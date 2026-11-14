@@ -51,7 +51,7 @@ function Donate({settings}) {
 
 function Admin({settings}) {
   const [user,setUser]=useState(auth?.currentUser||null),[isAdmin,setIsAdmin]=useState(false),[email,setEmail]=useState(""),[password,setPassword]=useState(""),[error,setError]=useState(""),[tab,setTab]=useState("overview"),[pending,setPending]=useState([]),[form,setForm]=useState(settings),[mediaTitle,setMediaTitle]=useState(""),[mediaCaption,setMediaCaption]=useState(""),[mediaType,setMediaType]=useState("image"),[file,setFile]=useState(null),[uploading,setUploading]=useState(false);
-  useEffect(()=>{if(!auth)return auth.onAuthStateChanged(async u=>{setUser(u);if(!u){setIsAdmin(false);return;}try{const result=await getIdTokenResult(u,true);setIsAdmin(result.claims.admin===true);}catch{setIsAdmin(false);}});},[]);
+  useEffect(()=>{if(!auth)return;return auth.onAuthStateChanged(async u=>{setUser(u);if(!u){setIsAdmin(false);return;}try{const result=await getIdTokenResult(u,true);setIsAdmin(result.claims.admin===true);}catch{setIsAdmin(false);}});},[]);
   useEffect(()=>{if(!db||!user)return;return onSnapshot(query(collection(db,"donations"),orderBy("createdAt","desc"),limit(250)),s=>setPending(s.docs.map(d=>({id:d.id,...d.data()}))));},[user]);
   useEffect(()=>setForm(settings),[settings]);
   async function login(e){e.preventDefault();setError("");try{await signInWithEmailAndPassword(auth,email,password);}catch(e){setError("Login failed. Check your email and password.");}}
