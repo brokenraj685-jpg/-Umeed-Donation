@@ -24,20 +24,52 @@ function useSiteData() {
 
 function Header({settings}) {
   const [open,setOpen] = useState(false);
-  return <header className="header"><Link to="/" className="brand"><span className="brandIcon"><HeartHandshake size={22}/></span><span>{settings.siteName || "Umeed"}</span></Link><button className="mobileMenu" onClick={()=>setOpen(!open)} aria-label="Menu">{open?<X/>:<Menu/>}</button><nav className={open?"nav open":"nav"}><a href="/#impact" onClick={()=>setOpen(false)}>Our impact</a><a href="/#leaderboard" onClick={()=>setOpen(false)}>Leaderboard</a><a href="/#gallery" onClick={()=>setOpen(false)}>Stories</a><Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}>Donate now <ArrowRight size={16}/></Link><Link to="/admin" className="adminLink" onClick={()=>setOpen(false)}>Admin</Link></nav></header>;
+  return <header className="header"><Link to="/" className="brand"><span className="brandIcon"><HeartHandshake size={22}/></span><span>{settings.siteName || "Umeed"}</span></Link><button className="mobileMenu" onClick={()=>setOpen(!open)} aria-label="Menu">{open?<X/>:<Menu/>}</button><nav className={open?"nav open":"nav"}><Link to="/details" onClick={()=>setOpen(false)}>Donation details</Link><a href="/#leaderboard" onClick={()=>setOpen(false)}>Leaderboard</a><a href="/#gallery" onClick={()=>setOpen(false)}>Stories</a><Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}>Donate now <ArrowRight size={16}/></Link><Link to="/admin" className="adminLink" onClick={()=>setOpen(false)}>Admin</Link></nav></header>;
 }
 
 function Home({data}) {
   const {settings,donations,media}=data;
   const total = donations.reduce((s,d)=>s+Number(d.amount||0),0);
   const top = useMemo(()=>[...donations].sort((a,b)=>Number(b.amount)-Number(a.amount)).slice(0,10),[donations]);
-  return <><section className="hero"><div className="heroCopy"><div className="eyebrow"><span/> SMALL ACTS. BIG CHANGE.</div><h1>Be the reason<br/><em>someone smiles.</em></h1><p>{settings.tagline || "Your kindness can help a family take its next step."}</p><div className="heroActions"><Link to="/donate" className="primaryBtn">Make a donation <ArrowRight size={18}/></Link><a href="#impact" className="textBtn">See our impact</a></div><div className="trust"><ShieldCheck size={17}/> Donations are published after admin verification</div></div><div className="heroArt"><div className="sun"/><div className="heroPhoto">{settings.heroImage?<img src={settings.heroImage} alt="Community support"/>:<div className="photoPlaceholder"><HeartHandshake size={64}/><span>Hope grows when we share</span></div>}</div><div className="floatingNote"><HeartHandshake size={20}/><span><b>Every contribution</b><small>makes a difference</small></span></div></div></section>
-  <section className="stats" id="impact"><div><span>Total verified donations</span><b>{money(total)}</b></div><div><span>Verified contributions</span><b>{donations.length}</b></div><div><span>People helped</span><b>{settings.totalHelped || "0"}+</b></div><div><span>Our promise</span><b>Transparent giving</b></div></section>
+  return <><section className="section leaderboard compactLeaderboard" id="leaderboard"><div className="sectionHead"><div><div className="sectionLabel">COMMUNITY OF GIVERS</div><h2>Daily kindness leaders</h2><p>Top verified donations from our community.</p></div><Trophy size={34}/></div><div className="tableWrap"><table><thead><tr><th>Rank</th><th>Donor</th><th>State</th><th>Amount</th><th>Date</th></tr></thead><tbody>{top.length?top.map((d,i)=><tr key={d.id}><td><span className="rank">{i+1}</span></td><td>{d.name}</td><td>{d.state}</td><td className="amount">{money(d.amount)}</td><td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN") || "Recently"}</td></tr>):<tr><td colSpan="5" className="empty">Verified donations will appear here.</td></tr>}</tbody></table></div><p className="privacyNote">Donor names, states and amounts are displayed publicly after verification.</p></section><section className="hero"><div className="heroCopy"><div className="eyebrow"><span/> SMALL ACTS. BIG CHANGE.</div><h1>Be the reason<br/><em>someone smiles.</em></h1><p>{settings.tagline || "Your kindness can help a family take its next step."}</p><div className="heroActions"><Link to="/donate" className="primaryBtn">Make a donation <ArrowRight size={18}/></Link><Link to="/details" className="textBtn">Donation details</Link></div><div className="trust"><ShieldCheck size={17}/> Donations are published after admin verification</div></div><div className="heroArt"><div className="sun"/><div className="heroPhoto">{settings.heroImage?<img src={settings.heroImage} alt="Community support"/>:<div className="photoPlaceholder"><HeartHandshake size={64}/><span>Hope grows when we share</span></div>}</div><div className="floatingNote"><HeartHandshake size={20}/><span><b>Every contribution</b><small>makes a difference</small></span></div></div></section>
+  
   <section className="section intro"><div className="sectionLabel">WHY WE EXIST</div><h2>Kindness has the power<br/>to change a life.</h2><p>{settings.about}</p><Link to="/donate" className="underLink">Be part of the change <ArrowRight size={16}/></Link></section>
-  <section className="section leaderboard" id="leaderboard"><div className="sectionHead"><div><div className="sectionLabel">COMMUNITY OF GIVERS</div><h2>Daily kindness leaders</h2><p>Top verified donations from our community.</p></div><Trophy size={34}/></div><div className="tableWrap"><table><thead><tr><th>Rank</th><th>Donor</th><th>State</th><th>Amount</th><th>Date</th></tr></thead><tbody>{top.length?top.map((d,i)=><tr key={d.id}><td><span className="rank">{i+1}</span></td><td>{d.name}</td><td>{d.state}</td><td className="amount">{money(d.amount)}</td><td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN") || "Recently"}</td></tr>):<tr><td colSpan="5" className="empty">Verified donations will appear here.</td></tr>}</tbody></table></div><p className="privacyNote">Donor names, states and amounts are displayed publicly after verification.</p></section>
+  
   <section className="section gallery" id="gallery"><div className="sectionHead"><div><div className="sectionLabel">REAL STORIES</div><h2>Moments of hope</h2><p>Photos and videos shared by the admin.</p></div><Camera size={32}/></div><div className="mediaGrid">{media.length?media.map(m=><article className="mediaCard" key={m.id}>{m.type==="video"?<video src={m.url} controls/>:<img src={m.url} alt={m.title||"Community story"}/>}<div><b>{m.title}</b><p>{m.caption}</p></div></article>):<div className="emptyGallery"><Camera size={30}/><span>Stories and updates will be shared here.</span></div>}</div></section>
   <section className="closing"><div><div className="sectionLabel">YOUR HELP MATTERS</div><h2>One act of giving<br/>can start a chain of hope.</h2></div><Link to="/donate" className="primaryBtn">Donate today <ArrowRight size={18}/></Link></section>
   <footer><Link to="/" className="brand"><span className="brandIcon"><HeartHandshake size={20}/></span>{settings.siteName || "Umeed"}</Link><span>Built on kindness. Powered by community.</span><Link to="/admin">Admin access</Link></footer></>;
+}
+
+
+function DonationDetails({settings,donations}) {
+  const total = donations.reduce((sum,d)=>sum+Number(d.amount||0),0);
+  return <main className="detailsPage">
+    <div className="detailsHeading">
+      <div className="sectionLabel">TRANSPARENCY</div>
+      <h1>Donation details</h1>
+      <p>All figures below are based on verified contributions.</p>
+    </div>
+    <section className="stats detailsStats" id="impact">
+      <div><span>Total verified donations</span><b>{money(total)}</b></div>
+      <div><span>Verified contributions</span><b>{donations.length}</b></div>
+      <div><span>People helped</span><b>{settings.totalHelped || "0"}+</b></div>
+      <div><span>Our promise</span><b>Transparent giving</b></div>
+    </section>
+    <section className="section detailsList">
+      <div className="sectionHead">
+        <div><div className="sectionLabel">VERIFIED RECORD</div><h2>All verified contributions</h2></div>
+        <ShieldCheck size={28}/>
+      </div>
+      <div className="tableWrap"><table>
+        <thead><tr><th>Donor</th><th>State</th><th>Amount</th><th>Date</th></tr></thead>
+        <tbody>{donations.length ? donations.map(d=><tr key={d.id}>
+          <td>{d.name}</td><td>{d.state}</td><td className="amount">{money(d.amount)}</td>
+          <td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN") || "Recently"}</td>
+        </tr>) : <tr><td colSpan="4" className="empty">Verified donations will appear here.</td></tr>}</tbody>
+      </table></div>
+      <p className="privacyNote">Only admin-verified donations are displayed.</p>
+    </section>
+  </main>;
 }
 
 function Donate({settings}) {
@@ -70,4 +102,4 @@ function Admin({settings}) {
   </section></main>;
 }
 
-export default function App(){const data=useSiteData();return <><Header settings={data.settings}/><Routes><Route path="/" element={<Home data={data}/>}/><Route path="/donate" element={<Donate settings={data.settings}/>}/><Route path="/admin" element={<Admin settings={data.settings}/>}/></Routes></>}
+export default function App(){const data=useSiteData();return <><Header settings={data.settings}/><Routes><Route path="/" element={<Home data={data}/>}/><Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/><Route path="/donate" element={<Donate settings={data.settings}/>}/><Route path="/admin" element={<Admin settings={data.settings}/>}/></Routes></>}
