@@ -1,0 +1,9 @@
+{
+  "name": "Umeed Donation",
+  "short_name": "Umeed",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8faf8",
+  "theme_color": "#14532d",
+  "icons": []
+}
