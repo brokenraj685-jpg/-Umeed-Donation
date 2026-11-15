@@ -336,7 +336,12 @@ function Admin({settings}) {
   if(!isAdmin)return <main className="adminPage"><div className="adminLogin">
     <div className="brandIcon"><ShieldCheck/></div>
     <h1>Admin permission required</h1>
-    <p>This signed-in account is not the verified project-owner email. Please sign in with the authorized account.</p>
+   <p>This signed-in account is not the verified project-owner email. Please sign in with the authorized account.</p>
+<p style={{marginTop:12,wordBreak:"break-word"}}>
+  Login email: {user.email || "not available"}<br/>
+  Email verified: {String(user.emailVerified)}<br/>
+  Required email: {ADMIN_EMAIL}
+</p> 
     <button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
