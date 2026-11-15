@@ -541,6 +541,19 @@ function Admin({settings}) {
     });
   }
 
+  async function removeDonation(d) {
+    const ok=window.confirm(`Kya aap ${d.name||"is donor"} ka donation record permanently delete karna chahte hain? Ye All Contributions se bhi hat jayega.`);
+    if(!ok)return;
+    setError("");
+    try {
+      await deleteDoc(doc(db,"donations",d.id));
+      // Keep certificateCodes permanently reserved so a deleted 6-digit number is never reused.
+      alert("Donor record delete ho gaya. All Contributions se bhi hat gaya.");
+    } catch(err) {
+      setError(err.message||"Donor delete nahi ho paya.");
+    }
+  }
+
   async function uploadMedia(e) {
     e.preventDefault();
     if(!file)return;
@@ -697,9 +710,10 @@ function Admin({settings}) {
           <tbody>{pending.map(d=><tr key={d.id}>
             <td>{d.name}</td><td>{d.state}</td><td>{money(d.amount)}</td><td>{d.transactionId}</td><td><b>{d.certificateCode||"—"}</b></td>
             <td><span className={"status "+d.status}>{d.status}</span></td>
-            <td>{d.status==="pending"?<div className="actions">
-              <button onClick={()=>verify(d,true)}>Verify</button><button onClick={()=>verify(d,false)}>Reject</button>
-            </div>:"—"}</td>
+            <td><div className="actions">
+              {d.status==="pending"&&<><button onClick={()=>verify(d,true)}>Verify</button><button onClick={()=>verify(d,false)}>Reject</button></>}
+              <button className="dangerAction" onClick={()=>removeDonation(d)}>Delete</button>
+            </div></td>
           </tr>)}</tbody>
         </table></div>
       </div>}
