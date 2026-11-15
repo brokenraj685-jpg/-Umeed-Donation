@@ -786,8 +786,13 @@ footer .brand{font-size:14px}
 }
 
 
-/* Social links in the public website footer */
-.socialLinks{display:flex;align-items:center;gap:12px}
-.socialLinks a{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line,rgba(0,0,0,.14));border-radius:50%;color:inherit;transition:transform .2s ease,background .2s ease,color .2s ease}
-.socialLinks a:hover{transform:translateY(-3px);background:var(--accent,#2f6b55);color:#fff}
+/* Colorful social links in the public website footer */
+.socialLinks{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.socialLinks .socialLink{min-width:150px;display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:13px;text-decoration:none;color:#fff;box-shadow:0 5px 16px rgba(0,0,0,.12);transition:transform .2s ease,filter .2s ease}
+.socialLinks .socialLink:hover{transform:translateY(-3px);filter:brightness(1.08)}
+.socialLinks .socialLink span{display:flex;flex-direction:column;align-items:flex-start;gap:2px;line-height:1.2}
+.socialLinks .socialLink b{font-size:13px;font-weight:700}
+.socialLinks .socialLink small{font-size:10px;opacity:.9}
+.socialLinks .instagramLink{background:linear-gradient(135deg,#833ab4 0%,#e1306c 52%,#f77737 100%)}
+.socialLinks .facebookLink{background:#1877f2}
 @media(max-width:640px){footer{flex-wrap:wrap;gap:14px}.socialLinks{width:100%;justify-content:center}}
