@@ -901,7 +901,7 @@ footer .brand{font-size:14px}
   .joinCertificatePrint p{font-size:12px;line-height:1.7}
   .joinCertDetails{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:13mm 0;padding:13px;border-top:1px solid #dce9dc;border-bottom:1px solid #dce9dc;text-align:left;font-size:11px}
   .joinCertificatePrint .joinFine{font-size:10px;line-height:1.6;margin:8mm auto;max-width:145mm}
-  .joinCertificatePrint .certificateSignature{display:grid;justify-items:center;gap:4px;margin:13mm 0 0 auto;width:65mm;text-align:center}
-  .joinCertificatePrint .certificateSignature img{display:block;width:48mm;height:auto;max-height:20mm;object-fit:contain}
+  .joinCertificatePrint .certificateSignature{display:grid;justify-items:center;gap:3px;margin:8mm 0 0 auto;width:45mm;text-align:center;overflow:hidden}
+  .joinCertificatePrint .certificateSignature img{display:block!important;width:28mm!important;max-width:28mm!important;height:auto!important;max-height:10mm!important;object-fit:contain;margin:0 auto}
   .joinCertificatePrint .certificateSignature small{font-size:9px;color:#829087;border-top:1px solid #9eb4a0;padding-top:5px;width:100%}
 }
