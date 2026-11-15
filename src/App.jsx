@@ -4,7 +4,7 @@ import { Link, Route, Routes } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud, Image as ImageIcon, Video, Play } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
 import { signInWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
-import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, doc, where, limit, getDocs, getDoc, writeBatch } from "firebase/firestore";
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, deleteDoc, doc, where, limit, getDocs, getDoc, writeBatch } from "firebase/firestore";
 
 const ADMIN_EMAIL = "rajbabushaikh18@gmail.com";
 
@@ -448,6 +448,12 @@ function Admin({settings}) {
   const [mediaType,setMediaType]=useState("image");
   const [file,setFile]=useState(null);
   const [uploading,setUploading]=useState(false);
+  const [mediaItems,setMediaItems]=useState([]);
+  const [editingMedia,setEditingMedia]=useState(null);
+  const [editTitle,setEditTitle]=useState("");
+  const [editCaption,setEditCaption]=useState("");
+  const [replacementFile,setReplacementFile]=useState(null);
+  const [mediaBusy,setMediaBusy]=useState(false);
 
   useEffect(()=>{
     if(!auth)return;
@@ -480,6 +486,11 @@ function Admin({settings}) {
   },[user,isAdmin]);
 
   useEffect(()=>setForm(settings),[settings]);
+
+  useEffect(()=>{
+    if(!db||!user||!isAdmin)return;
+    return onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(100)),s=>setMediaItems(s.docs.map(d=>({id:d.id,...d.data()}))),err=>setError(err.message));
+  },[user,isAdmin]);
 
   async function login(e) {
     e.preventDefault();
@@ -528,11 +539,11 @@ function Admin({settings}) {
         body:JSON.stringify({fileName:file.name,contentType:file.type})
       });
       if(!res.ok)throw new Error("R2 upload is not configured or upload URL could not be created.");
-      const {uploadUrl,publicUrl}=await res.json();
+      const {uploadUrl,publicUrl,key}=await res.json();
       const put=await fetch(uploadUrl,{method:"PUT",headers:{"Content-Type":file.type},body:file});
       if(!put.ok)throw new Error("Upload failed.");
       await addDoc(collection(db,"media"),{
-        title:mediaTitle,caption:mediaCaption,type:mediaType,url:publicUrl,createdAt:serverTimestamp()
+        title:mediaTitle,caption:mediaCaption,type:mediaType,url:publicUrl,key,createdAt:serverTimestamp()
       });
       setFile(null);
       setMediaTitle("");
@@ -543,6 +554,57 @@ function Admin({settings}) {
     } finally {
       setUploading(false);
     }
+  }
+
+  function getMediaKey(item){
+    if(item.key)return item.key;
+    try{
+      const path=decodeURIComponent(new URL(item.url).pathname).replace(/^\\/+/, "");
+      const at=path.indexOf("umeed/community/");
+      return at>=0?path.slice(at):"";
+    }catch{return "";}
+  }
+
+  async function callMediaDelete(key){
+    if(!key)throw new Error("Is purani file ka R2 key nahi mila. File ko delete nahi kiya gaya.");
+    const token=await getIdToken(user);
+    const res=await fetch("/api/r2-presign",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({action:"delete",key})});
+    if(!res.ok){const data=await res.json().catch(()=>({}));throw new Error(data.error||"R2 file delete nahi hui.");}
+  }
+
+  async function saveMediaEdit(item){
+    setMediaBusy(true);setError("");
+    try{
+      let newUrl=item.url,newKey=item.key||getMediaKey(item);
+      if(replacementFile){
+        const token=await getIdToken(user);
+        const res=await fetch("/api/r2-presign",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({fileName:replacementFile.name,contentType:replacementFile.type})});
+        if(!res.ok)throw new Error("Nayi file ke liye upload URL nahi bana.");
+        const signed=await res.json();
+        const put=await fetch(signed.uploadUrl,{method:"PUT",headers:{"Content-Type":replacementFile.type},body:replacementFile});
+        if(!put.ok)throw new Error("Nayi file upload nahi hui.");
+        newUrl=signed.publicUrl;newKey=signed.key;
+      }
+      await updateDoc(doc(db,"media",item.id),{title:editTitle.trim(),caption:editCaption.trim(),url:newUrl,key:newKey,updatedAt:serverTimestamp()});
+      if(replacementFile){
+        const oldKey=item.key||getMediaKey(item);
+        if(oldKey&&oldKey!==newKey){try{await callMediaDelete(oldKey);}catch(err){console.warn("Old media cleanup failed:",err);}}
+      }
+      setEditingMedia(null);setReplacementFile(null);alert("Photo/video update ho gaya.");
+    }catch(err){setError(err.message||"Media update nahi hua.");}
+    finally{setMediaBusy(false);}
+  }
+
+  async function removeMedia(item){
+    if(!window.confirm("Kya aap is photo/video ko permanently delete karna chahte hain?"))return;
+    setMediaBusy(true);setError("");
+    try{
+      await callMediaDelete(item.key||getMediaKey(item));
+      await deleteDoc(doc(db,"media",item.id));
+      if(editingMedia===item.id)setEditingMedia(null);
+      alert("Photo/video delete ho gaya.");
+    }catch(err){setError(err.message||"Delete nahi hua.");}
+    finally{setMediaBusy(false);}
   }
 
   if(!firebaseReady)return <main className="adminPage"><div className="adminLogin">
@@ -651,6 +713,22 @@ function Admin({settings}) {
           <button className="primaryBtn" disabled={uploading||!file}><UploadCloud size={18}/>{uploading?"Uploading…":"Upload to Cloudflare R2"}</button>
         </form>
         <p className="formFine">Use optimized images and compressed videos. R2 upload endpoint uses a short-lived signed URL; configure bucket CORS for your Vercel domain.</p>
+        <div className="adminMediaManager">
+          <h2>Uploaded photos & videos ({mediaItems.length})</h2>
+          {mediaItems.length===0?<p className="formFine">Abhi koi photo ya video upload nahi hua.</p>:<div className="adminMediaGrid">{mediaItems.map(item=><article className="adminMediaItem" key={item.id}>
+            {item.type==="video"?<video src={item.url} controls preload="metadata"/>:<img src={item.url} alt={item.title||"Uploaded community media"}/>}
+            <div className="adminMediaInfo"><b>{item.title||"Untitled"}</b><small>{item.type==="video"?"Video":"Photo"}</small>{item.caption&&<p>{item.caption}</p>}</div>
+            {editingMedia===item.id?<div className="adminMediaEdit">
+              <label>Title<input value={editTitle} onChange={e=>setEditTitle(e.target.value)}/></label>
+              <label>Caption<input value={editCaption} onChange={e=>setEditCaption(e.target.value)}/></label>
+              <label>Replace file (optional)<input type="file" accept={item.type==="video"?"video/*":"image/*"} onChange={e=>setReplacementFile(e.target.files?.[0]||null)}/></label>
+              <div className="actions"><button disabled={mediaBusy} onClick={()=>saveMediaEdit(item)}>{mediaBusy?"Saving…":"Save changes"}</button><button onClick={()=>{setEditingMedia(null);setReplacementFile(null);}}>Cancel</button></div>
+            </div>:<div className="actions">
+              <button onClick={()=>{setEditingMedia(item.id);setEditTitle(item.title||"");setEditCaption(item.caption||"");setReplacementFile(null);}}>Edit / Change</button>
+              <button disabled={mediaBusy} onClick={()=>removeMedia(item)}>Delete</button>
+            </div>}
+          </article>)}</div>}
+        </div>
       </div>}
     </section>
   </main>;
