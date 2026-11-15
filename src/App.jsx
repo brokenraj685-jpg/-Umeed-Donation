@@ -238,7 +238,7 @@ function CommunityService({settings}) {
 
 function Donate({settings}) {
   const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});
-  const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[error,setError]=useState("");
+  const [busy,setBusy]=useState(false),[done,setDone]=useState(()=>Boolean(localStorage.getItem("umeedLastDonationId"))),[error,setError]=useState("");
   const [submittedId,setSubmittedId]=useState(()=>localStorage.getItem("umeedLastDonationId")||"");
   const [donationRecord,setDonationRecord]=useState(null);
   const [showCertificate,setShowCertificate]=useState(false);
