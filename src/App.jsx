@@ -1,7 +1,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
-import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud, Image as ImageIcon, Video, Play } from "lucide-react";
+import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud, Image as ImageIcon, Video, Play, Instagram, Facebook } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
 import { signInWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
 import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, deleteDoc, doc, where, limit, getDocs, getDoc, writeBatch } from "firebase/firestore";
@@ -13,7 +13,7 @@ const money = n => new Intl.NumberFormat("en-IN", { style:"currency", currency:"
 const states = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Jammu and Kashmir","Ladakh","Puducherry"];
 
 function useSiteData() {
-  const [settings,setSettings] = useState({siteName:"Umeed",tagline:"Together, we can bring hope.",about:"A community-led effort to support families and individuals facing hardship. Every verified contribution is recorded transparently.",upiId:"",upiName:"",qrUrl:"",phone:"",heroImage:"",serviceTitle:"Umeed Community Service",serviceContent:"",totalHelped:"0",goal:"500000"});
+  const [settings,setSettings] = useState({siteName:"Umeed",tagline:"Together, we can bring hope.",about:"A community-led effort to support families and individuals facing hardship. Every verified contribution is recorded transparently.",upiId:"",upiName:"",qrUrl:"",phone:"",heroImage:"",serviceTitle:"Umeed Community Service",serviceContent:"",totalHelped:"0",goal:"500000",instagramUrl:"",facebookUrl:""});
   const [donations,setDonations] = useState([]);
   const [media,setMedia] = useState([]);
 
@@ -144,7 +144,10 @@ const top = useMemo(() => [...donations]
     <footer>
       <Link to="/" className="brand"><span className="brandIcon"><HeartHandshake size={20}/></span>{settings.siteName || "Umeed"}</Link>
       <span>Built on kindness. Powered by community.</span>
-      
+      <div className="socialLinks" aria-label="Social media links">
+        {settings.instagramUrl&&<a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Instagram"><Instagram size={21}/></a>}
+        {settings.facebookUrl&&<a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Facebook"><Facebook size={21}/></a>}
+      </div>
     </footer>
   </>;
 }
@@ -711,6 +714,8 @@ function Admin({settings}) {
         <label>Mobile / UPI number<input value={form.phone||""} onChange={e=>setForm(p=>({...p,phone:e.target.value}))}/></label>
         <label>QR code image URL<input value={form.qrUrl||""} onChange={e=>setForm(p=>({...p,qrUrl:e.target.value}))} placeholder="Upload QR to R2 and paste its public URL"/></label>
         <label>Hero image URL<input value={form.heroImage||""} onChange={e=>setForm(p=>({...p,heroImage:e.target.value}))}/></label>
+        <label>Instagram profile link<input type="url" value={form.instagramUrl||""} onChange={e=>setForm(p=>({...p,instagramUrl:e.target.value}))} placeholder="https://www.instagram.com/yourpage/"/></label>
+        <label>Facebook page link<input type="url" value={form.facebookUrl||""} onChange={e=>setForm(p=>({...p,facebookUrl:e.target.value}))} placeholder="https://www.facebook.com/yourpage/"/></label>
         <label>People helped count<input type="number" value={form.totalHelped||"0"} onChange={e=>setForm(p=>({...p,totalHelped:e.target.value}))}/></label>
         <button className="primaryBtn">Save website settings</button>
       </form>}
