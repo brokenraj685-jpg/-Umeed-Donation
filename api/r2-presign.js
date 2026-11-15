@@ -141,7 +141,7 @@ export default async function handler(req, res) {
       .replace(/[^a-zA-Z0-9]/g, "")
       .slice(0, 8);
 
-    const key = `community/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    const key = `umeed/community/${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
     const command = new PutObjectCommand({
       Bucket: bucket,
