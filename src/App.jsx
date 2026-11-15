@@ -202,7 +202,7 @@ function DonationDetails({settings,donations}) {
     <section className="stats detailsStats" id="impact">
       <div><span>Total donations</span><b>{money(total)}</b></div>
       <div><span>Contributions</span><b>{donations.length}</b></div>
-      <div><span>People helped</span><b>{settings.totalHelped || "0"}+</b></div>
+      <div><span>People Helped Together ❤️</span><b>{settings.totalHelped || "0"}+</b></div>
       <div><span>Our promise</span><b>Transparent giving</b></div>
     </section>
     <section className="section detailsList">
