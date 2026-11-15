@@ -41,6 +41,7 @@ function Header({settings}) {
     <nav className={open?"nav open":"nav"}>
       <Link to="/details" onClick={()=>setOpen(false)}>Donation details</Link>
       <Link to="/service" onClick={()=>setOpen(false)}>Service</Link>
+      <Link to="/join-community" className="joinNav" onClick={()=>setOpen(false)}>Join Community</Link>
       <a href="/#leaderboard" onClick={()=>setOpen(false)}>Leaderboard</a>
       <a href="/#gallery" onClick={()=>setOpen(false)}>Stories</a>
       <Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}>Donate now <ArrowRight size={16}/></Link>
@@ -251,6 +252,57 @@ function CommunityService({settings}) {
   </main>;
 }
 
+
+function JoinCommunity() {
+  const [form,setForm]=useState({name:"",mobile:"",state:"",age:""});
+  const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[error,setError]=useState(""),[joinId,setJoinId]=useState("");
+  const change=e=>setForm(p=>({...p,[e.target.name]:e.target.value}));
+  async function submit(e){
+    e.preventDefault();setError("");
+    if(!db){setError("Joining service abhi available nahi hai.");return;}
+    if(!/^[6-9]\\d{9}$/.test(form.mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
+    if(Number(form.age)<18||Number(form.age)>100){setError("Joining ke liye age 18 se 100 ke beech honi chahiye.");return;}
+    setBusy(true);
+    try{
+      const ref=await addDoc(collection(db,"communityJoins"),{
+        name:form.name.trim(),mobile:form.mobile.trim(),state:form.state,age:Number(form.age),
+        status:"pending",createdAt:serverTimestamp(),termsAccepted:true
+      });
+      setJoinId(ref.id);setDone(true);
+    }catch(err){setError(err.message||"Request submit nahi hui. Dobara try karein.");}
+    finally{setBusy(false);}
+  }
+  return <main className="joinPage">
+    <section className="joinHero"><span className="sectionLabel">BE A PART OF THE CHANGE</span><h1>Join Umeed Community</h1><p>Apni skills aur mehnat se kamayein, aur community ke zariye zarooratmand logon ki madad ka hissa banein.</p></section>
+    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Thank you for joining Umeed Community!</h2><p>Aapki joining request successfully submit ho gayi hai. Admin verification ke baad hi membership approve hogi.</p><small>Joining Request ID: {joinId}</small><div className="joinPendingStamp">PENDING ADMIN APPROVAL</div><button className="primaryBtn" onClick={()=>window.print()}>Download joining receipt / PDF</button></section>:<>
+      <section className="joinInfoGrid">
+        <article><h2>Joining Rules</h2><ul>
+          <li>Member ki identity verification ke liye Aadhaar Card, PAN Card aur passport-size photo dena zaroori hoga.</li>
+          <li>Mobile number aur di gayi personal details sahi honi chahiye.</li>
+          <li>Joining request admin review ke baad hi approve hogi.</li>
+          <li>Community ke through earning shuru karne se pehle applicable work aur payment details clear ki jayengi.</li>
+        </ul></article>
+        <article><h2>Community Benefits</h2><ul>
+          <li>Umeed Community ke network ke through kaam aur earning ke mauke.</li>
+          <li>Har earning ka transparent record maintain kiya jayega.</li>
+          <li>Community ke social-help projects ka hissa banne ka mauka.</li>
+        </ul><div className="joinShare"><b>90% Community</b><span>10% Earning member</span></div><p className="joinFine">Website ke through member ke source se aayi earning mein 90% Umeed Community ka aur 10% us member ka hoga jiske through earning aayi hai. Har kaam/payment se pehle calculation aur terms clear hongi.</p></article>
+      </section>
+      <section className="joinFormCard"><h2>Join Community Form</h2><p>Form submit karne ke baad admin approval ka wait karein.</p>
+        <form onSubmit={submit}>
+          <label>Full name<input name="name" value={form.name} onChange={change} maxLength="80" required placeholder="Apna poora naam"/></label>
+          <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
+          <label>State<select name="state" value={form.state} onChange={change} required><option value="">Select state</option>{states.map(x=><option key={x}>{x}</option>)}</select></label>
+          <label>Age<input name="age" type="number" min="18" max="100" value={form.age} onChange={change} required placeholder="Your age"/></label>
+          <p className="joinFine">Submit karke aap confirm karte hain ki aapki di hui details sahi hain aur 90% / 10% sharing rule padh liya hai.</p>
+          {error&&<p className="error">{error}</p>}
+          <button className="primaryBtn" disabled={busy}>{busy?"Submitting…":"Join Community"}</button>
+        </form>
+      </section>
+    </>}
+  </main>;
+}
+
 function Donate({settings}) {
   const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});
   const [busy,setBusy]=useState(false),[done,setDone]=useState(()=>Boolean(localStorage.getItem("umeedLastDonationId"))),[error,setError]=useState("");
@@ -456,7 +508,7 @@ function Admin({settings}) {
   const [password,setPassword]=useState("");
   const [error,setError]=useState("");
   const [tab,setTab]=useState("overview");
-  const [pending,setPending]=useState([]);
+  const [pending,setPending]=useState([]);\n  const [joinRequests,setJoinRequests]=useState([]);
   const [form,setForm]=useState(settings);
   const [mediaTitle,setMediaTitle]=useState("");
   const [mediaCaption,setMediaCaption]=useState("");
@@ -533,7 +585,7 @@ function Admin({settings}) {
     }
   }
 
-  async function verify(d,approved) {
+  async function reviewJoin(d,approved){\n    await updateDoc(doc(db,"communityJoins",d.id),{status:approved?"approved":"rejected",reviewedAt:serverTimestamp(),reviewedBy:user.email});\n  }\n\n  async function verify(d,approved) {
     await updateDoc(doc(db,"donations",d.id),{
       status:approved?"verified":"rejected",
       reviewedAt:serverTimestamp(),
@@ -682,7 +734,7 @@ function Admin({settings}) {
     <button className="textBtn" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
-  const nav=[["overview","Overview"],["donations","Donations"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
+  const nav=[["overview","Overview"],["donations","Donations"],["communityJoins","Community Join"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
 
   return <main className="adminShell">
     <aside className="adminSide">
@@ -718,6 +770,14 @@ function Admin({settings}) {
         </table></div>
       </div>}
 
+      {tab==="communityJoins"&&<div className="adminPanel communityJoinAdmin">
+        <h2>Community joining requests ({joinRequests.length})</h2>
+        <div className="tableWrap"><table><thead><tr><th>Name / Request ID</th><th>Mobile</th><th>State</th><th>Age</th><th>Status</th><th>Action / PDF</th></tr></thead>
+          <tbody>{joinRequests.map(j=><tr key={j.id}><td><b>{j.name}</b><small className="joinAdminId">{j.id}</small></td><td>{j.mobile}</td><td>{j.state}</td><td>{j.age}</td><td><span className={"status "+(j.status==="approved"?"verified":j.status==="rejected"?"rejected":"pending")}>{j.status}</span></td>
+          <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<button onClick={()=>{window.print();}}>Joining PDF</button>}</div></td></tr>)}
+          {!joinRequests.length&&<tr><td colSpan="6" className="empty">Abhi koi joining request nahi aayi.</td></tr>}</tbody></table></div>
+        <p className="formFine">Approved member ka PDF print/download karne ke liye request ko select karke browser print dialog mein Save as PDF choose karein.</p>
+      </div>}
       {tab==="settings"&&<form className="adminPanel settingsForm" onSubmit={saveSettings}>
         <h2>Website content & payment details</h2>
         <label>Website name<input value={form.siteName||""} onChange={e=>setForm(p=>({...p,siteName:e.target.value}))}/></label>
@@ -785,7 +845,7 @@ export default function App() {
       <Route path="/photos" element={<MediaPage media={data.media} type="image"/>}/>
       <Route path="/videos" element={<MediaPage media={data.media} type="video"/>}/>
       <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
-      <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
+      <Route path="/service" element={<CommunityService settings={data.settings}/>}/>\n      <Route path="/join-community" element={<JoinCommunity/>}/>
       <Route path="/donate" element={<Donate settings={data.settings}/>}/>
       <Route path="/admin" element={<Admin settings={data.settings}/>}/>
     </Routes>
