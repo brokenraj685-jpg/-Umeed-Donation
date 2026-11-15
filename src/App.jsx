@@ -862,7 +862,8 @@ export default function App() {
       <Route path="/photos" element={<MediaPage media={data.media} type="image"/>}/>
       <Route path="/videos" element={<MediaPage media={data.media} type="video"/>}/>
       <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
-      <Route path="/service" element={<CommunityService settings={data.settings}/>}/>\n      <Route path="/join-community" element={<JoinCommunity/>}/>
+      <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
+      <Route path="/join-community" element={<JoinCommunity/>}/>
       <Route path="/donate" element={<Donate settings={data.settings}/>}/>
       <Route path="/admin" element={<Admin settings={data.settings}/>}/>
     </Routes>
