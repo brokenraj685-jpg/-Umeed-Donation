@@ -151,7 +151,7 @@ export default async function handler(req, res) {
       .slice(0, 8);
 
     // Always store new media in the same canonical folder as the working older images.
-    const uploadPrefix = "umeed/community/";
+    const uploadPrefix = "umeed/umeed/community/";
     const key = `${uploadPrefix}${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
     const command = new PutObjectCommand({
