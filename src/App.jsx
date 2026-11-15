@@ -4,7 +4,7 @@ import { Link, Route, Routes } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud, Image as ImageIcon, Video, Play } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
 import { signInWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
-import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, doc, where, limit } from "firebase/firestore";
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, doc, where, limit, getDocs } from "firebase/firestore";
 
 const ADMIN_EMAIL = "rajbabushaikh18@gmail.com";
 
@@ -240,21 +240,49 @@ function Donate({settings}) {
   const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});
   const [busy,setBusy]=useState(false),[done,setDone]=useState(()=>Boolean(localStorage.getItem("umeedLastDonationId"))),[error,setError]=useState("");
   const [submittedId,setSubmittedId]=useState(()=>localStorage.getItem("umeedLastDonationId")||"");
-  const [donationRecord,setDonationRecord]=useState(null);
+  const [certificateCode,setCertificateCode]=useState(()=>localStorage.getItem("umeedLastCertificateCode")||"");
+  const [donationRecord,setDonationRecord]=useState(()=>{
+    try{return JSON.parse(localStorage.getItem("umeedLastDonationPreview")||"null");}catch{return null;}
+  });
+  const [lookupCode,setLookupCode]=useState("");
+  const [lookupRecord,setLookupRecord]=useState(null);
+  const [lookupBusy,setLookupBusy]=useState(false);
+  const [lookupMessage,setLookupMessage]=useState("");
   const [showCertificate,setShowCertificate]=useState(false);
 
   useEffect(()=>{
-    if(!db||!submittedId)return;
-    return onSnapshot(doc(db,"donations",submittedId),snap=>{
-      if(snap.exists())setDonationRecord({id:snap.id,...snap.data()});
-    });
-  },[submittedId]);
+    if(!db||!certificateCode)return;
+    const verifiedQuery=query(collection(db,"donations"),where("certificateCode","==",certificateCode),where("status","==","verified"),limit(1));
+    return onSnapshot(verifiedQuery,snap=>{
+      if(!snap.empty){
+        const d={id:snap.docs[0].id,...snap.docs[0].data()};
+        setDonationRecord(d);
+        localStorage.setItem("umeedLastDonationPreview",JSON.stringify({...d,createdAt:null}));
+      }
+    },err=>console.error("Certificate status check:",err));
+  },[certificateCode]);
 
-  function downloadCertificate(){
+  function downloadCertificate(record){
     setShowCertificate(true);
     setTimeout(()=>window.print(),400);
   }
   const change=e=>setForm(p=>({...p,[e.target.name]:e.target.value}));
+
+  async function lookupCertificate(e){
+    e?.preventDefault();
+    const code=lookupCode.trim();
+    setLookupMessage("");setLookupRecord(null);
+    if(!/^\d{6}$/.test(code)){setLookupMessage("Please 6-digit Certificate Number enter karein.");return;}
+    if(!db){setLookupMessage("Certificate service abhi available nahi hai.");return;}
+    setLookupBusy(true);
+    try{
+      const q=query(collection(db,"donations"),where("certificateCode","==",code),where("status","==","verified"),limit(1));
+      const result=await getDocs(q);
+      if(result.empty)setLookupMessage("Certificate abhi verify nahi hua hai ya number galat hai. Payment verify hone ke baad dobara try karein.");
+      else setLookupRecord({id:result.docs[0].id,...result.docs[0].data()});
+    }catch(err){setLookupMessage("Certificate check nahi ho paya. Thodi der baad try karein.");}
+    finally{setLookupBusy(false);}
+  }
 
   async function submit(e) {
     e.preventDefault();
@@ -263,13 +291,19 @@ function Donate({settings}) {
     if(Number(form.amount)<1){setError("Please enter a valid donation amount.");return;}
     setBusy(true);
     try {
+      const newCode=String(crypto.getRandomValues(new Uint32Array(1))[0]%900000+100000);
+      const preview={name:form.name.trim(),state:form.state,amount:Number(form.amount),status:"pending",certificateCode:newCode,createdAt:null};
       const docRef = await addDoc(collection(db,"donations"),{
         name:form.name.trim(),state:form.state,amount:Number(form.amount),
         transactionId:form.transactionId.trim(),note:form.note.trim(),
-        status:"pending",createdAt:serverTimestamp()
+        certificateCode:newCode,status:"pending",createdAt:serverTimestamp()
       });
       setSubmittedId(docRef.id);
+      setCertificateCode(newCode);
+      setDonationRecord({...preview,id:docRef.id});
       localStorage.setItem("umeedLastDonationId",docRef.id);
+      localStorage.setItem("umeedLastCertificateCode",newCode);
+      localStorage.setItem("umeedLastDonationPreview",JSON.stringify(preview));
       setDone(true);
     } catch(err) {
       setError(err.message||"Could not submit donation.");
@@ -278,49 +312,57 @@ function Donate({settings}) {
     }
   }
 
-  if(done){
-    const verified = donationRecord?.status==="verified";
-    const certDate = donationRecord?.createdAt?.toDate
-      ? donationRecord.createdAt.toDate().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})
-      : new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});
-    return <main className="formPage certificatePage">
-      <div className="successCard noPrint">
-        <CheckCircle2 size={48}/><h1>{verified?"Your donation is verified!":"Thank you for your kindness."}</h1>
-        <p>{verified?"Your contribution has been verified by Umeed Community. Your certificate is ready!":"Your donation details have been submitted. Umeed Community will verify your payment. Your certificate will appear here after verification."}</p>
-        {verified&&<button className="primaryBtn full" onClick={downloadCertificate}>Download Donation Certificate (PDF)</button>}
-        <Link to="/" className="textBtn">Back to home</Link>
-      </div>
-      {verified&&<section className={"donationCertificate"+(showCertificate?" printReady":"")}>
-        <div className="certificateBorder">
-          <div className="certificateLogo"><span className="brandIcon"><HeartHandshake size={30}/></span><b>UMEED COMMUNITY</b></div>
-          <div className="certificateSmall">CERTIFICATE OF APPRECIATION</div>
-          <h1>Donation Certificate</h1>
-          <p className="certificateIntro">This certificate is proudly presented to</p>
-          <h2>{donationRecord.name||"Valued Donor"}</h2>
-          <p className="certificateBody">In heartfelt appreciation of your generous contribution to Umeed Community. Your kindness and support help us bring hope, care and smiles to people in need.</p>
-          <div className="certificateDetails">
-            <div><span>DONATION AMOUNT</span><b>{money(donationRecord.amount)}</b></div>
-            <div><span>STATE</span><b>{donationRecord.state||"—"}</b></div>
-            <div><span>DATE</span><b>{certDate}</b></div>
-          </div>
-          <p className="certificateThanks">Thank you for being a part of this journey of kindness. Every act of giving makes a difference. We are truly grateful to have you with us. ❤️</p>
-          <div className="certificateFooter">
-            <div className="certificateSignature"><span>With gratitude,</span><b>Umeed Community</b><small>Authorized Community Member</small></div>
-            <div className="certificateId"><span>CERTIFICATE ID</span><b>UMEED-{submittedId.slice(-8).toUpperCase()}</b></div>
-          </div>
-          <div className="certificateMotto">Jahan Madad Hai, Wahan Umeed Hai.</div>
+  const renderCertificate=(record,preview=false)=> {
+    const verified=record?.status==="verified";
+    const certDate=record?.createdAt?.toDate
+      ?record.createdAt.toDate().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})
+      :new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});
+    return <section className={"donationCertificate"+(showCertificate?" printReady":"")}>
+      <div className="certificateBorder">
+        <div className="certificateLogo"><span className="brandIcon"><HeartHandshake size={30}/></span><b>UMEED COMMUNITY</b></div>
+        <div className="certificateSmall">CERTIFICATE OF APPRECIATION</div>
+        <h1>Donation Certificate</h1>
+        <p className="certificateIntro">This certificate is proudly presented to</p>
+        <h2>{record?.name||"Valued Donor"}</h2>
+        <p className="certificateBody">In heartfelt appreciation of your generous contribution to Umeed Community. Your kindness and support help us bring hope, care and smiles to people in need.</p>
+        <div className="certificateDetails">
+          <div><span>DONATION AMOUNT</span><b>{money(record?.amount)}</b></div>
+          <div><span>STATE</span><b>{record?.state||"—"}</b></div>
+          <div><span>DATE</span><b>{certDate}</b></div>
         </div>
-      </section>}
-    </main>;
-  }
+        <div className="certificateCodeLine"><span>YOUR 6-DIGIT CERTIFICATE NUMBER</span><b>{record?.certificateCode||"------"}</b></div>
+        <p className="certificateThanks">Thank you for being a part of this journey of kindness. Every act of giving makes a difference. We are truly grateful to have you with us. ❤️</p>
+        <div className="certificateFooter">
+          <div className="certificateSignature"><span>{verified?"With gratitude,":"Signature after payment verification"}</span><b>{verified?"Umeed Community":"Pending Verification"}</b><small>{verified?"Authorized Community Member":"Official signature will appear after verification"}</small></div>
+          <div className="certificateId"><span>CERTIFICATE NUMBER</span><b>{record?.certificateCode||"------"}</b></div>
+        </div>
+        <div className="certificateMotto">Jahan Madad Hai, Wahan Umeed Hai.</div>
+        {!verified&&<div className="certificatePendingStamp">PENDING PAYMENT VERIFICATION · NOT VALID FOR OFFICIAL USE</div>}
+      </div>
+    </section>;
+  };
 
-  return <main className="formPage">
-    <div className="formIntro">
+  return <main className="formPage certificatePage">
+    {done&&donationRecord&&<div className="successCard noPrint">
+      <CheckCircle2 size={48}/><h1>{donationRecord.status==="verified"?"Your donation is verified!":"Thank you for your kindness."}</h1>
+      <p>{donationRecord.status==="verified"?"Your contribution has been verified. Your official certificate is ready.":"Your certificate preview is ready. Official signature and PDF download will unlock after payment verification."}</p>
+      <div className="donorCertificateNumber"><span>Your Certificate Number</span><b>{donationRecord.certificateCode||certificateCode}</b><small>Is 6-digit number ko save kar lein. Baad mein isi se certificate check/download kar sakte hain.</small></div>
+      {donationRecord.status==="verified"&&<button className="primaryBtn full" onClick={()=>downloadCertificate(donationRecord)}>Download Official Certificate (PDF)</button>}
+      <Link to="/" className="textBtn">Back to home</Link>
+    </div>}
+    {done&&donationRecord&&renderCertificate(donationRecord,true)}
+    {lookupRecord&&<div className="successCard noPrint">
+      <CheckCircle2 size={38}/><h2>Verified certificate found!</h2>
+      <p>Certificate Number: <b>{lookupRecord.certificateCode}</b></p>
+      <button className="primaryBtn full" onClick={()=>downloadCertificate(lookupRecord)}>Download Official Certificate (PDF)</button>
+    </div>}
+    {lookupRecord&&renderCertificate(lookupRecord)}
+    {!done&&<div className="formIntro">
       <div className="sectionLabel">GIVE WITH PURPOSE</div>
       <h1>Your kindness<br/><em>creates hope.</em></h1>
       <p>Fill in your details, make the payment using the payment details shown below, then submit your transaction reference.</p>
-    </div>
-    <form className="donateForm" onSubmit={submit}>
+    </div>}
+    {!done&&<form className="donateForm" onSubmit={submit}>
       <h2>Donation details</h2>
       <label>Your full name<input name="name" required maxLength="80" value={form.name} onChange={change} placeholder="Enter your name"/></label>
       <label>State<select name="state" required value={form.state} onChange={change}>
@@ -340,7 +382,16 @@ function Donate({settings}) {
       {error&&<p className="error">{error}</p>}
       <button className="primaryBtn full" disabled={busy}>{busy?"Submitting…":"Submit donation"}</button>
       <p className="formFine">Please enter your correct payment reference. Do not submit someone else's transaction details.</p>
-    </form>
+    </form>}
+    <section className="certificateLookup noPrint">
+      <h2>Already donated? Find your certificate</h2>
+      <p>Apna 6-digit Certificate Number enter karke verified PDF download karein.</p>
+      <form onSubmit={lookupCertificate}>
+        <input inputMode="numeric" maxLength="6" pattern="[0-9]{6}" value={lookupCode} onChange={e=>setLookupCode(e.target.value.replace(/\D/g,"").slice(0,6))} placeholder="Enter 6-digit number" aria-label="6-digit Certificate Number"/>
+        <button className="primaryBtn" disabled={lookupBusy}>{lookupBusy?"Checking…":"Check Certificate"}</button>
+      </form>
+      {lookupMessage&&<p className="formFine">{lookupMessage}</p>}
+    </section>
   </main>;
 }
 
