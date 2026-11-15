@@ -880,3 +880,18 @@ footer .brand{font-size:14px}
 @keyframes joinPop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
 @media(max-width:700px){.joinInfoGrid{grid-template-columns:1fr}.joinHero h1{font-size:27px}.joinFormCard{padding:17px}.joinFormCard form{grid-template-columns:1fr}.joinFormCard .joinFine,.joinFormCard .error,.joinFormCard button{grid-column:1}}
 @media print{.header,footer,.joinFormCard,.joinInfoGrid,.joinHero{display:none!important}.joinSuccess{box-shadow:none;border:0}.joinSuccess button{display:none}}
+
+.joinCertificatePrint{display:none}
+@media print{
+  body *{visibility:hidden!important}
+  .joinSuccess,.joinSuccess *{visibility:visible!important}
+  .joinSuccess{position:absolute;left:0;top:0;width:100%;box-shadow:none;border:0}
+  .joinSuccess button{display:none!important}
+  .adminShell,.adminShell *{visibility:hidden!important}
+  .joinCertificatePrint,.joinCertificatePrint *{visibility:visible!important}
+  .joinCertificatePrint{display:block!important;position:absolute;left:8%;top:10%;width:84%;padding:45px 30px;border:5px double #39764d;text-align:center;background:#fff;color:#18352a}
+  .joinCertificatePrint h1{font:700 30px 'Playfair Display',serif;color:#1b5634;margin:25px 0}
+  .joinCertificatePrint h2{font:700 27px 'Playfair Display',serif;color:#286b42}
+  .joinCertDetails{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:30px 0;padding:18px;border-top:1px solid #dce9dc;border-bottom:1px solid #dce9dc;text-align:left;font-size:12px}
+  .joinCertificatePrint .certificateSignature{margin:45px 0 0 auto;width:210px}
+}
