@@ -13,7 +13,7 @@ const money = n => new Intl.NumberFormat("en-IN", { style:"currency", currency:"
 const states = ["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi","Jammu and Kashmir","Ladakh","Puducherry"];
 
 function useSiteData() {
-  const [settings,setSettings] = useState({siteName:"Umeed",tagline:"Together, we can bring hope.",about:"A community-led effort to support families and individuals facing hardship. Every verified contribution is recorded transparently.",upiId:"",upiName:"",qrUrl:"",phone:"",heroImage:"",totalHelped:"0",goal:"500000"});
+  const [settings,setSettings] = useState({siteName:"Umeed",tagline:"Together, we can bring hope.",about:"A community-led effort to support families and individuals facing hardship. Every verified contribution is recorded transparently.",upiId:"",upiName:"",qrUrl:"",phone:"",heroImage:"",serviceTitle:"Umeed Community Service",serviceContent:"",totalHelped:"0",goal:"500000"});
   const [donations,setDonations] = useState([]);
   const [media,setMedia] = useState([]);
 
@@ -40,6 +40,7 @@ function Header({settings}) {
     <button className="mobileMenu" onClick={()=>setOpen(!open)} aria-label="Menu">{open?<X/>:<Menu/>}</button>
     <nav className={open?"nav open":"nav"}>
       <Link to="/details" onClick={()=>setOpen(false)}>Donation details</Link>
+      <Link to="/service" onClick={()=>setOpen(false)}>Service</Link>
       <a href="/#leaderboard" onClick={()=>setOpen(false)}>Leaderboard</a>
       <a href="/#gallery" onClick={()=>setOpen(false)}>Stories</a>
       <Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}>Donate now <ArrowRight size={16}/></Link>
@@ -205,6 +206,20 @@ function DonationDetails({settings,donations}) {
         </tr>) : <tr><td colSpan="4" className="empty">Verified donations will appear here.</td></tr>}</tbody>
       </table></div>
       
+    </section>
+  </main>;
+}
+
+function CommunityService({settings}) {
+  const content = settings.serviceContent || "";
+  return <main className="servicePage">
+    <div className="serviceHero">
+      <div className="sectionLabel">UMEED COMMUNITY</div>
+      <h1>{settings.serviceTitle || "Umeed Community Service"}</h1>
+      <p>Our community, our work, and the ways we bring hope together.</p>
+    </div>
+    <section className="serviceContent">
+      {content.trim() ? <div className="serviceText">{content}</div> : <div className="serviceEmpty">Community service information will be added soon.</div>}
     </section>
   </main>;
 }
@@ -417,7 +432,7 @@ function Admin({settings}) {
     <button className="textBtn" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
-  const nav=[["overview","Overview"],["donations","Donations"],["settings","Website settings"],["media","Photos & videos"]];
+  const nav=[["overview","Overview"],["donations","Donations"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
 
   return <main className="adminShell">
     <aside className="adminSide">
@@ -466,6 +481,13 @@ function Admin({settings}) {
         <button className="primaryBtn">Save website settings</button>
       </form>}
 
+      {tab==="service"&&<form className="adminPanel settingsForm" onSubmit={saveSettings}>
+        <h2>Umeed Community Service page</h2>
+        <label>Page heading<input value={form.serviceTitle||"Umeed Community Service"} onChange={e=>setForm(p=>({...p,serviceTitle:e.target.value}))} placeholder="Umeed Community Service"/></label>
+        <label className="serviceEditor">Community information & work details<textarea rows="14" value={form.serviceContent||""} onChange={e=>setForm(p=>({...p,serviceContent:e.target.value}))} placeholder={"Yahan Umeed Community ke baare mein likhein...\n\nHamare kaam, services, activities, goals aur contact details."}/></label>
+        <button className="primaryBtn">Save community service page</button>
+      </form>}
+
       {tab==="media"&&<div className="adminPanel">
         <h2>Upload a public story</h2>
         <form className="settingsForm" onSubmit={uploadMedia}>
@@ -494,6 +516,7 @@ export default function App() {
       <Route path="/photos" element={<MediaPage media={data.media} type="image"/>}/>
       <Route path="/videos" element={<MediaPage media={data.media} type="video"/>}/>
       <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
+      <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
       <Route path="/donate" element={<Donate settings={data.settings}/>}/>
       <Route path="/admin" element={<Admin settings={data.settings}/>}/>
     </Routes>
