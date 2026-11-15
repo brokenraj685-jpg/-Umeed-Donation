@@ -464,3 +464,32 @@ footer .brand{font-size:14px}
   .mediaPageGrid{gap:8px}
   .mediaPageCaption{padding:8px}
 }
+
+
+/* FINAL FIX: restore homepage hero image to its original proportions */
+.heroArt{
+  min-height:400px;
+}
+.heroPhoto{
+  width:78%;
+  height:340px;
+  border-radius:48% 48% 18px 18px;
+  box-shadow:0 20px 60px #18352a20;
+}
+.heroPhoto img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+@media(max-width:760px){
+  .heroArt{min-height:300px}
+  .heroPhoto{
+    width:100%;
+    height:270px;
+    border-radius:48% 48% 18px 18px;
+  }
+}
+@media(max-width:420px){
+  .heroArt{min-height:235px}
+  .heroPhoto{height:205px}
+}
