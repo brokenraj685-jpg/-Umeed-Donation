@@ -108,7 +108,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Verified admin access required" });
     }
 
-    const { action, fileName, contentType, key } = req.body || {};
+    const { action, fileName, contentType, key: deleteKey } = req.body || {};
 
     const endpoint = process.env.R2_ENDPOINT;
     const bucket = process.env.R2_BUCKET;
@@ -134,10 +134,10 @@ export default async function handler(req, res) {
     });
 
     if (action === "delete") {
-      if (typeof key !== "string" || !key.startsWith("umeed/community/") || key.includes("..") || key.length > 500) {
+      if (typeof deleteKey !== "string" || !deleteKey.startsWith("umeed/community/") || deleteKey.includes("..") || deleteKey.length > 500) {
         return res.status(400).json({ error: "Invalid media key" });
       }
-      await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+      await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: deleteKey }));
       return res.status(200).json({ deleted: true });
     }
 
