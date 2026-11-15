@@ -83,3 +83,182 @@
   .adminCards b{font-size:15px}
 }
 
+/* UMEED ADMIN - COMPLETE MOBILE RESPONSIVE FIX */
+@media (max-width: 760px) {
+  body {
+    overflow-x: hidden;
+  }
+
+  .adminShell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+    align-content: start;
+    min-height: 0;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .adminSide {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    padding: 14px 16px;
+  }
+
+  .adminSide .brand {
+    margin-bottom: 8px;
+  }
+
+  .adminNav {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    gap: 6px;
+    margin: 10px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .adminNav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .adminNav button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: 12px 14px;
+  }
+
+  .logout {
+    flex: 0 0 auto;
+    margin: 2px 0 0;
+    padding: 8px;
+  }
+
+  .adminMain {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 22px 16px;
+    overflow: hidden;
+  }
+
+  .adminTop {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .adminTop > div {
+    min-width: 0;
+  }
+
+  .adminTop h1 {
+    font-size: 27px;
+    overflow-wrap: anywhere;
+  }
+
+  .adminEmail {
+    flex: 0 1 42%;
+    min-width: 0;
+    max-width: 42%;
+    text-align: right;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    font-size: 10px;
+  }
+
+  .adminCards {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .adminCards article {
+    min-width: 0;
+    padding: 14px 12px;
+    gap: 8px;
+  }
+
+  .adminCards span {
+    font-size: 10px;
+    overflow-wrap: anywhere;
+  }
+
+  .adminCards b {
+    font-size: 19px;
+    overflow-wrap: anywhere;
+  }
+
+  .adminPanel {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  .adminPanel h2 {
+    font-size: 21px;
+    overflow-wrap: anywhere;
+  }
+
+  .adminPanel .tableWrap {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .adminPanel table {
+    min-width: 650px;
+  }
+
+  .settingsForm {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settingsForm label,
+  .settingsForm input,
+  .settingsForm textarea,
+  .settingsForm select {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 380px) {
+  .adminMain {
+    padding: 18px 12px;
+  }
+
+  .adminCards {
+    gap: 8px;
+  }
+
+  .adminCards article {
+    padding: 11px 9px;
+  }
+
+  .adminCards b {
+    font-size: 17px;
+  }
+
+  .adminNav button {
+    padding: 10px 12px;
+  }
+}
+
+
