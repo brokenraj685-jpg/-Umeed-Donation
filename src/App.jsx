@@ -97,7 +97,7 @@ const top = useMemo(() => [...donations]
       </div>
       <input className="impactRange" type="range" min="50" max="5000" step="50" value={impactAmount} onChange={e=>setImpactAmount(Number(e.target.value))} aria-label="Choose donation amount"/>
       <div className="impactRangeLabels"><span>₹50</span><span>₹5,000</span></div>
-      <div className="impactEstimate"><span className="impactPeople">{estimatedPeople}</span><span>logon tak madad pahunchane ka illustrative estimate 🤝</span></div>
+      <div className="impactEstimate"><span className="impactPeople">{estimatedPeople}</span><span>Itne logon ke chehre par muskaan la sakte hain ❤️</span></div>
     </section>
 
     <section className="hero">
