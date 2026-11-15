@@ -717,3 +717,70 @@ footer .brand{font-size:14px}
 .adminMediaItem>img,.adminMediaItem>video{height:240px;object-fit:contain;background:#eef2ee}
 .mediaPreview{aspect-ratio:4/3}
 .mediaPreview img,.mediaPreview video{object-fit:contain;background:#eef2ee}
+
+
+/* Compact line-style controls for admin dashboard */
+.adminShell .adminNav button,
+.adminShell .logout,
+.adminShell .adminPanel button,
+.adminShell .settingsForm button,
+.adminShell .adminMediaItem button {
+  border: 1px solid #cbd9ce;
+  border-radius: 6px;
+  background: transparent;
+  color: #245b39;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+  box-shadow: none;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.adminShell .adminNav button {
+  border-color: transparent;
+  border-bottom-color: #41694f;
+  border-radius: 5px 5px 0 0;
+  color: #d0dfd3;
+  padding: 8px 10px;
+}
+.adminShell .adminNav button.selected,
+.adminShell .adminNav button:hover {
+  background: #204d32;
+  border-color: #6e9b79;
+  border-bottom: 2px solid #b7dfbd;
+  color: #fff;
+}
+.adminShell .logout {
+  border-color: #557762;
+  color: #e1ece3;
+}
+.adminShell .logout:hover {
+  background: #204d32;
+  border-color: #a6c8ad;
+}
+.adminShell .adminPanel button:hover,
+.adminShell .settingsForm button:hover,
+.adminShell .adminMediaItem button:hover {
+  background: #edf5ee;
+  border-color: #6f9b79;
+}
+.adminShell .adminPanel .primaryBtn {
+  background: transparent;
+  color: #17633a;
+  border: 1px solid #7da889;
+}
+.adminShell .adminPanel .actions button+button {
+  background: transparent;
+  color: #a33;
+  border-color: #e4b9b6;
+}
+.adminShell .adminPanel .actions button+button:hover {
+  background: #fff3f2;
+}
+@media(max-width:760px) {
+  .adminShell .adminNav button { padding: 7px 9px; font-size: 10px; }
+  .adminShell .logout { padding: 7px 9px; font-size: 10px; }
+  .adminShell .adminPanel button,
+  .adminShell .settingsForm button,
+  .adminShell .adminMediaItem button { padding: 6px 8px; font-size: 10px; }
+}
