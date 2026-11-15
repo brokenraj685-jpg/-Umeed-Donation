@@ -1,8 +1,6 @@
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
 import crypto from "node:crypto";
 
 const allowedTypes = new Set([
@@ -10,13 +8,74 @@ const allowedTypes = new Set([
   "video/mp4", "video/webm", "video/quicktime"
 ]);
 
-function adminAuth() {
-  if (!getApps().length) {
-    const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-    if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON is missing");
-    initializeApp({ credential: cert(JSON.parse(raw)) });
+let cachedCerts = null;
+let certExpiry = 0;
+
+async function getFirebaseCerts() {
+  if (cachedCerts && Date.now() < certExpiry) return cachedCerts;
+
+  const response = await fetch(
+    "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+  );
+
+  if (!response.ok) throw new Error("Could not fetch Firebase verification keys");
+
+  cachedCerts = await response.json();
+
+  const cacheControl = response.headers.get("cache-control") || "";
+  const maxAge = Number(cacheControl.match(/max-age=(\d+)/)?.[1] || 3600);
+  certExpiry = Date.now() + maxAge * 1000;
+
+  return cachedCerts;
+}
+
+async function verifyFirebaseToken(token, projectId) {
+  const parts = token.split(".");
+  if (parts.length !== 3) throw new Error("Invalid login token");
+
+  const header = JSON.parse(
+    Buffer.from(parts[0], "base64url").toString("utf8")
+  );
+
+  const payload = JSON.parse(
+    Buffer.from(parts[1], "base64url").toString("utf8")
+  );
+
+  if (header.alg !== "RS256" || !header.kid) {
+    throw new Error("Invalid token header");
   }
-  return getAuth();
+
+  const certs = await getFirebaseCerts();
+  const cert = certs[header.kid];
+
+  if (!cert) throw new Error("Unknown Firebase signing key");
+
+  const validSignature = crypto.verify(
+    "RSA-SHA256",
+    Buffer.from(`${parts[0]}.${parts[1]}`),
+    cert,
+    Buffer.from(parts[2], "base64url")
+  );
+
+  const now = Math.floor(Date.now() / 1000);
+
+  if (
+    !validSignature ||
+    payload.aud !== projectId ||
+    payload.iss !== `https://securetoken.google.com/${projectId}` ||
+    !payload.sub ||
+    payload.sub.length > 128 ||
+    !payload.exp ||
+    payload.exp <= now ||
+    !payload.iat ||
+    payload.iat > now + 300 ||
+    !payload.auth_time ||
+    payload.auth_time > now + 300
+  ) {
+    throw new Error("Firebase login token is invalid or expired");
+  }
+
+  return payload;
 }
 
 export default async function handler(req, res) {
@@ -25,12 +84,22 @@ export default async function handler(req, res) {
   }
 
   try {
+    const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
+
+    if (!projectId) {
+      throw new Error("VITE_FIREBASE_PROJECT_ID is missing in Vercel");
+    }
+
     const bearer = req.headers.authorization || "";
+
     if (!bearer.startsWith("Bearer ")) {
       return res.status(401).json({ error: "Sign-in required" });
     }
 
-    const decoded = await adminAuth().verifyIdToken(bearer.slice(7));
+    const decoded = await verifyFirebaseToken(
+      bearer.slice(7),
+      projectId
+    );
 
     if (
       decoded.email_verified !== true ||
@@ -50,12 +119,13 @@ export default async function handler(req, res) {
     const publicBase = process.env.R2_PUBLIC_BASE_URL;
 
     if (
-      !endpoint || !bucket ||
+      !endpoint ||
+      !bucket ||
       !process.env.R2_ACCESS_KEY_ID ||
       !process.env.R2_SECRET_ACCESS_KEY ||
       !publicBase
     ) {
-      return res.status(500).json({ error: "R2 environment variables are incomplete" });
+      throw new Error("R2 environment variables are incomplete");
     }
 
     const client = new S3Client({
@@ -79,14 +149,19 @@ export default async function handler(req, res) {
       ContentType: contentType
     });
 
-    const uploadUrl = await getSignedUrl(client, command, { expiresIn: 300 });
+    const uploadUrl = await getSignedUrl(client, command, {
+      expiresIn: 300
+    });
 
     return res.status(200).json({
       uploadUrl,
       publicUrl: `${publicBase.replace(/\/$/, "")}/${key}`
     });
+
   } catch (err) {
     console.error("R2 upload error:", err);
-    return res.status(500).json({ error: err.message || "Upload failed" });
+    return res.status(500).json({
+      error: err.message || "Upload failed"
+    });
   }
 }
