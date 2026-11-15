@@ -292,7 +292,7 @@ function Donate({settings}) {
     setBusy(true);
     try {
       const newCode=String(crypto.getRandomValues(new Uint32Array(1))[0]%900000+100000);
-      const preview={name:form.name.trim(),state:form.state,amount:Number(form.amount),status:"pending",certificateCode:newCode,createdAt:null};
+      const preview={name:form.name.trim(),state:form.state,amount:Number(form.amount),status:"pending",certificateCode:newCode,createdAt:new Date().toISOString()};
       const docRef = await addDoc(collection(db,"donations"),{
         name:form.name.trim(),state:form.state,amount:Number(form.amount),
         transactionId:form.transactionId.trim(),note:form.note.trim(),
@@ -316,7 +316,7 @@ function Donate({settings}) {
     const verified=record?.status==="verified";
     const certDate=record?.createdAt?.toDate
       ?record.createdAt.toDate().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})
-      :new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});
+      :new Date(record?.createdAt||Date.now()).toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});
     return <section className={"donationCertificate"+(showCertificate?" printReady":"")}>
       <div className="certificateBorder">
         <div className="certificateLogo"><span className="brandIcon"><HeartHandshake size={30}/></span><b>UMEED COMMUNITY</b></div>
