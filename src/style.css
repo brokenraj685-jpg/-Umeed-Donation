@@ -894,14 +894,16 @@ footer .brand{font-size:14px}
     text-align:center;background:#fff;color:#18352a;overflow:hidden;
     -webkit-print-color-adjust:exact;print-color-adjust:exact;
   }
-  .joinCertificatePrint .certificateLogo{font-size:19px;font-weight:800;letter-spacing:2px;color:#24683e}
-  .joinCertificatePrint .sectionLabel{font-size:10px;letter-spacing:2px;margin-top:18mm}
-  .joinCertificatePrint h1{font:700 27px 'Playfair Display',serif;color:#1b5634;margin:12mm 0 9mm}
-  .joinCertificatePrint h2{font:700 25px 'Playfair Display',serif;color:#286b42;margin:7mm 0}
-  .joinCertificatePrint p{font-size:12px;line-height:1.7}
-  .joinCertDetails{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:13mm 0;padding:13px;border-top:1px solid #dce9dc;border-bottom:1px solid #dce9dc;text-align:left;font-size:11px}
-  .joinCertificatePrint .joinFine{font-size:10px;line-height:1.6;margin:8mm auto;max-width:145mm}
-  .joinCertificatePrint .certificateSignature{display:grid;justify-items:center;gap:3px;margin:8mm 0 0 auto;width:45mm;text-align:center;overflow:hidden}
-  .joinCertificatePrint .certificateSignature img{display:block!important;width:28mm!important;max-width:28mm!important;height:auto!important;max-height:10mm!important;object-fit:contain;margin:0 auto}
-  .joinCertificatePrint .certificateSignature small{font-size:9px;color:#829087;border-top:1px solid #9eb4a0;padding-top:5px;width:100%}
+  .joinCertificatePrint .certificateLogo{font-size:22px;font-weight:800;letter-spacing:2px;color:#24683e}
+  .joinCertificatePrint .sectionLabel{font-size:12px;letter-spacing:2px;margin-top:16mm}
+  .joinCertificatePrint h1{font:700 32px 'Playfair Display',serif;color:#1b5634;margin:10mm 0 8mm}
+  .joinCertificatePrint h2{font:700 29px 'Playfair Display',serif;color:#286b42;margin:6mm 0}
+  .joinCertificatePrint p{font-size:14px;line-height:1.75}
+  .joinCertDetails{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:11mm 0;padding:16px;border-top:1px solid #dce9dc;border-bottom:1px solid #dce9dc;text-align:left;font-size:13px}
+  .joinCertDetails b{font-size:13px}
+  .joinCertificatePrint .joinFine{font-size:12px;line-height:1.7;margin:7mm auto;max-width:145mm}
+  .joinCertificatePrint .certificateSignature{position:absolute;right:20mm;bottom:18mm;display:grid;justify-items:center;gap:2px;margin:0;width:34mm;text-align:center;overflow:hidden}
+  .joinCertificatePrint .certificateSignature span{font-size:9px}
+  .joinCertificatePrint .certificateSignature img{display:block!important;width:19mm!important;max-width:19mm!important;height:auto!important;max-height:7mm!important;object-fit:contain;margin:0 auto}
+  .joinCertificatePrint .certificateSignature small{font-size:8px;color:#829087;border-top:1px solid #9eb4a0;padding-top:3px;width:100%}
 }
