@@ -784,3 +784,10 @@ footer .brand{font-size:14px}
   .adminShell .settingsForm button,
   .adminShell .adminMediaItem button { padding: 6px 8px; font-size: 10px; }
 }
+
+
+/* Social links in the public website footer */
+.socialLinks{display:flex;align-items:center;gap:12px}
+.socialLinks a{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line,rgba(0,0,0,.14));border-radius:50%;color:inherit;transition:transform .2s ease,background .2s ease,color .2s ease}
+.socialLinks a:hover{transform:translateY(-3px);background:var(--accent,#2f6b55);color:#fff}
+@media(max-width:640px){footer{flex-wrap:wrap;gap:14px}.socialLinks{width:100%;justify-content:center}}
