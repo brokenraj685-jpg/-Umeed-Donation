@@ -1,9 +1,9 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
+import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
 import { signInWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
-import { signInWithEmailAndPassword, signOut, getIdToken } from "firebase/auth";
 import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, doc, where, limit } from "firebase/firestore";
 
 const ADMIN_EMAIL = "rajbabushaikh18@gmail.com";
