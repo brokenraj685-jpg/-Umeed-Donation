@@ -1,5 +1,5 @@
 
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "node:crypto";
 
@@ -108,11 +108,7 @@ export default async function handler(req, res) {
       return res.status(403).json({ error: "Verified admin access required" });
     }
 
-    const { fileName, contentType } = req.body || {};
-
-    if (!fileName || !allowedTypes.has(contentType)) {
-      return res.status(400).json({ error: "Unsupported file type" });
-    }
+    const { action, fileName, contentType, key } = req.body || {};
 
     const endpoint = process.env.R2_ENDPOINT;
     const bucket = process.env.R2_BUCKET;
@@ -137,6 +133,19 @@ export default async function handler(req, res) {
       }
     });
 
+    if (action === "delete") {
+      if (typeof key !== "string" || !key.startsWith("umeed/community/") || key.includes("..") || key.length > 500) {
+        return res.status(400).json({ error: "Invalid media key" });
+      }
+      await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+      return res.status(200).json({ deleted: true });
+    }
+
+    if (action && action !== "upload") return res.status(400).json({ error: "Invalid action" });
+    if (!fileName || !allowedTypes.has(contentType)) {
+      return res.status(400).json({ error: "Unsupported file type" });
+    }
+
     const ext = (fileName.split(".").pop() || "bin")
       .replace(/[^a-zA-Z0-9]/g, "")
       .slice(0, 8);
@@ -155,7 +164,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       uploadUrl,
-      publicUrl: `${publicBase.replace(/\/$/, "")}/${key}`
+      publicUrl: `${publicBase.replace(/\/$/, "")}/${key}`,
+      key
     });
 
   } catch (err) {
