@@ -559,7 +559,8 @@ function Admin({settings}) {
   function getMediaKey(item){
     if(item.key)return item.key;
     try{
-      const path=decodeURIComponent(new URL(item.url).pathname).replace(/^\\/+/, "");
+      const rawPath=decodeURIComponent(new URL(item.url).pathname);
+      const path=rawPath.startsWith("/")?rawPath.slice(1):rawPath;
       const at=path.indexOf("umeed/community/");
       return at>=0?path.slice(at):"";
     }catch{return "";}
