@@ -150,6 +150,18 @@ const top = useMemo(() => [...donations]
 }
 
 
+function tryMediaFallback(event,url){
+  const media=event.currentTarget;
+  const index=Number(media.dataset.fallbackIndex||"0");
+  let parsed;
+  try{parsed=new URL(url,window.location.origin);}catch{return;}
+  const file=parsed.pathname.split("/").filter(Boolean).pop();
+  if(!file||index>=3)return;
+  const paths=["/umeed/community/","/umeed/umeed/community/","/umeedcommunity/"];
+  media.dataset.fallbackIndex=String(index+1);
+  const candidate=parsed.origin+paths[index]+file;
+  if(candidate!==media.src)media.src=candidate;
+}
 function MediaPage({media,type}) {
   const [selected,setSelected]=useState(null);
   const mediaUrl = (url) => {
@@ -174,7 +186,7 @@ function MediaPage({media,type}) {
     <div className="mediaPageGrid">
       {items.length?items.map((m,i)=><article className="mediaPageCard" key={m.id}>
         <button className="mediaPreview" onClick={()=>setSelected(m)} aria-label={type==="video"?"Play video":"View full photo"}>
-          {type==="video"?<><video src={mediaUrl(m.url)} preload="metadata" playsInline/><span className="mediaPlay"><Play fill="currentColor"/></span></>:<img src={mediaUrl(m.url)} alt={m.title||"Umeed community photo"} loading="lazy"/>}
+          {type==="video"?<><video src={mediaUrl(m.url)} onError={e=>tryMediaFallback(e,m.url)} preload="metadata" playsInline/><span className="mediaPlay"><Play fill="currentColor"/></span></>:<img src={mediaUrl(m.url)} onError={e=>tryMediaFallback(e,m.url)} alt={m.title||"Umeed community photo"} loading="lazy"/>}
           <span className="mediaNumber">{String(i+1).padStart(2,"0")}</span>
         </button>
         <div className="mediaPageCaption"><b>{m.title||heading.slice(0,-1)+" "+(i+1)}</b>{m.caption&&<p>{m.caption}</p>}</div>
@@ -183,7 +195,7 @@ function MediaPage({media,type}) {
     {selected&&<div className="mediaLightbox" onClick={()=>setSelected(null)}>
       <button className="mediaClose" onClick={()=>setSelected(null)} aria-label="Close">×</button>
       <div className="mediaLightboxInner" onClick={e=>e.stopPropagation()}>
-        {type==="video"?<video src={mediaUrl(selected.url)} controls autoPlay playsInline/>:<img src={mediaUrl(selected.url)} alt={selected.title||"Full size community photo"}/>}
+        {type==="video"?<video src={mediaUrl(selected.url)} onError={e=>tryMediaFallback(e,selected.url)} controls autoPlay playsInline/>:<img src={mediaUrl(selected.url)} onError={e=>tryMediaFallback(e,selected.url)} alt={selected.title||"Full size community photo"}/>}
         <div><b>{selected.title}</b>{selected.caption&&<p>{selected.caption}</p>}</div>
       </div>
     </div>}
@@ -569,8 +581,10 @@ function Admin({settings}) {
     try{
       const rawPath=decodeURIComponent(new URL(item.url).pathname);
       const path=rawPath.startsWith("/")?rawPath.slice(1):rawPath;
-      const at=path.indexOf("umeed/community/");
-      return at>=0?path.slice(at):"";
+      if(path.startsWith("umeed/umeed/community/"))return path;
+      if(path.startsWith("umeed/community/"))return path;
+      if(path.startsWith("umeedcommunity/"))return path;
+      return "";
     }catch{return "";}
   }
 
@@ -725,7 +739,7 @@ function Admin({settings}) {
         <div className="adminMediaManager">
           <h2>Uploaded photos & videos ({mediaItems.length})</h2>
           {mediaItems.length===0?<p className="formFine">Abhi koi photo ya video upload nahi hua.</p>:<div className="adminMediaGrid">{mediaItems.map(item=><article className="adminMediaItem" key={item.id}>
-            {item.type==="video"?<video src={adminMediaUrl(item.url)} controls preload="metadata"/>:<img src={adminMediaUrl(item.url)} alt={item.title||"Uploaded community media"}/>}
+            {item.type==="video"?<video src={adminMediaUrl(item.url)} onError={e=>tryMediaFallback(e,item.url)} controls preload="metadata"/>:<img src={adminMediaUrl(item.url)} onError={e=>tryMediaFallback(e,item.url)} alt={item.title||"Uploaded community media"}/>}
             <div className="adminMediaInfo"><b>{item.title||"Untitled"}</b><small>{item.type==="video"?"Video":"Photo"}</small>{item.caption&&<p>{item.caption}</p>}</div>
             {editingMedia===item.id?<div className="adminMediaEdit">
               <label>Title<input value={editTitle} onChange={e=>setEditTitle(e.target.value)}/></label>
