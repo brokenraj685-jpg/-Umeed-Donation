@@ -52,6 +52,8 @@ function Header({settings}) {
 function Home({data}) {
   const {settings,donations,media}=data;
 const [now,setNow] = useState(Date.now());
+const [impactAmount,setImpactAmount] = useState(50);
+const estimatedPeople = Math.round(impactAmount / 25);
 
 useEffect(() => {
   const timer = setInterval(() => setNow(Date.now()), 60 * 1000);
@@ -86,6 +88,17 @@ const top = useMemo(() => [...donations]
         </tr>):<tr><td colSpan="5" className="empty">Be the first to make a contribution.</td></tr>}</tbody>
       </table></div>
       
+    </section>
+
+    <section className="impactSlider" aria-label="Donation impact calculator">
+      <div className="impactSliderHead">
+        <div><span className="sectionLabel">YOUR DONATION, YOUR IMPACT</span><h2>See what your help can do</h2></div>
+        <div className="impactAmount">{money(impactAmount)}</div>
+      </div>
+      <input className="impactRange" type="range" min="50" max="5000" step="50" value={impactAmount} onChange={e=>setImpactAmount(Number(e.target.value))} aria-label="Choose donation amount"/>
+      <div className="impactRangeLabels"><span>₹50</span><span>₹5,000</span></div>
+      <div className="impactEstimate"><span className="impactPeople">{estimatedPeople}</span><span>logon tak madad pahunchane ka illustrative estimate 🤝</span></div>
+      <p className="impactNote">Yeh sirf ek example estimate hai; actual madad zarurat aur available resources par depend karegi.</p>
     </section>
 
     <section className="hero">
