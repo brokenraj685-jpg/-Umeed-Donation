@@ -493,3 +493,24 @@ footer .brand{font-size:14px}
   .heroArt{min-height:235px}
   .heroPhoto{height:205px}
 }
+
+
+/* Umeed Community Service page */
+.servicePage{min-height:calc(100vh - 64px);background:#f8faf8;padding:42px 7% 65px}
+.serviceHero{max-width:900px;margin:0 auto 28px;padding:34px 36px;background:#edf4ed;border-radius:18px}
+.serviceHero h1{font:700 clamp(30px,5vw,46px)/1.15 'Playfair Display',serif;margin:10px 0;color:#18352a}
+.serviceHero p{margin:0;color:#718071;font-size:13px;line-height:1.7}
+.serviceContent{max-width:900px;min-height:220px;margin:0 auto;padding:30px 36px;background:#fff;border:1px solid #e6ece6;border-radius:16px}
+.serviceText{white-space:pre-wrap;overflow-wrap:anywhere;color:#52665b;font-size:14px;line-height:1.9}
+.serviceEmpty{display:grid;min-height:160px;place-items:center;text-align:center;color:#87948b;font-size:13px}
+.settingsForm .serviceEditor{grid-column:1/-1}
+.settingsForm .serviceEditor textarea{min-height:240px;line-height:1.6}
+@media(max-width:760px){
+ .servicePage{padding:24px 5% 42px}
+ .serviceHero{padding:24px 20px;margin-bottom:16px;border-radius:13px}
+ .serviceHero h1{font-size:31px}
+ .serviceContent{padding:22px 20px;min-height:180px;border-radius:13px}
+ .serviceText{font-size:13px;line-height:1.8}
+ .settingsForm .serviceEditor{grid-column:1}
+ .settingsForm .serviceEditor textarea{min-height:220px}
+}
