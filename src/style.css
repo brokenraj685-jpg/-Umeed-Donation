@@ -693,3 +693,22 @@ footer .brand{font-size:14px}
   .certificatePage .certificateId b{font-size:8px;letter-spacing:1px}
   .certificatePage .certificateFooter{margin-top:28mm}
 }
+
+
+/* Admin media manager: edit, replace and delete uploaded stories */
+.adminMediaManager{margin-top:28px;padding-top:22px;border-top:1px solid #e6ece6}
+.adminMediaManager h2{margin-bottom:16px}
+.adminMediaGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.adminMediaItem{min-width:0;overflow:hidden;border:1px solid #e4ebe4;border-radius:12px;background:#fbfdfb}
+.adminMediaItem>img,.adminMediaItem>video{display:block;width:100%;height:180px;object-fit:cover;background:#e8eee8}
+.adminMediaInfo{display:grid;gap:4px;padding:12px 12px 4px}
+.adminMediaInfo b{font-size:13px;overflow-wrap:anywhere}
+.adminMediaInfo small{font-size:10px;color:#718071}
+.adminMediaInfo p{margin:2px 0;color:#718071;font-size:11px}
+.adminMediaItem>.actions{padding:10px 12px 12px;flex-wrap:wrap}
+.adminMediaItem .actions button{font-size:10px}
+.adminMediaEdit{padding:10px 12px 12px}
+.adminMediaEdit label{display:grid;gap:5px;margin-bottom:10px;font-size:10px;font-weight:700;color:#52665b}
+.adminMediaEdit input{width:100%;min-width:0;padding:9px;border:1px solid #dce6dd;border-radius:7px;font-size:11px}
+.adminMediaEdit .actions{flex-wrap:wrap}
+@media(max-width:760px){.adminMediaGrid{grid-template-columns:1fr}.adminMediaItem>img,.adminMediaItem>video{height:200px}}
