@@ -134,7 +134,7 @@ export default async function handler(req, res) {
     });
 
     if (action === "delete") {
-      if (typeof deleteKey !== "string" || !/^(?:umeed\/community\/|umeed\/umeed\/community\/|umeedcommunity\/)/.test(deleteKey) || deleteKey.includes("..") || deleteKey.length > 500) {
+      if (typeof deleteKey !== "string" || !["community/", "umeed/community/", "umeed/umeed/community/", "umeedcommunity/"].some(prefix => deleteKey.startsWith(prefix)) || deleteKey.includes("..") || deleteKey.startsWith("/") || deleteKey.length > 500) {
         return res.status(400).json({ error: "Invalid media key" });
       }
       await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: deleteKey }));
