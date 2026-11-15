@@ -10,7 +10,7 @@ service cloud.firestore {
     }
     match /donations/{donationId} {
       allow read: if isAdmin() || resource.data.status == "verified";
-      allow create: if request.resource.data.keys().hasOnly(["name","state","amount","transactionId","note","status","createdAt"])
+      allow create: if request.resource.data.keys().hasOnly(["name","state","amount","transactionId","note","certificateCode","status","createdAt"])
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 80
@@ -20,6 +20,8 @@ service cloud.firestore {
         && request.resource.data.amount <= 10000000
         && request.resource.data.transactionId is string
         && request.resource.data.transactionId.size() > 0
+        && request.resource.data.certificateCode is string
+        && request.resource.data.certificateCode.matches("^[0-9]{6}$")
         && request.resource.data.status == "pending";
       allow update, delete: if isAdmin();
     }
