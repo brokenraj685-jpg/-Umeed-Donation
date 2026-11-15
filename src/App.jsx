@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud } from "lucide-react";
-import { auth, db, firebaseReady } from "./firebase";
+import { signInWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
 import { signInWithEmailAndPassword, signOut, getIdToken } from "firebase/auth";
 import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, doc, where, limit } from "firebase/firestore";
 
@@ -333,16 +333,24 @@ function Admin({settings}) {
     <Link to="/" className="textBtn">Back to website</Link>
   </form></main>;
 
-  if(!isAdmin)return <main className="adminPage"><div className="adminLogin">
+    if(!isAdmin)return <main className="adminPage"><div className="adminLogin">
     <div className="brandIcon"><ShieldCheck/></div>
-    <h1>Admin permission required</h1>
-   <p>This signed-in account is not the verified project-owner email. Please sign in with the authorized account.</p>
-<p style={{marginTop:12,wordBreak:"break-word"}}>
-  Login email: {user.email || "not available"}<br/>
-  Email verified: {String(user.emailVerified)}<br/>
-  Required email: {ADMIN_EMAIL}
-</p> 
-    <button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button>
+    <h1>Email verification required</h1>
+    <p>Your email address is correct, but Firebase shows it is not verified yet.</p>
+    <p>Login email: {user.email}</p>
+    <button className="primaryBtn full" onClick={async()=>{
+      try {
+        await sendEmailVerification(user);
+        alert("Verification email sent. Check your inbox.");
+      } catch(err) {
+        alert(err.message);
+      }
+    }}>Resend verification email</button>
+    <button className="textBtn" onClick={async()=>{
+      await user.reload();
+      window.location.reload();
+    }}>I have verified — refresh status</button>
+    <button className="textBtn" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
   const nav=[["overview","Overview"],["donations","Donations"],["settings","Website settings"],["media","Photos & videos"]];
