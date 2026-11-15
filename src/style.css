@@ -346,3 +346,121 @@
 .mediaClose{position:absolute;right:22px;top:12px;border:0;background:transparent;color:#fff;font-size:42px;cursor:pointer}
 @media(max-width:700px){.mediaChoices{grid-template-columns:1fr;gap:12px}.mediaChoice{padding:18px}.mediaPage{padding:30px 16px 60px}.mediaPageGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.mediaPageCaption{padding:10px}.mediaPageCaption b{font-size:13px}.mediaLightbox{padding:12px}}
 @media(max-width:390px){.mediaPageGrid{grid-template-columns:1fr}}
+
+
+/* Site-wide compact typography and spacing */
+html{font-size:14px}
+body{font-size:13px;line-height:1.45}
+.header{height:64px;padding-left:5%;padding-right:5%}
+.brand{font-size:17px;gap:8px}
+.brandIcon{width:32px;height:32px;border-radius:9px}
+.nav{gap:22px;font-size:12px}
+.navDonate,.primaryBtn{padding:11px 16px;font-size:12px;gap:7px}
+.navDonate{padding:9px 13px}
+.hero{padding:34px 7% 28px;gap:4%}
+.hero h1{font-size:clamp(38px,4.8vw,58px);margin:12px 0;letter-spacing:-1.3px}
+.heroCopy>p{font-size:13px;line-height:1.55}
+.heroActions{margin-top:18px;gap:18px}
+.trust{margin-top:18px;font-size:10px}
+.heroArt{min-height:320px}
+.heroPhoto{height:310px}
+.sun{width:260px;height:260px}
+.floatingNote{bottom:18px;padding:10px 13px}
+.stats{padding:18px 0}
+.stats div{gap:5px;padding:0 15px}
+.stats span{font-size:10px}
+.stats b{font-size:18px}
+.section{padding:48px 7%}
+.section h2,.closing h2{font-size:32px;margin:9px 0}
+.intro>p,.sectionHead p{font-size:12px;line-height:1.55}
+.sectionHead{margin-bottom:18px}
+.sectionLabel,.eyebrow{font-size:9px;letter-spacing:1.5px}
+.tableWrap{border-radius:9px}
+th{padding:11px;font-size:9px}
+td{padding:11px;font-size:11px}
+.privacyNote,.formFine{font-size:9px;margin-top:9px}
+.closing{margin:0 7% 35px;padding:28px 4%;border-radius:13px}
+.closing h2{font-size:28px}
+footer{padding:18px 7%;font-size:10px}
+footer .brand{font-size:14px}
+.formPage{min-height:calc(100vh - 64px);padding:36px 7%;gap:5%}
+.formIntro{padding-top:24px}
+.formIntro h1{font-size:46px;margin:12px 0}
+.formIntro p{font-size:12px;line-height:1.55}
+.donateForm,.adminLogin{padding:24px;border-radius:12px}
+.donateForm h2{font-size:21px;margin-bottom:15px}
+.donateForm label,.adminLogin label,.settingsForm label{font-size:10px;gap:6px;margin-bottom:12px}
+.donateForm input,.donateForm select,.donateForm textarea,.adminLogin input,.settingsForm input,.settingsForm textarea,.settingsForm select{padding:10px;font-size:12px}
+.paymentBox{padding:13px;margin:13px 0;font-size:11px}
+.qr{width:135px;height:135px}
+.adminPage{min-height:calc(100vh - 64px);padding:20px}
+.adminLogin h1{font-size:25px}
+.adminShell{min-height:calc(100vh - 64px)}
+.adminSide{padding:19px 14px}
+.adminNav{margin-top:30px}
+.adminNav button,.logout{padding:10px;font-size:11px}
+.adminMain{padding:20px 3%}
+.adminTop{margin-bottom:14px}
+.adminTop h1{font-size:24px}
+.adminCards article,.adminPanel{padding:16px}
+.adminCards article{gap:9px}
+.adminCards span{font-size:10px}
+.adminCards b{font-size:19px}
+.adminPanel h2{font-size:19px;margin-bottom:14px}
+.mediaChoices{gap:12px;margin-top:16px}
+.mediaChoice{padding:17px;border-radius:13px;gap:12px}
+.mediaChoice b{font-size:16px}
+.mediaChoice small{font-size:11px}
+.mediaPage{padding:28px 20px 42px;min-height:0}
+.mediaPageHead{margin-bottom:20px}
+.mediaBack{margin-bottom:15px;font-size:12px}
+.mediaPageHead h1{font-size:38px}
+.mediaPageHead p{font-size:12px}
+.mediaPageGrid{gap:15px}
+.mediaPageCaption{padding:10px 12px}
+.mediaPageCaption b{font-size:13px}
+.mediaPageCaption p{font-size:11px}
+.mediaNumber{font-size:10px;padding:4px 8px;left:9px;top:9px}
+@media(max-width:760px){
+  .header{height:58px;padding:0 4%}
+  .nav{top:58px;padding:15px 5%;gap:14px}
+  .hero{padding:24px 6% 18px;gap:10px}
+  .hero h1{font-size:39px;line-height:1.04;margin:9px 0}
+  .heroCopy>p{font-size:12px}
+  .heroArt{min-height:235px}
+  .heroPhoto{height:225px}
+  .sun{width:205px;height:205px}
+  .floatingNote{bottom:8px;padding:8px 10px}
+  .section{padding:34px 6%}
+  .section h2,.closing h2{font-size:27px}
+  .sectionHead{margin-bottom:14px}
+  .sectionHead>svg{width:25px;height:25px}
+  .stats{margin:0 5%;padding:14px 0;gap:14px 0}
+  .stats b{font-size:16px}
+  .closing{margin:0 5% 25px;padding:22px;gap:12px}
+  .closing h2{font-size:25px}
+  footer{padding:16px 5%;font-size:9px}
+  .formPage{min-height:0;padding:24px 5%;gap:15px}
+  .formIntro{padding-top:0}
+  .formIntro h1{font-size:39px;margin:8px 0}
+  .donateForm{padding:18px}
+  .adminMain{padding:14px 4%}
+  .adminTop{margin-bottom:12px}
+  .adminTop h1{font-size:22px}
+  .adminPanel{padding:13px}
+  .mediaPage{padding:22px 14px 32px}
+  .mediaPageHead{margin-bottom:16px}
+  .mediaPageHead h1{font-size:32px}
+  .mediaPageGrid{gap:10px}
+  .mediaChoices{gap:10px}
+  .mediaChoice{padding:14px}
+}
+@media(max-width:420px){
+  .hero h1{font-size:35px}
+  .heroArt{min-height:205px}
+  .heroPhoto{height:195px}
+  .section{padding:30px 5%}
+  .section h2,.closing h2{font-size:24px}
+  .mediaPageGrid{gap:8px}
+  .mediaPageCaption{padding:8px}
+}
