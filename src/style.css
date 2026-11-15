@@ -787,6 +787,8 @@ footer .brand{font-size:14px}
 
 
 /* Colorful social links in the public website footer */
+.socialLinks .socialLink svg{width:18px;height:18px;flex:0 0 18px}
+
 .socialLinks{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
 .socialLinks .socialLink{min-width:150px;display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:13px;text-decoration:none;color:#fff;box-shadow:0 5px 16px rgba(0,0,0,.12);transition:transform .2s ease,filter .2s ease}
 .socialLinks .socialLink:hover{transform:translateY(-3px);filter:brightness(1.08)}
