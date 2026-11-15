@@ -43,7 +43,7 @@ function Header({settings}) {
       <a href="/#leaderboard" onClick={()=>setOpen(false)}>Leaderboard</a>
       <a href="/#gallery" onClick={()=>setOpen(false)}>Stories</a>
       <Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}>Donate now <ArrowRight size={16}/></Link>
-      <Link to="/admin" className="adminLink" onClick={()=>setOpen(false)}>Admin</Link>
+      <Link to="/admin" className="adminLink" onClick={()=>setOpen(false)}>Community</Link>
     </nav>
   </header>;
 }
@@ -74,7 +74,7 @@ const top = useMemo(() => [...donations]
   return <>
     <section className="section leaderboard compactLeaderboard" id="leaderboard">
       <div className="sectionHead">
-        <div><div className="sectionLabel">COMMUNITY OF GIVERS</div><h2>Daily kindness leaders</h2><p>Top verified donations from our community.</p></div>
+        <div><div className="sectionLabel">COMMUNITY OF GIVERS</div><h2>Daily kindness leaders</h2><p>Top contributions from our community.</p></div>
         <Trophy size={34}/>
       </div>
       <div className="tableWrap"><table>
@@ -82,9 +82,9 @@ const top = useMemo(() => [...donations]
         <tbody>{top.length?top.map((d,i)=><tr key={d.id}>
           <td><span className="rank">{i+1}</span></td><td>{d.name}</td><td>{d.state}</td><td className="amount">{money(d.amount)}</td>
           <td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN") || "Recently"}</td>
-        </tr>):<tr><td colSpan="5" className="empty">Verified donations will appear here.</td></tr>}</tbody>
+        </tr>):<tr><td colSpan="5" className="empty">Be the first to make a contribution.</td></tr>}</tbody>
       </table></div>
-      <p className="privacyNote">Donor names, states and amounts are displayed publicly after verification.</p>
+      
     </section>
 
     <section className="hero">
@@ -96,7 +96,7 @@ const top = useMemo(() => [...donations]
           <Link to="/donate" className="primaryBtn">Make a donation <ArrowRight size={18}/></Link>
           <Link to="/details" className="textBtn">Donation details</Link>
         </div>
-        <div className="trust"><ShieldCheck size={17}/> Donations are published after admin verification</div>
+        
       </div>
       <div className="heroArt">
         <div className="sun"/>
@@ -114,7 +114,7 @@ const top = useMemo(() => [...donations]
 
     <section className="section gallery" id="gallery">
       <div className="sectionHead">
-        <div><div className="sectionLabel">REAL STORIES</div><h2>Moments of hope</h2><p>Explore photos and videos shared by the admin.</p></div>
+        <div><div className="sectionLabel">REAL STORIES</div><h2>Moments of hope</h2><p>Explore photos and videos from our community.</p></div>
         <Camera size={32}/>
       </div>
       <div className="mediaChoices">
@@ -131,7 +131,7 @@ const top = useMemo(() => [...donations]
     <footer>
       <Link to="/" className="brand"><span className="brandIcon"><HeartHandshake size={20}/></span>{settings.siteName || "Umeed"}</Link>
       <span>Built on kindness. Powered by community.</span>
-      <Link to="/admin">Admin access</Link>
+      
     </footer>
   </>;
 }
@@ -146,7 +146,7 @@ function MediaPage({media,type}) {
       <Link to="/" className="mediaBack">← Back to home</Link>
       <div className="sectionLabel">UMEED COMMUNITY STORIES</div>
       <h1>{heading}</h1>
-      <p>{type==="video"?"Watch stories and updates shared by our admin.":"View photos and moments shared by our community."}</p>
+      <p>{type==="video"?"Watch stories and updates from our community.":"View photos and moments shared by our community."}</p>
       <span className="mediaCount">{items.length} {type==="video"?"videos":"photos"}</span>
     </div>
     <div className="mediaPageGrid">
@@ -175,17 +175,17 @@ function DonationDetails({settings,donations}) {
     <div className="detailsHeading">
       <div className="sectionLabel">TRANSPARENCY</div>
       <h1>Donation details</h1>
-      <p>All figures below are based on verified contributions.</p>
+      <p>A clear record of contributions made by our community.</p>
     </div>
     <section className="stats detailsStats" id="impact">
-      <div><span>Total verified donations</span><b>{money(total)}</b></div>
-      <div><span>Verified contributions</span><b>{donations.length}</b></div>
+      <div><span>Total donations</span><b>{money(total)}</b></div>
+      <div><span>Contributions</span><b>{donations.length}</b></div>
       <div><span>People helped</span><b>{settings.totalHelped || "0"}+</b></div>
       <div><span>Our promise</span><b>Transparent giving</b></div>
     </section>
     <section className="section detailsList">
       <div className="sectionHead">
-        <div><div className="sectionLabel">VERIFIED RECORD</div><h2>All verified contributions</h2></div>
+        <div><div className="sectionLabel">COMMUNITY RECORD</div><h2>All contributions</h2></div>
         <ShieldCheck size={28}/>
       </div>
       <div className="tableWrap"><table>
@@ -195,7 +195,7 @@ function DonationDetails({settings,donations}) {
           <td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN") || "Recently"}</td>
         </tr>) : <tr><td colSpan="4" className="empty">Verified donations will appear here.</td></tr>}</tbody>
       </table></div>
-      <p className="privacyNote">Only admin-verified donations are displayed.</p>
+      
     </section>
   </main>;
 }
@@ -227,7 +227,7 @@ function Donate({settings}) {
 
   if(done)return <main className="formPage"><div className="successCard">
     <CheckCircle2 size={48}/><h1>Thank you for your kindness.</h1>
-    <p>Your donation details have been submitted for verification. It will appear on the public leaderboard after admin approval.</p>
+    <p>Your donation details have been submitted. Thank you for supporting our community.</p>
     <Link to="/" className="primaryBtn">Back to home</Link>
   </div></main>;
 
@@ -235,7 +235,7 @@ function Donate({settings}) {
     <div className="formIntro">
       <div className="sectionLabel">GIVE WITH PURPOSE</div>
       <h1>Your kindness<br/><em>creates hope.</em></h1>
-      <p>Fill in your details, make the payment using the admin's QR/UPI details, then submit your transaction reference.</p>
+      <p>Fill in your details, make the payment using the payment details shown below, then submit your transaction reference.</p>
     </div>
     <form className="donateForm" onSubmit={submit}>
       <h2>Donation details</h2>
@@ -246,7 +246,7 @@ function Donate({settings}) {
       <label>Donation amount (₹)<input name="amount" required type="number" min="1" max="10000000" value={form.amount} onChange={change} placeholder="e.g. 500"/></label>
       <div className="paymentBox">
         <b>Make your payment</b>
-        {settings.qrUrl?<img className="qr" src={settings.qrUrl} alt="Donation payment QR code"/>:<div className="qrMissing">Admin has not added a QR code yet.</div>}
+        {settings.qrUrl?<img className="qr" src={settings.qrUrl} alt="Donation payment QR code"/>:<div className="qrMissing">Payment QR code is not available yet.</div>}
         {settings.upiId&&<p>UPI ID: <b>{settings.upiId}</b></p>}
         {settings.upiName&&<p>Payee: {settings.upiName}</p>}
         {settings.phone&&<p>UPI / Mobile: {settings.phone}</p>}
@@ -255,8 +255,8 @@ function Donate({settings}) {
       <label>UPI transaction ID / reference<input name="transactionId" required value={form.transactionId} onChange={change} placeholder="Enter payment reference"/></label>
       <label>Message (optional)<textarea name="note" rows="3" maxLength="300" value={form.note} onChange={change} placeholder="A short message"/></label>
       {error&&<p className="error">{error}</p>}
-      <button className="primaryBtn full" disabled={busy}>{busy?"Submitting…":"Submit donation for verification"}</button>
-      <p className="formFine">Your donation is marked pending until an admin verifies the payment. Do not submit someone else's transaction details.</p>
+      <button className="primaryBtn full" disabled={busy}>{busy?"Submitting…":"Submit donation"}</button>
+      <p className="formFine">Please enter your correct payment reference. Do not submit someone else's transaction details.</p>
     </form>
   </main>;
 }
