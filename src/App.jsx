@@ -4,7 +4,7 @@ import { Link, Route, Routes } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud, Image as ImageIcon, Video, Play } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
 import { signInWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
-import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, doc, where, limit, getDocs } from "firebase/firestore";
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, doc, where, limit, getDocs, getDoc, writeBatch } from "firebase/firestore";
 
 const ADMIN_EMAIL = "rajbabushaikh18@gmail.com";
 
@@ -276,10 +276,13 @@ function Donate({settings}) {
     if(!db){setLookupMessage("Certificate service abhi available nahi hai.");return;}
     setLookupBusy(true);
     try{
-      const q=query(collection(db,"donations"),where("certificateCode","==",code),where("status","==","verified"),limit(1));
-      const result=await getDocs(q);
-      if(result.empty)setLookupMessage("Certificate abhi verify nahi hua hai ya number galat hai. Payment verify hone ke baad dobara try karein.");
-      else setLookupRecord({id:result.docs[0].id,...result.docs[0].data()});
+      const codeSnap=await getDoc(doc(db,"certificateCodes",code));
+      if(!codeSnap.exists())setLookupMessage("Certificate abhi verify nahi hua hai ya number galat hai. Payment verify hone ke baad dobara try karein.");
+      else{
+        const donationSnap=await getDoc(doc(db,"donations",codeSnap.data().donationId));
+        if(!donationSnap.exists())setLookupMessage("Certificate record nahi mila.");
+        else setLookupRecord({id:donationSnap.id,...donationSnap.data()});
+      }
     }catch(err){setLookupMessage("Certificate check nahi ho paya. Thodi der baad try karein.");}
     finally{setLookupBusy(false);}
   }
@@ -291,13 +294,21 @@ function Donate({settings}) {
     if(Number(form.amount)<1){setError("Please enter a valid donation amount.");return;}
     setBusy(true);
     try {
-      const newCode=String(crypto.getRandomValues(new Uint32Array(1))[0]%900000+100000);
+      let newCode="",docRef=null,lastError=null;
+      for(let attempt=0;attempt<8;attempt++){
+        newCode=String(crypto.getRandomValues(new Uint32Array(1))[0]%900000+100000);
+        docRef=doc(collection(db,"donations"));
+        const batch=writeBatch(db);
+        batch.set(docRef,{
+          name:form.name.trim(),state:form.state,amount:Number(form.amount),
+          transactionId:form.transactionId.trim(),note:form.note.trim(),
+          certificateCode:newCode,status:"pending",createdAt:serverTimestamp()
+        });
+        batch.set(doc(db,"certificateCodes",newCode),{donationId:docRef.id});
+        try{await batch.commit();lastError=null;break;}catch(err){lastError=err;docRef=null;}
+      }
+      if(!docRef)throw lastError||new Error("Could not reserve a unique certificate number.");
       const preview={name:form.name.trim(),state:form.state,amount:Number(form.amount),status:"pending",certificateCode:newCode,createdAt:new Date().toISOString()};
-      const docRef = await addDoc(collection(db,"donations"),{
-        name:form.name.trim(),state:form.state,amount:Number(form.amount),
-        transactionId:form.transactionId.trim(),note:form.note.trim(),
-        certificateCode:newCode,status:"pending",createdAt:serverTimestamp()
-      });
       setSubmittedId(docRef.id);
       setCertificateCode(newCode);
       setDonationRecord({...preview,id:docRef.id});
