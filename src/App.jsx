@@ -139,6 +139,15 @@ const top = useMemo(() => [...donations]
 
 function MediaPage({media,type}) {
   const [selected,setSelected]=useState(null);
+  const mediaUrl = (url) => {
+    try {
+      const parsed = new URL(url);
+      if (parsed.pathname.startsWith("/community/")) parsed.pathname = `/umeed${parsed.pathname}`;
+      return parsed.toString();
+    } catch {
+      return url;
+    }
+  };
   const items=useMemo(()=>media.filter(m=>type==="video"?m.type==="video":m.type!=="video"),[media,type]);
   const heading=type==="video"?"Videos":"Photos";
   return <main className="mediaPage">
@@ -152,7 +161,7 @@ function MediaPage({media,type}) {
     <div className="mediaPageGrid">
       {items.length?items.map((m,i)=><article className="mediaPageCard" key={m.id}>
         <button className="mediaPreview" onClick={()=>setSelected(m)} aria-label={type==="video"?"Play video":"View full photo"}>
-          {type==="video"?<><video src={m.url} preload="metadata" playsInline/><span className="mediaPlay"><Play fill="currentColor"/></span></>:<img src={m.url} alt={m.title||"Umeed community photo"} loading="lazy"/>}
+          {type==="video"?<><video src={mediaUrl(m.url)} preload="metadata" playsInline/><span className="mediaPlay"><Play fill="currentColor"/></span></>:<img src={mediaUrl(m.url)} alt={m.title||"Umeed community photo"} loading="lazy"/>}
           <span className="mediaNumber">{String(i+1).padStart(2,"0")}</span>
         </button>
         <div className="mediaPageCaption"><b>{m.title||heading.slice(0,-1)+" "+(i+1)}</b>{m.caption&&<p>{m.caption}</p>}</div>
@@ -161,7 +170,7 @@ function MediaPage({media,type}) {
     {selected&&<div className="mediaLightbox" onClick={()=>setSelected(null)}>
       <button className="mediaClose" onClick={()=>setSelected(null)} aria-label="Close">×</button>
       <div className="mediaLightboxInner" onClick={e=>e.stopPropagation()}>
-        {type==="video"?<video src={selected.url} controls autoPlay playsInline/>:<img src={selected.url} alt={selected.title||"Full size community photo"}/>}
+        {type==="video"?<video src={mediaUrl(selected.url)} controls autoPlay playsInline/>:<img src={mediaUrl(selected.url)} alt={selected.title||"Full size community photo"}/>}
         <div><b>{selected.title}</b>{selected.caption&&<p>{selected.caption}</p>}</div>
       </div>
     </div>}
