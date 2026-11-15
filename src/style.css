@@ -907,3 +907,108 @@ footer .brand{font-size:14px}
   .joinCertificatePrint .certificateSignature img{display:block!important;width:19mm!important;max-width:19mm!important;height:auto!important;max-height:7mm!important;object-fit:contain;margin:0 auto}
   .joinCertificatePrint .certificateSignature small{font-size:8px;color:#829087;border-top:1px solid #9eb4a0;padding-top:3px;width:100%}
 }
+
+/* Final joining certificate print layout: one full page, responsive to paper size */
+@media print {
+  @page { size: A4 portrait; margin: 0 !important; }
+  html, body, #root {
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: #fff !important;
+  }
+  body * { visibility: hidden !important; }
+  .joinCertificatePrint,
+  .joinCertificatePrint * { visibility: visible !important; }
+  .joinCertificatePrint {
+    display: flex !important;
+    position: fixed !important;
+    inset: 8mm !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+    padding: 16mm 13mm 22mm !important;
+    margin: 0 !important;
+    border: 2px solid #39764d !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    overflow: hidden !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-before: avoid-page !important;
+    break-after: avoid-page !important;
+    break-inside: avoid-page !important;
+    text-align: center !important;
+    background: #fff !important;
+  }
+  .joinCertificatePrint .certificateLogo {
+    font-size: 17px !important;
+    line-height: 1.4 !important;
+  }
+  .joinCertificatePrint .sectionLabel {
+    font-size: 10px !important;
+    margin-top: 12mm !important;
+    letter-spacing: 1.5px !important;
+  }
+  .joinCertificatePrint h1 {
+    font-size: 27px !important;
+    line-height: 1.2 !important;
+    margin: 8mm 0 6mm !important;
+  }
+  .joinCertificatePrint h2 {
+    font-size: 24px !important;
+    line-height: 1.2 !important;
+    margin: 5mm 0 !important;
+  }
+  .joinCertificatePrint p {
+    font-size: 13px !important;
+    line-height: 1.6 !important;
+    margin: 3mm 0 !important;
+  }
+  .joinCertificatePrint .joinCertDetails {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 9mm 0 5mm !important;
+    padding: 12px !important;
+    gap: 12px !important;
+    font-size: 12px !important;
+  }
+  .joinCertificatePrint .joinCertDetails b { font-size: 12px !important; }
+  .joinCertificatePrint .joinFine {
+    max-width: 100% !important;
+    font-size: 11px !important;
+    line-height: 1.6 !important;
+    margin: 5mm auto !important;
+  }
+  .joinCertificatePrint .certificateSignature {
+    position: absolute !important;
+    right: 14mm !important;
+    bottom: 12mm !important;
+    display: grid !important;
+    justify-items: center !important;
+    gap: 2px !important;
+    width: 27mm !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+  }
+  .joinCertificatePrint .certificateSignature span { font-size: 8px !important; }
+  .joinCertificatePrint .certificateSignature img {
+    display: block !important;
+    width: 17mm !important;
+    max-width: 17mm !important;
+    height: 5mm !important;
+    max-height: 5mm !important;
+    object-fit: contain !important;
+    margin: 0 auto !important;
+  }
+  .joinCertificatePrint .certificateSignature small {
+    width: 100% !important;
+    font-size: 8px !important;
+    padding-top: 2px !important;
+  }
+}
