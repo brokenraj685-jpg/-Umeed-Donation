@@ -145,8 +145,8 @@ const top = useMemo(() => [...donations]
       <Link to="/" className="brand"><span className="brandIcon"><HeartHandshake size={20}/></span>{settings.siteName || "Umeed"}</Link>
       <span>Built on kindness. Powered by community.</span>
       <div className="socialLinks" aria-label="Social media links">
-        {settings.instagramUrl&&<a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Instagram"><Instagram size={21}/></a>}
-        {settings.facebookUrl&&<a href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Facebook"><Facebook size={21}/></a>}
+        {settings.instagramUrl&&<a className="socialLink instagramLink" href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Instagram"><Instagram size={23}/><span><b>Instagram</b><small>Instagram open</small></span></a>}
+        {settings.facebookUrl&&<a className="socialLink facebookLink" href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Facebook"><Facebook size={23}/><span><b>Facebook</b><small>Facebook open</small></span></a>}
       </div>
     </footer>
   </>;
