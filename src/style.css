@@ -262,3 +262,59 @@
 }
 
 
+/* UMEED LEADERBOARD - SLOW AUTO SLIDE */
+@media (max-width: 760px) {
+  .compactLeaderboard .tableWrap {
+    position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    touch-action: pan-x;
+  }
+
+  .compactLeaderboard .tableWrap table {
+    width: 620px;
+    min-width: 620px;
+    animation: umeedLeaderboardSlide 16s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  .compactLeaderboard .tableWrap:focus-within table,
+  .compactLeaderboard .tableWrap:active table {
+    animation-play-state: paused;
+  }
+
+  .compactLeaderboard .tableWrap::after {
+    content: "← Full details →";
+    position: sticky;
+    left: 100%;
+    display: block;
+    width: max-content;
+    margin: -30px 8px 8px auto;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #17633a;
+    color: white;
+    font-size: 9px;
+    pointer-events: none;
+  }
+}
+
+@keyframes umeedLeaderboardSlide {
+  0%, 12% {
+    transform: translateX(0);
+  }
+  45%, 55% {
+    transform: translateX(calc(90vw - 620px));
+  }
+  88%, 100% {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .compactLeaderboard .tableWrap table {
+    animation: none;
+  }
+}
+
