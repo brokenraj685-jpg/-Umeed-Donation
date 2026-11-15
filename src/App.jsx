@@ -556,6 +556,14 @@ function Admin({settings}) {
     }
   }
 
+  function adminMediaUrl(url){
+    try{
+      const parsed=new URL(url,window.location.origin);
+      if(parsed.pathname.startsWith("/community/"))parsed.pathname="/umeed"+parsed.pathname;
+      return parsed.toString();
+    }catch{return url||"";}
+  }
+
   function getMediaKey(item){
     if(item.key)return item.key;
     try{
@@ -717,7 +725,7 @@ function Admin({settings}) {
         <div className="adminMediaManager">
           <h2>Uploaded photos & videos ({mediaItems.length})</h2>
           {mediaItems.length===0?<p className="formFine">Abhi koi photo ya video upload nahi hua.</p>:<div className="adminMediaGrid">{mediaItems.map(item=><article className="adminMediaItem" key={item.id}>
-            {item.type==="video"?<video src={item.url} controls preload="metadata"/>:<img src={item.url} alt={item.title||"Uploaded community media"}/>}
+            {item.type==="video"?<video src={adminMediaUrl(item.url)} controls preload="metadata"/>:<img src={adminMediaUrl(item.url)} alt={item.title||"Uploaded community media"}/>}
             <div className="adminMediaInfo"><b>{item.title||"Untitled"}</b><small>{item.type==="video"?"Video":"Photo"}</small>{item.caption&&<p>{item.caption}</p>}</div>
             {editingMedia===item.id?<div className="adminMediaEdit">
               <label>Title<input value={editTitle} onChange={e=>setEditTitle(e.target.value)}/></label>
