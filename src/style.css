@@ -573,3 +573,23 @@ footer .brand{font-size:14px}
   .certificateDetails span{font-size:8px}
   .certificateFooter{margin-top:25px}
 }
+
+
+/* Donation certificate preview, lookup and verification state */
+.donorCertificateNumber{display:grid;gap:6px;margin:16px auto;padding:14px;border:1px dashed #7da889;border-radius:12px;background:#f2f8f2;max-width:330px;text-align:center}
+.donorCertificateNumber span,.certificateCodeLine span{font-size:10px;letter-spacing:1px;color:#718071;font-weight:800}
+.donorCertificateNumber b{font-size:30px;letter-spacing:7px;color:#17633a}
+.donorCertificateNumber small{font-size:10px;color:#718071;line-height:1.5}
+.certificateCodeLine{display:grid;gap:5px;justify-items:center;margin:18px auto;padding:10px;border-top:1px solid #dce9dc;border-bottom:1px solid #dce9dc}
+.certificateCodeLine b{font-size:24px;letter-spacing:6px;color:#1d5735}
+.certificatePendingStamp{margin:22px auto 0;padding:9px 12px;max-width:520px;border:2px solid #b77735;color:#9a5b1e;font-size:11px;font-weight:900;letter-spacing:1px;transform:rotate(-1deg)}
+.certificateLookup{width:min(650px,100%);margin:22px auto 40px;padding:20px;border:1px solid #e1eae1;border-radius:14px;background:#fff}
+.certificateLookup h2{margin:0 0 7px;color:#18352a;font-size:19px}
+.certificateLookup p{color:#718071;font-size:12px}
+.certificateLookup form{display:flex;gap:10px;margin-top:14px}
+.certificateLookup input{flex:1;min-width:0;padding:12px;border:1px solid #d8e2d8;border-radius:8px;font:inherit;letter-spacing:3px}
+.certificateLookup .primaryBtn{white-space:nowrap}
+@media(max-width:520px){.certificateLookup{padding:15px}.certificateLookup form{flex-direction:column}.certificateLookup .primaryBtn{width:100%;justify-content:center}.certificateCodeLine b{font-size:21px}.certificatePendingStamp{font-size:9px}}
+@media print{
+  .certificateLookup{display:none!important}
+}
