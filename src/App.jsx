@@ -50,7 +50,26 @@ function Header({settings}) {
 
 function Home({data}) {
   const {settings,donations,media}=data;
-  const top = useMemo(()=>[...donations].sort((a,b)=>Number(b.amount)-Number(a.amount)).slice(0,10),[donations]);
+const [now,setNow] = useState(Date.now());
+
+useEffect(() => {
+  const timer = setInterval(() => setNow(Date.now()), 60 * 1000);
+  return () => clearInterval(timer);
+}, []);
+
+const top = useMemo(() => [...donations]
+  .filter(d => {
+    const created = d.createdAt?.toDate
+      ? d.createdAt.toDate().getTime()
+      : typeof d.createdAt?.seconds === "number"
+        ? d.createdAt.seconds * 1000
+        : d.createdAt instanceof Date
+          ? d.createdAt.getTime()
+          : 0;
+    return created > 0 && created <= now && now - created < 12 * 60 * 60 * 1000;
+  })
+  .sort((a,b) => Number(b.amount) - Number(a.amount))
+  .slice(0,5), [donations,now]);
 
   return <>
     <section className="section leaderboard compactLeaderboard" id="leaderboard">
