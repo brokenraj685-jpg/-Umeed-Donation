@@ -883,15 +883,25 @@ footer .brand{font-size:14px}
 
 .joinCertificatePrint{display:none}
 @media print{
+  @page{size:A4 portrait;margin:8mm}
+  html,body{margin:0!important;padding:0!important;background:#fff!important}
   body *{visibility:hidden!important}
-  .joinSuccess,.joinSuccess *{visibility:visible!important}
-  .joinSuccess{position:absolute;left:0;top:0;width:100%;box-shadow:none;border:0}
-  .joinSuccess button{display:none!important}
   .adminShell,.adminShell *{visibility:hidden!important}
   .joinCertificatePrint,.joinCertificatePrint *{visibility:visible!important}
-  .joinCertificatePrint{display:block!important;position:absolute;left:8%;top:10%;width:84%;padding:45px 30px;border:5px double #39764d;text-align:center;background:#fff;color:#18352a}
-  .joinCertificatePrint h1{font:700 30px 'Playfair Display',serif;color:#1b5634;margin:25px 0}
-  .joinCertificatePrint h2{font:700 27px 'Playfair Display',serif;color:#286b42}
-  .joinCertDetails{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:30px 0;padding:18px;border-top:1px solid #dce9dc;border-bottom:1px solid #dce9dc;text-align:left;font-size:12px}
-  .joinCertificatePrint .certificateSignature{margin:45px 0 0 auto;width:210px}
+  .joinCertificatePrint{
+    display:block!important;position:absolute;left:0;top:0;width:100%;height:277mm;
+    box-sizing:border-box;padding:24mm 16mm 18mm;border:5px double #39764d;
+    text-align:center;background:#fff;color:#18352a;overflow:hidden;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  .joinCertificatePrint .certificateLogo{font-size:19px;font-weight:800;letter-spacing:2px;color:#24683e}
+  .joinCertificatePrint .sectionLabel{font-size:10px;letter-spacing:2px;margin-top:18mm}
+  .joinCertificatePrint h1{font:700 27px 'Playfair Display',serif;color:#1b5634;margin:12mm 0 9mm}
+  .joinCertificatePrint h2{font:700 25px 'Playfair Display',serif;color:#286b42;margin:7mm 0}
+  .joinCertificatePrint p{font-size:12px;line-height:1.7}
+  .joinCertDetails{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:13mm 0;padding:13px;border-top:1px solid #dce9dc;border-bottom:1px solid #dce9dc;text-align:left;font-size:11px}
+  .joinCertificatePrint .joinFine{font-size:10px;line-height:1.6;margin:8mm auto;max-width:145mm}
+  .joinCertificatePrint .certificateSignature{display:grid;justify-items:center;gap:4px;margin:13mm 0 0 auto;width:65mm;text-align:center}
+  .joinCertificatePrint .certificateSignature img{display:block;width:48mm;height:auto;max-height:20mm;object-fit:contain}
+  .joinCertificatePrint .certificateSignature small{font-size:9px;color:#829087;border-top:1px solid #9eb4a0;padding-top:5px;width:100%}
 }
