@@ -593,3 +593,103 @@ footer .brand{font-size:14px}
 @media print{
   .certificateLookup{display:none!important}
 }
+
+
+/* Compact donor success and certificate preview */
+.certificatePage{
+  padding:18px 5% 22px;
+}
+.certificatePage .successCard{
+  max-width:430px;
+  margin:0 auto 12px;
+  padding:18px 20px;
+  border-radius:12px;
+}
+.certificatePage .successCard svg{width:30px;height:30px}
+.certificatePage .successCard h1{font-size:23px;margin:7px 0}
+.certificatePage .successCard h2{font-size:19px;margin:6px 0}
+.certificatePage .successCard p{font-size:11px;line-height:1.45;margin:6px 0 12px}
+.certificatePage .donorCertificateNumber{
+  max-width:260px;
+  gap:3px;
+  margin:9px auto;
+  padding:8px;
+}
+.certificatePage .donorCertificateNumber span{font-size:8px}
+.certificatePage .donorCertificateNumber b{font-size:21px;letter-spacing:4px}
+.certificatePage .donorCertificateNumber small{font-size:8px;line-height:1.3}
+.certificatePage .donationCertificate{
+  max-width:680px;
+  margin:0 auto 12px;
+  padding:8px;
+}
+.certificatePage .certificateBorder{
+  min-height:0;
+  padding:17px 5%;
+  border-width:3px;
+}
+.certificatePage .certificateLogo{font-size:12px;letter-spacing:1.2px}
+.certificatePage .certificateLogo .brandIcon{width:27px;height:27px}
+.certificatePage .certificateLogo svg{width:20px;height:20px}
+.certificatePage .certificateSmall{font-size:8px;margin-top:12px;letter-spacing:1.5px}
+.certificatePage .certificateBorder h1{font-size:25px;margin:5px 0}
+.certificatePage .certificateIntro{font-size:10px;margin:9px 0 4px}
+.certificatePage .certificateBorder h2{font-size:21px;margin:0 0 7px}
+.certificatePage .certificateBody{font-size:10px;line-height:1.45}
+.certificatePage .certificateDetails{gap:7px;margin:12px 0;padding:8px 0}
+.certificatePage .certificateDetails div{gap:3px}
+.certificatePage .certificateDetails span{font-size:7px}
+.certificatePage .certificateDetails b{font-size:11px}
+.certificatePage .certificateCodeLine{margin:8px auto;padding:5px;gap:2px}
+.certificatePage .certificateCodeLine span{font-size:7px}
+.certificatePage .certificateCodeLine b{font-size:13px;letter-spacing:3px}
+.certificatePage .certificateThanks{font-size:9px;line-height:1.4}
+.certificatePage .certificateFooter{margin-top:14px;gap:10px}
+.certificatePage .certificateSignature{gap:2px}
+.certificatePage .certificateSignature span{font-size:8px}
+.certificatePage .certificateSignature b{font-size:17px}
+.certificatePage .certificateSignature small{font-size:7px;padding-top:3px}
+.certificatePage .certificateId{gap:2px}
+.certificatePage .certificateId span{font-size:6px}
+.certificatePage .certificateId b{font-size:8px}
+.certificatePage .certificateMotto{font-size:10px;margin-top:10px}
+.certificatePage .certificatePendingStamp{font-size:8px;margin:9px auto 0;padding:5px 7px;border-width:1px}
+.certificatePage .certificateLookup{max-width:500px;margin:10px auto 16px;padding:12px}
+.certificatePage .certificateLookup h2{font-size:15px}
+.certificatePage .certificateLookup p{font-size:10px;margin:4px 0}
+.certificatePage .certificateLookup form{margin-top:8px}
+.certificatePage .certificateLookup input{padding:8px;font-size:11px}
+.certificatePage .certificateLookup .primaryBtn{padding:8px 12px;font-size:10px}
+@media(max-width:600px){
+  .certificatePage{padding:12px 4% 18px}
+  .certificatePage .successCard{padding:14px 12px;margin-bottom:10px}
+  .certificatePage .certificateBorder{padding:14px 4%}
+  .certificatePage .certificateBorder h1{font-size:22px}
+  .certificatePage .certificateBorder h2{font-size:19px}
+  .certificatePage .certificateDetails{gap:4px}
+  .certificatePage .certificateDetails b{font-size:10px}
+  .certificatePage .certificateFooter{margin-top:11px}
+  .certificatePage .certificatePendingStamp{font-size:7px;letter-spacing:.4px}
+}
+@media print{
+  .certificatePage .donationCertificate{max-width:none;padding:0}
+  .certificatePage .certificateBorder{
+    position:relative;
+    height:185mm;
+    min-height:0;
+    padding:22mm 7% 16mm;
+  }
+  /* Keep the certificate number discreetly in the top-right corner */
+  .certificatePage .certificateCodeLine{display:none!important}
+  .certificatePage .certificateId{
+    position:absolute;
+    top:7mm;
+    right:8mm;
+    display:grid;
+    gap:2px;
+    text-align:right;
+  }
+  .certificatePage .certificateId span{font-size:6px;letter-spacing:.5px}
+  .certificatePage .certificateId b{font-size:8px;letter-spacing:1px}
+  .certificatePage .certificateFooter{margin-top:28mm}
+}
