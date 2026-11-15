@@ -164,7 +164,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       uploadUrl,
-      publicUrl: `${publicBase.replace(/\/$/, "")}/${key}`,
+      publicUrl: `${new URL(publicBase).origin}/${key}`,
       key
     });
 
