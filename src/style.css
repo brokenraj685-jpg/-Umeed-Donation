@@ -847,3 +847,36 @@ footer .brand{font-size:14px}
 @media (prefers-reduced-motion: reduce) {
   .detailsList .tableWrap table { animation: none; }
 }
+
+/* Join Umeed Community page */
+.joinNav{color:#17633a!important;font-weight:800!important}
+.joinPage{max-width:1000px;margin:0 auto;padding:34px 5% 55px;color:#18352a}
+.joinHero{text-align:center;padding:28px 18px 24px;background:linear-gradient(135deg,#edf7ef,#fff);border:1px solid #dceade;border-radius:16px}
+.joinHero h1{font:700 34px 'Playfair Display',serif;margin:8px 0;color:#1b5634}
+.joinHero p{max-width:650px;margin:0 auto;color:#64766a;font-size:13px;line-height:1.7}
+.joinInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0}
+.joinInfoGrid article,.joinFormCard,.joinSuccess{padding:22px;background:#fff;border:1px solid #e1eae1;border-radius:14px;box-shadow:0 8px 24px #18352a08}
+.joinInfoGrid h2,.joinFormCard h2{font-size:18px;margin:0 0 12px;color:#1b5634}
+.joinInfoGrid ul{padding-left:19px;margin:0;color:#52665b;font-size:12px;line-height:1.9}
+.joinShare{display:flex;justify-content:space-between;gap:10px;margin:14px 0;padding:12px;border-radius:9px;background:#eff7ef;color:#17633a;font-size:12px}
+.joinFine{font-size:10px!important;line-height:1.6!important;color:#77857a!important}
+.joinFormCard{max-width:620px;margin:0 auto}
+.joinFormCard>p{font-size:11px;color:#718071}
+.joinFormCard form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.joinFormCard label{display:grid;gap:6px;font-size:11px;font-weight:700;color:#52665b}
+.joinFormCard input,.joinFormCard select{width:100%;min-width:0;padding:11px;border:1px solid #d8e2d8;border-radius:8px;font:inherit;font-size:12px;background:#fff}
+.joinFormCard .joinFine,.joinFormCard .error,.joinFormCard button{grid-column:1/-1}
+.joinSuccess{text-align:center;max-width:620px;margin:25px auto;animation:joinPop .6s ease both}
+.joinSuccessIcon{width:54px;height:54px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;background:#e6f4e8;color:#17633a;font-size:28px;font-weight:900}
+.joinSuccess h2{font:700 23px 'Playfair Display',serif;color:#1b5634}
+.joinSuccess p{font-size:12px;line-height:1.7;color:#64766a}
+.joinSuccess small{font-size:10px;color:#718071;overflow-wrap:anywhere}
+.joinPendingStamp{margin:14px auto;padding:8px;border:1px dashed #b77735;color:#9a5b1e;font-size:10px;font-weight:800;letter-spacing:1px}
+.joinAdminId{display:block;max-width:130px;overflow-wrap:anywhere;font-size:8px;color:#829087}
+.communityJoinAdmin table{font-size:10px}
+.communityJoinAdmin th,.communityJoinAdmin td{padding:8px 6px}
+.communityJoinAdmin .actions{gap:4px;flex-wrap:wrap}
+.communityJoinAdmin .actions button{padding:5px 7px;font-size:9px}
+@keyframes joinPop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:700px){.joinInfoGrid{grid-template-columns:1fr}.joinHero h1{font-size:27px}.joinFormCard{padding:17px}.joinFormCard form{grid-template-columns:1fr}.joinFormCard .joinFine,.joinFormCard .error,.joinFormCard button{grid-column:1}}
+@media print{.header,footer,.joinFormCard,.joinInfoGrid,.joinHero{display:none!important}.joinSuccess{box-shadow:none;border:0}.joinSuccess button{display:none}}
