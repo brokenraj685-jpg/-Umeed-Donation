@@ -150,7 +150,9 @@ export default async function handler(req, res) {
       .replace(/[^a-zA-Z0-9]/g, "")
       .slice(0, 8);
 
-    const key = `umeed/community/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+    // Always store new media in the same canonical folder as the working older images.
+    const uploadPrefix = "umeed/community/";
+    const key = `${uploadPrefix}${Date.now()}-${crypto.randomUUID()}.${ext}`;
 
     const command = new PutObjectCommand({
       Bucket: bucket,
@@ -162,9 +164,12 @@ export default async function handler(req, res) {
       expiresIn: 300
     });
 
+    const publicOrigin = new URL(publicBase).origin;
+    const publicUrl = new URL(key, `${publicOrigin}/`).toString();
+
     return res.status(200).json({
       uploadUrl,
-      publicUrl: `${new URL(publicBase).origin}/${key}`,
+      publicUrl,
       key
     });
 
