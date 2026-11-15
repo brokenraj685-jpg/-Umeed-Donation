@@ -712,3 +712,8 @@ footer .brand{font-size:14px}
 .adminMediaEdit input{width:100%;min-width:0;padding:9px;border:1px solid #dce6dd;border-radius:7px;font-size:11px}
 .adminMediaEdit .actions{flex-wrap:wrap}
 @media(max-width:760px){.adminMediaGrid{grid-template-columns:1fr}.adminMediaItem>img,.adminMediaItem>video{height:200px}}
+
+/* Show complete media instead of cropping the uploaded image */
+.adminMediaItem>img,.adminMediaItem>video{height:240px;object-fit:contain;background:#eef2ee}
+.mediaPreview{aspect-ratio:4/3}
+.mediaPreview img,.mediaPreview video{object-fit:contain;background:#eef2ee}
