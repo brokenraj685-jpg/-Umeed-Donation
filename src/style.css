@@ -58,3 +58,28 @@
   .heroArt{min-height:350px}
   .heroPhoto{height:340px;width:100%}
 }
+
+/* Compact Admin Overview */
+.adminMain{padding:24px 3%;min-width:0}
+.adminTop{margin-bottom:18px}
+.adminTop h1{font-size:28px;margin:5px 0}
+.adminCards{gap:10px}
+.adminCards article{padding:14px 16px;gap:8px;min-width:0}
+.adminCards span{font-size:10px;line-height:1.35}
+.adminCards b{font-size:20px;line-height:1.2;overflow-wrap:anywhere}
+
+@media(max-width:760px){
+  .adminMain{padding:16px 4%}
+  .adminTop{margin-bottom:14px;align-items:center}
+  .adminTop h1{font-size:24px}
+  .adminCards{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .adminCards article{padding:12px;gap:7px;border-radius:10px}
+  .adminCards span{font-size:9px}
+  .adminCards b{font-size:17px}
+}
+@media(max-width:360px){
+  .adminCards{gap:7px}
+  .adminCards article{padding:10px}
+  .adminCards b{font-size:15px}
+}
+
