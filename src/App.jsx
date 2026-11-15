@@ -508,7 +508,9 @@ function Admin({settings}) {
   const [password,setPassword]=useState("");
   const [error,setError]=useState("");
   const [tab,setTab]=useState("overview");
-  const [pending,setPending]=useState([]);\n  const [joinRequests,setJoinRequests]=useState([]);\n  const [selectedJoin,setSelectedJoin]=useState(null);
+  const [pending,setPending]=useState([]);
+  const [joinRequests,setJoinRequests]=useState([]);
+  const [selectedJoin,setSelectedJoin]=useState(null);
   const [form,setForm]=useState(settings);
   const [mediaTitle,setMediaTitle]=useState("");
   const [mediaCaption,setMediaCaption]=useState("");
@@ -585,7 +587,11 @@ function Admin({settings}) {
     }
   }
 
-  async function reviewJoin(d,approved){\n    await updateDoc(doc(db,"communityJoins",d.id),{status:approved?"approved":"rejected",reviewedAt:serverTimestamp(),reviewedBy:user.email});\n  }\n\n  async function verify(d,approved) {
+  async function reviewJoin(d,approved){
+    await updateDoc(doc(db,"communityJoins",d.id),{status:approved?"approved":"rejected",reviewedAt:serverTimestamp(),reviewedBy:user.email});
+  }
+
+  async function verify(d,approved) {
     await updateDoc(doc(db,"donations",d.id),{
       status:approved?"verified":"rejected",
       reviewedAt:serverTimestamp(),
@@ -776,7 +782,8 @@ function Admin({settings}) {
           <tbody>{joinRequests.map(j=><tr key={j.id}><td><b>{j.name}</b><small className="joinAdminId">{j.id}</small></td><td>{j.mobile}</td><td>{j.state}</td><td>{j.age}</td><td><span className={"status "+(j.status==="approved"?"verified":j.status==="rejected"?"rejected":"pending")}>{j.status}</span></td>
           <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<button onClick={()=>{setSelectedJoin(j);setTimeout(()=>window.print(),300);}}>Joining PDF</button>}</div></td></tr>)}
           {!joinRequests.length&&<tr><td colSpan="6" className="empty">Abhi koi joining request nahi aayi.</td></tr>}</tbody></table></div>
-        <p className="formFine">Approved member ka PDF print/download karne ke liye request ko select karke browser print dialog mein Save as PDF choose karein.</p>\n        {selectedJoin&&<section className="joinCertificatePrint">
+        <p className="formFine">Approved member ka PDF print/download karne ke liye request ko select karke browser print dialog mein Save as PDF choose karein.</p>
+        {selectedJoin&&<section className="joinCertificatePrint">
           <div className="certificateLogo"><span className="brandIcon"><HeartHandshake/></span> UMEED COMMUNITY</div>
           <div className="sectionLabel">OFFICIAL MEMBERSHIP CONFIRMATION</div>
           <h1>Community Joining Certificate</h1>
