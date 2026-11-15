@@ -20,7 +20,11 @@ function useSiteData() {
   useEffect(() => {
     if (!db) return;
     const stopA = onSnapshot(doc(db,"site","settings"), s => { if(s.exists()) setSettings(p=>({...p,...s.data()})); });
-    const stopB = onSnapshot(query(collection(db,"donations"),where("status","==","verified"),orderBy("createdAt","desc"),limit(100)), s => setDonations(s.docs.map(d=>({id:d.id,...d.data()}))));
+    const stopB = onSnapshot(
+  query(collection(db,"donations"),where("status","==","verified"),limit(100)),
+  s => setDonations(s.docs.map(d=>({id:d.id,...d.data()}))),
+  err => console.error("Verified donations error:",err)
+);
     const stopC = onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(50)), s => setMedia(s.docs.map(d=>({id:d.id,...d.data()}))));
     return () => { stopA(); stopB(); stopC(); };
   },[]);
