@@ -239,6 +239,21 @@ function CommunityService({settings}) {
 function Donate({settings}) {
   const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});
   const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[error,setError]=useState("");
+  const [submittedId,setSubmittedId]=useState(()=>localStorage.getItem("umeedLastDonationId")||"");
+  const [donationRecord,setDonationRecord]=useState(null);
+  const [showCertificate,setShowCertificate]=useState(false);
+
+  useEffect(()=>{
+    if(!db||!submittedId)return;
+    return onSnapshot(doc(db,"donations",submittedId),snap=>{
+      if(snap.exists())setDonationRecord({id:snap.id,...snap.data()});
+    });
+  },[submittedId]);
+
+  function downloadCertificate(){
+    setShowCertificate(true);
+    setTimeout(()=>window.print(),400);
+  }
   const change=e=>setForm(p=>({...p,[e.target.name]:e.target.value}));
 
   async function submit(e) {
@@ -248,11 +263,13 @@ function Donate({settings}) {
     if(Number(form.amount)<1){setError("Please enter a valid donation amount.");return;}
     setBusy(true);
     try {
-      await addDoc(collection(db,"donations"),{
+      const docRef = await addDoc(collection(db,"donations"),{
         name:form.name.trim(),state:form.state,amount:Number(form.amount),
         transactionId:form.transactionId.trim(),note:form.note.trim(),
         status:"pending",createdAt:serverTimestamp()
       });
+      setSubmittedId(docRef.id);
+      localStorage.setItem("umeedLastDonationId",docRef.id);
       setDone(true);
     } catch(err) {
       setError(err.message||"Could not submit donation.");
@@ -261,11 +278,41 @@ function Donate({settings}) {
     }
   }
 
-  if(done)return <main className="formPage"><div className="successCard">
-    <CheckCircle2 size={48}/><h1>Thank you for your kindness.</h1>
-    <p>Your donation details have been submitted. Thank you for supporting our community.</p>
-    <Link to="/" className="primaryBtn">Back to home</Link>
-  </div></main>;
+  if(done){
+    const verified = donationRecord?.status==="verified";
+    const certDate = donationRecord?.createdAt?.toDate
+      ? donationRecord.createdAt.toDate().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"})
+      : new Date().toLocaleDateString("en-IN",{day:"2-digit",month:"long",year:"numeric"});
+    return <main className="formPage certificatePage">
+      <div className="successCard noPrint">
+        <CheckCircle2 size={48}/><h1>{verified?"Your donation is verified!":"Thank you for your kindness."}</h1>
+        <p>{verified?"Your contribution has been verified by Umeed Community. Your certificate is ready!":"Your donation details have been submitted. Umeed Community will verify your payment. Your certificate will appear here after verification."}</p>
+        {verified&&<button className="primaryBtn full" onClick={downloadCertificate}>Download Donation Certificate (PDF)</button>}
+        <Link to="/" className="textBtn">Back to home</Link>
+      </div>
+      {verified&&<section className={"donationCertificate"+(showCertificate?" printReady":"")}>
+        <div className="certificateBorder">
+          <div className="certificateLogo"><span className="brandIcon"><HeartHandshake size={30}/></span><b>UMEED COMMUNITY</b></div>
+          <div className="certificateSmall">CERTIFICATE OF APPRECIATION</div>
+          <h1>Donation Certificate</h1>
+          <p className="certificateIntro">This certificate is proudly presented to</p>
+          <h2>{donationRecord.name||"Valued Donor"}</h2>
+          <p className="certificateBody">In heartfelt appreciation of your generous contribution to Umeed Community. Your kindness and support help us bring hope, care and smiles to people in need.</p>
+          <div className="certificateDetails">
+            <div><span>DONATION AMOUNT</span><b>{money(donationRecord.amount)}</b></div>
+            <div><span>STATE</span><b>{donationRecord.state||"—"}</b></div>
+            <div><span>DATE</span><b>{certDate}</b></div>
+          </div>
+          <p className="certificateThanks">Thank you for being a part of this journey of kindness. Every act of giving makes a difference. We are truly grateful to have you with us. ❤️</p>
+          <div className="certificateFooter">
+            <div className="certificateSignature"><span>With gratitude,</span><b>Umeed Community</b><small>Authorized Community Member</small></div>
+            <div className="certificateId"><span>CERTIFICATE ID</span><b>UMEED-{submittedId.slice(-8).toUpperCase()}</b></div>
+          </div>
+          <div className="certificateMotto">Jahan Madad Hai, Wahan Umeed Hai.</div>
+        </div>
+      </section>}
+    </main>;
+  }
 
   return <main className="formPage">
     <div className="formIntro">
