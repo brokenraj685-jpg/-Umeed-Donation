@@ -312,8 +312,17 @@ function Donate({settings}) {
     setBusy(true);
     try {
       let newCode="",docRef=null,lastError=null;
-      for(let attempt=0;attempt<8;attempt++){
-        newCode=String(crypto.getRandomValues(new Uint32Array(1))[0]%900000+100000);
+      // Generate an unbiased random 6-digit code. Firestore rules atomically
+      // reject a code that already exists, so a collision can never overwrite it.
+      function makeUniqueCandidate(){
+        const range=900000;
+        const limit=Math.floor(0x100000000/range)*range;
+        const value=new Uint32Array(1);
+        do{crypto.getRandomValues(value);}while(value[0]>=limit);
+        return String(100000+(value[0]%range));
+      }
+      for(let attempt=0;attempt<20;attempt++){
+        newCode=makeUniqueCandidate();
         docRef=doc(collection(db,"donations"));
         const batch=writeBatch(db);
         batch.set(docRef,{
@@ -321,10 +330,11 @@ function Donate({settings}) {
           transactionId:form.transactionId.trim(),note:form.note.trim(),
           certificateCode:newCode,status:"pending",createdAt:serverTimestamp()
         });
+        // This mapping is create-only in Firestore rules; existing numbers cannot be reused.
         batch.set(doc(db,"certificateCodes",newCode),{donationId:docRef.id});
         try{await batch.commit();lastError=null;break;}catch(err){lastError=err;docRef=null;}
       }
-      if(!docRef)throw lastError||new Error("Could not reserve a unique certificate number.");
+      if(!docRef)throw lastError||new Error("Unique number reserve nahi ho paya. Please dobara try karein.");
       const preview={name:form.name.trim(),state:form.state,amount:Number(form.amount),status:"pending",certificateCode:newCode,createdAt:new Date().toISOString()};
       setSubmittedId(docRef.id);
       setCertificateCode(newCode);
