@@ -798,3 +798,52 @@ footer .brand{font-size:14px}
 .socialLinks .instagramLink{background:linear-gradient(135deg,#833ab4 0%,#e1306c 52%,#f77737 100%)}
 .socialLinks .facebookLink{background:#1877f2}
 @media(max-width:640px){footer{flex-wrap:wrap;gap:14px}.socialLinks{width:100%;justify-content:center}}
+
+
+/* All Contributions: mobile left-right detail slider */
+@media (max-width: 760px) {
+  .detailsList .tableWrap {
+    position: relative;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    touch-action: pan-x;
+  }
+
+  .detailsList .tableWrap table {
+    width: 680px;
+    min-width: 680px;
+    animation: umeedContributorsSlide 18s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  .detailsList .tableWrap:focus-within table,
+  .detailsList .tableWrap:active table {
+    animation-play-state: paused;
+  }
+
+  .detailsList .tableWrap::after {
+    content: "← Swipe / Full details →";
+    position: sticky;
+    left: 100%;
+    display: block;
+    width: max-content;
+    margin: -30px 8px 8px auto;
+    padding: 5px 9px;
+    border-radius: 20px;
+    background: #17633a;
+    color: white;
+    font-size: 9px;
+    pointer-events: none;
+  }
+}
+
+@keyframes umeedContributorsSlide {
+  0%, 12% { transform: translateX(0); }
+  45%, 55% { transform: translateX(calc(90vw - 680px)); }
+  88%, 100% { transform: translateX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detailsList .tableWrap table { animation: none; }
+}
