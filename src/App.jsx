@@ -508,7 +508,7 @@ function Admin({settings}) {
   const [password,setPassword]=useState("");
   const [error,setError]=useState("");
   const [tab,setTab]=useState("overview");
-  const [pending,setPending]=useState([]);\n  const [joinRequests,setJoinRequests]=useState([]);
+  const [pending,setPending]=useState([]);\n  const [joinRequests,setJoinRequests]=useState([]);\n  const [selectedJoin,setSelectedJoin]=useState(null);
   const [form,setForm]=useState(settings);
   const [mediaTitle,setMediaTitle]=useState("");
   const [mediaCaption,setMediaCaption]=useState("");
@@ -774,9 +774,19 @@ function Admin({settings}) {
         <h2>Community joining requests ({joinRequests.length})</h2>
         <div className="tableWrap"><table><thead><tr><th>Name / Request ID</th><th>Mobile</th><th>State</th><th>Age</th><th>Status</th><th>Action / PDF</th></tr></thead>
           <tbody>{joinRequests.map(j=><tr key={j.id}><td><b>{j.name}</b><small className="joinAdminId">{j.id}</small></td><td>{j.mobile}</td><td>{j.state}</td><td>{j.age}</td><td><span className={"status "+(j.status==="approved"?"verified":j.status==="rejected"?"rejected":"pending")}>{j.status}</span></td>
-          <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<button onClick={()=>{window.print();}}>Joining PDF</button>}</div></td></tr>)}
+          <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<button onClick={()=>{setSelectedJoin(j);setTimeout(()=>window.print(),300);}}>Joining PDF</button>}</div></td></tr>)}
           {!joinRequests.length&&<tr><td colSpan="6" className="empty">Abhi koi joining request nahi aayi.</td></tr>}</tbody></table></div>
-        <p className="formFine">Approved member ka PDF print/download karne ke liye request ko select karke browser print dialog mein Save as PDF choose karein.</p>
+        <p className="formFine">Approved member ka PDF print/download karne ke liye request ko select karke browser print dialog mein Save as PDF choose karein.</p>\n        {selectedJoin&&<section className="joinCertificatePrint">
+          <div className="certificateLogo"><span className="brandIcon"><HeartHandshake/></span> UMEED COMMUNITY</div>
+          <div className="sectionLabel">OFFICIAL MEMBERSHIP CONFIRMATION</div>
+          <h1>Community Joining Certificate</h1>
+          <p>This is to certify that</p><h2>{selectedJoin.name}</h2>
+          <p>has been approved as a member of Umeed Community.</p>
+          <div className="joinCertDetails"><span>Mobile: <b>{selectedJoin.mobile}</b></span><span>State: <b>{selectedJoin.state}</b></span><span>Age: <b>{selectedJoin.age}</b></span><span>Joining ID: <b>{selectedJoin.id}</b></span></div>
+          <p className="joinFine">Member has been informed about the community rules and the 90% community / 10% referring member earning share policy.</p>
+          <div className="certificateSignature"><b>Umeed Community</b><small>Authorized approval</small></div>
+        </section>}
+
       </div>}
       {tab==="settings"&&<form className="adminPanel settingsForm" onSubmit={saveSettings}>
         <h2>Website content & payment details</h2>
