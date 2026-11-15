@@ -266,6 +266,23 @@ function Donate({settings}) {
     setShowCertificate(true);
     setTimeout(()=>window.print(),400);
   }
+
+  function startNewDonation(){
+    setForm({name:"",state:"",amount:"",transactionId:"",note:""});
+    setDone(false);
+    setSubmittedId("");
+    setCertificateCode("");
+    setDonationRecord(null);
+    setLookupRecord(null);
+    setLookupCode("");
+    setLookupMessage("");
+    setShowCertificate(false);
+    localStorage.removeItem("umeedLastDonationId");
+    localStorage.removeItem("umeedLastCertificateCode");
+    localStorage.removeItem("umeedLastDonationPreview");
+    setError("");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }
   const change=e=>setForm(p=>({...p,[e.target.name]:e.target.value}));
 
   async function lookupCertificate(e){
@@ -360,6 +377,7 @@ function Donate({settings}) {
       <div className="donorCertificateNumber"><span>Your Certificate Number</span><b>{donationRecord.certificateCode||certificateCode}</b><small>Is 6-digit number ko save kar lein. Baad mein isi se certificate check/download kar sakte hain.</small></div>
       {donationRecord.status==="verified"&&<button className="primaryBtn full" onClick={()=>downloadCertificate(donationRecord)}>Download Official Certificate (PDF)</button>}
       <Link to="/" className="textBtn">Back to home</Link>
+      <button type="button" className="primaryBtn full" onClick={startNewDonation}>＋ Make a new donation</button>
     </div>}
     {done&&donationRecord&&renderCertificate(donationRecord,true)}
     {lookupRecord&&<div className="successCard noPrint">
