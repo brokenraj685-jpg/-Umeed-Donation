@@ -558,6 +558,15 @@ function Admin({settings}) {
 
   useEffect(()=>{
     if(!db||!user||!isAdmin)return;
+    return onSnapshot(
+      query(collection(db,"communityJoins"),orderBy("createdAt","desc"),limit(250)),
+      s=>setJoinRequests(s.docs.map(d=>({id:d.id,...d.data()}))),
+      err=>setError("Community Join load error: "+err.message)
+    );
+  },[user,isAdmin]);
+
+  useEffect(()=>{
+    if(!db||!user||!isAdmin)return;
     return onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(100)),s=>setMediaItems(s.docs.map(d=>({id:d.id,...d.data()}))),err=>setError(err.message));
   },[user,isAdmin]);
 
