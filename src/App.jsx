@@ -1,7 +1,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
-import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud } from "lucide-react";
+import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud, Image as ImageIcon, Video, Play } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
 import { signInWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
 import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, doc, where, limit } from "firebase/firestore";
@@ -114,13 +114,13 @@ const top = useMemo(() => [...donations]
 
     <section className="section gallery" id="gallery">
       <div className="sectionHead">
-        <div><div className="sectionLabel">REAL STORIES</div><h2>Moments of hope</h2><p>Photos and videos shared by the admin.</p></div>
+        <div><div className="sectionLabel">REAL STORIES</div><h2>Moments of hope</h2><p>Explore photos and videos shared by the admin.</p></div>
         <Camera size={32}/>
       </div>
-      <div className="mediaGrid">{media.length?media.map(m=><article className="mediaCard" key={m.id}>
-        {m.type==="video"?<video src={m.url} controls/>:<img src={m.url} alt={m.title||"Community story"}/>}
-        <div><b>{m.title}</b><p>{m.caption}</p></div>
-      </article>):<div className="emptyGallery"><Camera size={30}/><span>Stories and updates will be shared here.</span></div>}</div>
+      <div className="mediaChoices">
+        <Link to="/photos" className="mediaChoice"><ImageIcon size={30}/><span><b>Photos</b><small>{media.filter(m=>m.type!=="video").length} photos · View gallery</small></span><ArrowRight/></Link>
+        <Link to="/videos" className="mediaChoice"><Video size={30}/><span><b>Videos</b><small>{media.filter(m=>m.type==="video").length} videos · Watch stories</small></span><ArrowRight/></Link>
+      </div>
     </section>
 
     <section className="closing">
@@ -134,6 +134,38 @@ const top = useMemo(() => [...donations]
       <Link to="/admin">Admin access</Link>
     </footer>
   </>;
+}
+
+
+function MediaPage({media,type}) {
+  const [selected,setSelected]=useState(null);
+  const items=useMemo(()=>media.filter(m=>type==="video"?m.type==="video":m.type!=="video"),[media,type]);
+  const heading=type==="video"?"Videos":"Photos";
+  return <main className="mediaPage">
+    <div className="mediaPageHead">
+      <Link to="/" className="mediaBack">← Back to home</Link>
+      <div className="sectionLabel">UMEED COMMUNITY STORIES</div>
+      <h1>{heading}</h1>
+      <p>{type==="video"?"Watch stories and updates shared by our admin.":"View photos and moments shared by our community."}</p>
+      <span className="mediaCount">{items.length} {type==="video"?"videos":"photos"}</span>
+    </div>
+    <div className="mediaPageGrid">
+      {items.length?items.map((m,i)=><article className="mediaPageCard" key={m.id}>
+        <button className="mediaPreview" onClick={()=>setSelected(m)} aria-label={type==="video"?"Play video":"View full photo"}>
+          {type==="video"?<><video src={m.url} preload="metadata" playsInline/><span className="mediaPlay"><Play fill="currentColor"/></span></>:<img src={m.url} alt={m.title||"Umeed community photo"} loading="lazy"/>}
+          <span className="mediaNumber">{String(i+1).padStart(2,"0")}</span>
+        </button>
+        <div className="mediaPageCaption"><b>{m.title||heading.slice(0,-1)+" "+(i+1)}</b>{m.caption&&<p>{m.caption}</p>}</div>
+      </article>):<div className="emptyGallery"><Camera size={30}/><span>No {type==="video"?"videos":"photos"} have been uploaded yet.</span></div>}
+    </div>
+    {selected&&<div className="mediaLightbox" onClick={()=>setSelected(null)}>
+      <button className="mediaClose" onClick={()=>setSelected(null)} aria-label="Close">×</button>
+      <div className="mediaLightboxInner" onClick={e=>e.stopPropagation()}>
+        {type==="video"?<video src={selected.url} controls autoPlay playsInline/>:<img src={selected.url} alt={selected.title||"Full size community photo"}/>}
+        <div><b>{selected.title}</b>{selected.caption&&<p>{selected.caption}</p>}</div>
+      </div>
+    </div>}
+  </main>;
 }
 
 function DonationDetails({settings,donations}) {
@@ -450,6 +482,8 @@ export default function App() {
     <Header settings={data.settings}/>
     <Routes>
       <Route path="/" element={<Home data={data}/>}/>
+      <Route path="/photos" element={<MediaPage media={data.media} type="image"/>}/>
+      <Route path="/videos" element={<MediaPage media={data.media} type="video"/>}/>
       <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
       <Route path="/donate" element={<Donate settings={data.settings}/>}/>
       <Route path="/admin" element={<Admin settings={data.settings}/>}/>
