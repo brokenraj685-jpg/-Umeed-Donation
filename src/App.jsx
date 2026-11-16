@@ -148,6 +148,7 @@ const top = useMemo(() => [...donations]
       <div className="socialLinks" aria-label="Social media links">
         {settings.instagramUrl&&<a className="socialLink instagramLink" href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Instagram"><Instagram size={23}/><span><b>Instagram</b><small>Instagram open</small></span></a>}
         {settings.facebookUrl&&<a className="socialLink facebookLink" href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Facebook"><Facebook size={23}/><span><b>Facebook</b><small>Facebook open</small></span></a>}
+        <Link className="socialLink helplineLink" to="/helpline" aria-label="Open Helpline"><Phone size={23}/><span><b>Helpline</b><small>Get help</small></span></Link>
       </div>
     </footer>
   </>;
@@ -252,6 +253,40 @@ function CommunityService({settings}) {
   </main>;
 }
 
+
+
+function HelpLine() {
+  const [form,setForm]=useState({message:"",address:"",mobile:""});
+  const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[error,setError]=useState("");
+  async function submit(e){
+    e.preventDefault();setError("");
+    if(!db){setError("Helpline abhi available nahi hai.");return;}
+    if(!/^[6-9]\\d{9}$/.test(form.mobile.trim())){setError("Valid 10-digit mobile number enter karein.");return;}
+    if(form.message.trim().length<8){setError("Please help ke baare mein thoda detail mein likhein.");return;}
+    if(form.address.trim().length<5){setError("Apna poora address enter karein.");return;}
+    setBusy(true);
+    try{
+      await addDoc(collection(db,"helpRequests"),{
+        message:form.message.trim(),address:form.address.trim(),mobile:form.mobile.trim(),
+        status:"new",createdAt:serverTimestamp()
+      });
+      setDone(true);
+    }catch(err){setError(err.message||"Helpline request submit nahi hui. Dobara try karein.");}
+    finally{setBusy(false);}
+  }
+  return <main className="joinPage helpLinePage">
+    <section className="joinHero"><span className="sectionLabel">UMEED COMMUNITY SUPPORT</span><h1>Helpline</h1><p>Batayein aapko kis cheez mein madad chahiye. Hamari team aapse sampark karegi.</p></section>
+    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Your request has been submitted</h2><p>Thank you for contacting Umeed Community. Hamari community team 48 hours ke andar aapse contact karne ki koshish karegi.</p></section>:<section className="helpFormPanel">
+      <form className="settingsForm" onSubmit={submit}>
+        <label>Kis cheez ke liye help chahiye?<textarea rows="5" maxLength="1500" value={form.message} onChange={e=>setForm(p=>({...p,message:e.target.value}))} placeholder="Apni problem ya help ki zaroorat detail mein likhein..." required/></label>
+        <label>Poora address<textarea rows="3" maxLength="500" value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} placeholder="House / area / city / pincode" required/></label>
+        <label>Mobile number<input type="tel" inputMode="numeric" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\\D/g,"").slice(0,10)}))} placeholder="10-digit mobile number" required/></label>
+        {error&&<p className="error">{error}</p>}
+        <button className="primaryBtn" disabled={busy}>{busy?"Submitting…":"Submit Helpline Request"}</button>
+      </form>
+    </section>}
+  </main>;
+}
 
 function JoinCommunity() {
   const [form,setForm]=useState({name:"",email:"",mobile:"",state:"",age:""});
@@ -519,6 +554,7 @@ function Admin({settings}) {
   const [tab,setTab]=useState("overview");
   const [pending,setPending]=useState([]);
   const [joinRequests,setJoinRequests]=useState([]);
+  const [helpRequests,setHelpRequests]=useState([]);
   const [selectedJoin,setSelectedJoin]=useState(null);
   const [memberPayments,setMemberPayments]=useState([]);
   const [selectedPaymentMember,setSelectedPaymentMember]=useState(null);
@@ -564,6 +600,15 @@ function Admin({settings}) {
       query(collection(db,"donations"),orderBy("createdAt","desc"),limit(1000)),
       s=>setPending(s.docs.map(d=>({id:d.id,...d.data()}))),
       err=>setError(err.message)
+    );
+  },[user,isAdmin]);
+
+  useEffect(()=>{
+    if(!db||!user||!isAdmin)return;
+    return onSnapshot(
+      query(collection(db,"helpRequests"),orderBy("createdAt","desc"),limit(500)),
+      snap=>setHelpRequests(snap.docs.map(d=>({id:d.id,...d.data()}))),
+      err=>setError("Helpline requests load error: "+err.message)
     );
   },[user,isAdmin]);
 
@@ -826,7 +871,7 @@ function Admin({settings}) {
     <button className="textBtn" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
-  const nav=[["overview","Overview"],["donations","Donations"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
+  const nav=[["overview","Overview"],["donations","Donations"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["helpline","Helpline"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
 
   return <main className="adminShell">
     <aside className="adminSide">
@@ -936,6 +981,19 @@ function Admin({settings}) {
           </div>
         </section>}
       </div>}
+      {tab==="helpline"&&<div className="adminPanel">
+        <h2>Helpline Requests ({helpRequests.length})</h2>
+        <p className="formFine">Website se submit hui sabhi help requests yahan date aur time ke saath dikhengi.</p>
+        {helpRequests.length===0?<p className="empty">Abhi koi helpline request nahi aayi hai.</p>:<div className="tableWrap"><table>
+          <thead><tr><th>Date & Time</th><th>Mobile</th><th>Address</th><th>Help message</th></tr></thead>
+          <tbody>{helpRequests.map(r=><tr key={r.id}>
+            <td>{r.createdAt?.toDate?r.createdAt.toDate().toLocaleString("en-IN"):"Submitting…"}</td>
+            <td><a href={`tel:${r.mobile}`}>{r.mobile}</a></td>
+            <td>{r.address}</td><td className="helplineMessage">{r.message}</td>
+          </tr>)}</tbody>
+        </table></div>}
+      </div>}
+
       {tab==="settings"&&<form className="adminPanel settingsForm" onSubmit={saveSettings}>
         <h2>Website content & payment details</h2>
         <label>Website name<input value={form.siteName||""} onChange={e=>setForm(p=>({...p,siteName:e.target.value}))}/></label>
@@ -1005,6 +1063,7 @@ export default function App() {
       <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
       <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
       <Route path="/join-community" element={<JoinCommunity/>}/>
+      <Route path="/helpline" element={<HelpLine/>}/>
       <Route path="/donate" element={<Donate settings={data.settings}/>}/>
       <Route path="/admin" element={<Admin settings={data.settings}/>}/>
     </Routes>
