@@ -1036,6 +1036,18 @@ footer .brand{font-size:14px}
 }
 
 
+
+.memberReportControls{display:grid;gap:14px;margin:18px 0;padding:15px;border:1px solid #dce8de;border-radius:12px;background:#f8fbf8}
+.memberReportControls label{display:grid;gap:7px;font-size:13px;font-weight:600;color:#355844;max-width:280px}
+.memberReportControls input{padding:10px 12px;border:1px solid #cbd9ce;border-radius:8px;background:#fff;font:inherit}
+.memberReportTotals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.memberReportTotals>div{display:grid;gap:5px;padding:12px;border-radius:9px;background:#fff;border:1px solid #e2ebe3}
+.memberReportTotals span{font-size:11px;color:#718071}
+.memberReportTotals b{font-size:17px;color:#17633a}
+.memberPdfSummary{padding:10px 14px;margin:12px 0;border:1px solid #b9cbbd;background:#f5faf5}
+.memberPdfSummary p{margin:7px 0!important}
+@media(max-width:700px){.memberReportTotals{grid-template-columns:1fr}.memberReportTotals b{font-size:16px}}
+
 /* Admin member-wise payment records */
 .memberPaymentCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:18px 0}
 .memberPaymentCard{display:grid;gap:6px;text-align:left;padding:15px;border:1px solid #dce8de;border-radius:12px;background:#fff;color:#355844;cursor:pointer}
