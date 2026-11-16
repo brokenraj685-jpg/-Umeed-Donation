@@ -307,7 +307,6 @@ function JoinCommunity() {
           <label>Age<input name="age" type="number" min="18" max="100" value={form.age} onChange={change} required placeholder="Your age"/></label>
           <label>Create password<input name="password" type="password" minLength="8" autoComplete="new-password" value={form.password} onChange={change} required placeholder="At least 8 characters"/></label>
           <label>Confirm password<input name="confirmPassword" type="password" minLength="8" autoComplete="new-password" value={form.confirmPassword} onChange={change} required placeholder="Enter password again"/></label>
-          <p className="joinFine">Password secure Firebase Authentication mein save hoga; website ke database mein plain password save nahi hoga. Submit karke aap 75% / 25% sharing rule accept karte hain.</p>
           {error&&<p className="error">{error}</p>}
           <button className="primaryBtn" disabled={busy}>{busy?"Submitting…":"Join Community"}</button>
           <p className="formFine">Already joined? <Link to="/member-login">Member Login</Link></p>
