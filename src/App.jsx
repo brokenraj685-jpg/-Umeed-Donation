@@ -884,7 +884,7 @@ function Admin({settings}) {
           <div className="memberReportControls">
             <label>PDF ke liye month select karein<input type="month" value={paymentReportMonth} onChange={e=>setPaymentReportMonth(e.target.value)}/></label>
             <div className="memberReportTotals">
-              <div><span>Verified donations through member</span><b>{money(selectedMonthTotal)}</b></div>
+              <div><span>Total amount entered for this month</span><b>{money(selectedMonthTotal)}</b></div>
               <div><span>75% Umeed Community</span><b>{money(communityShare)}</b></div>
               <div><span>25% Member share</span><b>{money(memberShare)}</b></div>
             </div>
