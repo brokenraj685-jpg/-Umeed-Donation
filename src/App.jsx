@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, Route, Routes, useNavigate } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, FileText, UsersRound, LogOut, UploadCloud, Image as ImageIcon, Video, Play, Instagram, Facebook } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
@@ -42,7 +42,7 @@ function Header({settings}) {
       <Link to="/details" className="navItem" onClick={()=>setOpen(false)}><FileText className="navIcon" size={17}/><span>Donation details</span></Link>
       <Link to="/service" className="navItem" onClick={()=>setOpen(false)}><HeartHandshake className="navIcon" size={17}/><span>Service</span></Link>
       <Link to="/join-community" className="navItem joinNav" onClick={()=>setOpen(false)}><UsersRound className="navIcon" size={17}/><span>Join Community</span></Link>
-      <Link to="/member-login" className="navItem" onClick={()=>setOpen(false)}><UsersRound className="navIcon" size={17}/><span>Member Login</span></Link>
+      <Link to="/member/login" className="navItem" onClick={()=>setOpen(false)}><UsersRound className="navIcon" size={17}/><span>Member Login</span></Link>
       <a href="/#leaderboard" className="navItem" onClick={()=>setOpen(false)}><Trophy className="navIcon" size={17}/><span>Leaderboard</span></a>
       <a href="/#gallery" className="navItem" onClick={()=>setOpen(false)}><Camera className="navIcon" size={17}/><span>Stories</span></a>
       <Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}><HeartHandshake size={17}/><span>Donate now</span><ArrowRight size={15}/></Link>
@@ -327,7 +327,7 @@ function MemberLogin(){
   const [error,setError]=useState("");
   const [loading,setLoading]=useState(true);
   useEffect(()=>{
-    if(!auth||!db)return;
+    if(!auth||!db){setError("Firebase connection missing hai. Vercel Environment Variables check karein.");setLoading(false);return;}
     let stopReferrals=null;
     const stopAuth=auth.onAuthStateChanged(async user=>{
       if(stopReferrals){stopReferrals();stopReferrals=null;}
@@ -342,7 +342,7 @@ function MemberLogin(){
         const data={id:snap.id,...snap.data()};
         setMember(data);
         if(data.status==="approved"&&data.referralCode){
-          navigate("/member-dashboard",{replace:true});
+          if(window.location.pathname!=="/member/dashboard")navigate("/member/dashboard",{replace:true});
           const q=query(collection(db,"donations"),where("referralCode","==",data.referralCode),where("status","==","verified"),limit(250));
           stopReferrals=onSnapshot(q,ss=>setReferrals(ss.docs.map(x=>({id:x.id,...x.data()}))),err=>setError("Referral details load nahi hui: "+err.message));
           setLoading(false);
@@ -977,8 +977,9 @@ export default function App() {
       <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
       <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
       <Route path="/join-community" element={<JoinCommunity/>}/>
-      <Route path="/member-login" element={<MemberLogin/>}/>
-      <Route path="/member-dashboard" element={<MemberLogin/>}/>
+      <Route path="/member/*" element={<MemberLogin/>}/>
+      <Route path="/member-login" element={<Navigate to="/member/login" replace/>}/>
+      <Route path="/member-dashboard" element={<Navigate to="/member/dashboard" replace/>}/>
       <Route path="/donate" element={<Donate settings={data.settings}/>}/>
       <Route path="/admin" element={<Admin settings={data.settings}/>}/>
     </Routes>
