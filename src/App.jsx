@@ -348,7 +348,7 @@ function MemberLogin(){
           setLoading(false);
           return;
         }
-      }catch(err){setError("Member details load nahi hui. Please dobara login karein.");}
+      }catch(err){console.error("Member dashboard load error:",err);setError("Member details load nahi hui: "+(err.code||err.message||"Unknown error"));}
       setLoading(false);
     });
     return ()=>{stopAuth();if(stopReferrals)stopReferrals();};
@@ -358,7 +358,7 @@ function MemberLogin(){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())){setError("Valid Gmail / email address enter karein.");return;}
     setBusy(true);
     try{await signInWithEmailAndPassword(auth,email.trim().toLowerCase(),password);}
-    catch(err){setError("Gmail ya password galat hai.");}
+    catch(err){console.error("Member login error:",err);const messages={"auth/invalid-credential":"Gmail ya password galat hai.","auth/user-not-found":"Is Gmail se account nahi mila. Pehle Join Community karein.","auth/wrong-password":"Password galat hai.","auth/too-many-requests":"Bahut attempts hue hain. Thodi der baad try karein.","auth/invalid-email":"Gmail address sahi nahi hai."};setError(messages[err.code]||("Login nahi hua: "+(err.code||err.message)));}
     finally{setBusy(false);}
   }
   if(loading)return <main className="adminPage"><section className="adminLogin"><h2>Loading your private dashboard…</h2></section></main>;
