@@ -402,6 +402,7 @@ function Donate({settings}) {
         batch.set(docRef,{
           name:form.name.trim(),state:form.state,amount:Number(form.amount),
           transactionId:form.transactionId.trim(),note:form.note.trim(),
+          ...(referralCode?{referralCode}:{}),
           certificateCode:newCode,status:"pending",createdAt:serverTimestamp()
         });
         // This mapping is create-only in Firestore rules; existing numbers cannot be reused.
@@ -522,6 +523,7 @@ function Admin({settings}) {
   const [memberPayments,setMemberPayments]=useState([]);
   const [selectedPaymentMember,setSelectedPaymentMember]=useState(null);
   const [paymentForm,setPaymentForm]=useState({amount:"",paidAt:"",referenceId:""});
+  const [paymentReportMonth,setPaymentReportMonth]=useState(()=>new Date().toISOString().slice(0,7));
   const [form,setForm]=useState(settings);
   const [mediaTitle,setMediaTitle]=useState("");
   const [mediaCaption,setMediaCaption]=useState("");
@@ -649,6 +651,20 @@ function Admin({settings}) {
   function memberPaymentTotal(memberId){
     return memberPayments.filter(p=>p.memberId===memberId).reduce((sum,p)=>sum+Number(p.amount||0),0);
   }
+
+  function donationMonthKey(d){
+    const date=d.createdAt?.toDate?d.createdAt.toDate():d.createdAt?.seconds?new Date(d.createdAt.seconds*1000):new Date(d.createdAt||0);
+    return Number.isNaN(date.getTime())?"":date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0");
+  }
+
+  const selectedMemberDonations=selectedPaymentMember
+    ?pending.filter(d=>d.status==="verified"&&d.referralCode===selectedPaymentMember.referralCode&&donationMonthKey(d)===paymentReportMonth)
+      .sort((a,b)=>donationMonthKey(a).localeCompare(donationMonthKey(b))||String(a.createdAt?.seconds||"").localeCompare(String(b.createdAt?.seconds||"")))
+    :[];
+  const selectedMemberDonationTotal=selectedMemberDonations.reduce((sum,d)=>sum+Number(d.amount||0),0);
+  const communityShare=Math.round(selectedMemberDonationTotal*0.75*100)/100;
+  const memberShare=Math.round(selectedMemberDonationTotal*0.25*100)/100;
+  const reportMonthLabel=new Date(paymentReportMonth+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
 
   async function verify(d,approved) {
     await updateDoc(doc(db,"donations",d.id),{
@@ -865,6 +881,14 @@ function Admin({settings}) {
         </div>
         {selectedPaymentMember&&<section className="adminPanel selectedMemberPayments">
           <div className="sectionHead"><div><div className="sectionLabel">SELECTED MEMBER</div><h2>{selectedPaymentMember.name}</h2><p>{selectedPaymentMember.email||"—"} · {selectedPaymentMember.mobile||"—"}</p></div><b className="amount">{money(memberPaymentTotal(selectedPaymentMember.id))}</b></div>
+          <div className="memberReportControls">
+            <label>PDF ke liye month select karein<input type="month" value={paymentReportMonth} onChange={e=>setPaymentReportMonth(e.target.value)}/></label>
+            <div className="memberReportTotals">
+              <div><span>Verified donations through member</span><b>{money(selectedMemberDonationTotal)}</b></div>
+              <div><span>75% Umeed Community</span><b>{money(communityShare)}</b></div>
+              <div><span>25% Member share</span><b>{money(memberShare)}</b></div>
+            </div>
+          </div>
           <form className="settingsForm" onSubmit={saveMemberPayment}>
             <h3>Add payment entry</h3>
             <label>Payment amount (₹)<input type="number" min="1" step="0.01" value={paymentForm.amount} onChange={e=>setPaymentForm(p=>({...p,amount:e.target.value}))} required placeholder="Enter amount"/></label>
@@ -881,13 +905,24 @@ function Admin({settings}) {
             </table>
           </div>
           <div className="memberPaymentPrint">
-            <h1>Umeed Community – Member Payment Statement</h1>
+            <h1>Umeed Community – Monthly Member Earnings Statement</h1>
             <h2>{selectedPaymentMember.name}</h2>
             <p>Mobile: {selectedPaymentMember.mobile||"—"} | Email: {selectedPaymentMember.email||"—"}</p>
-            <h3>Total earnings: {money(memberPaymentTotal(selectedPaymentMember.id))}</h3>
+            <h3>Statement month: {reportMonthLabel}</h3>
+            <div className="memberPdfSummary">
+              <p>Total verified donations received through this member: <b>{money(selectedMemberDonationTotal)}</b></p>
+              <p>Umeed Community share (75%): <b>{money(communityShare)}</b></p>
+              <p>Member share (25%): <b>{money(memberShare)}</b></p>
+            </div>
+            <h3>Verified donation details</h3>
+            <table><thead><tr><th>Date</th><th>Donor</th><th>Amount</th><th>Transaction Reference</th></tr></thead><tbody>
+              {selectedMemberDonations.map(d=><tr key={d.id}><td>{d.createdAt?.toDate?.().toLocaleString("en-IN")||"—"}</td><td>{d.name||"—"}</td><td>{money(d.amount)}</td><td>{d.transactionId||"—"}</td></tr>)}
+              {!selectedMemberDonations.length&&<tr><td colSpan="4">No verified referral donations for this month.</td></tr>}
+            </tbody></table>
+            <h3>Manually recorded member payment entries (all dates)</h3>
             <table><thead><tr><th>Date & Time</th><th>Amount</th><th>Payment Reference ID</th></tr></thead><tbody>
-              {memberPayments.filter(p=>p.memberId===selectedPaymentMember.id).sort((a,b)=>String(a.paidAt||"").localeCompare(String(b.paidAt||""))).map(p=><tr key={p.id}><td>{p.paidAt?new Date(p.paidAt).toLocaleString("en-IN"):"—"}</td><td>{money(p.amount)}</td><td>{p.referenceId}</td></tr>)}
-              {!memberPayments.some(p=>p.memberId===selectedPaymentMember.id)&&<tr><td colSpan="3">No payment entries</td></tr>}
+              {memberPayments.filter(p=>p.memberId===selectedPaymentMember.id&&String(p.paidAt||"").slice(0,7)===paymentReportMonth).sort((a,b)=>String(a.paidAt||"").localeCompare(String(b.paidAt||""))).map(p=><tr key={p.id}><td>{p.paidAt?new Date(p.paidAt).toLocaleString("en-IN"):"—"}</td><td>{money(p.amount)}</td><td>{p.referenceId}</td></tr>)}
+              {!memberPayments.some(p=>p.memberId===selectedPaymentMember.id&&String(p.paidAt||"").slice(0,7)===paymentReportMonth)&&<tr><td colSpan="3">No manual payment entries for this month.</td></tr>}
             </tbody></table>
             <p>Generated from Umeed Community admin records.</p>
           </div>
