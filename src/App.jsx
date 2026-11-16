@@ -337,20 +337,20 @@ function MemberLogin(){
       const loadTimeout=setTimeout(()=>{setError("Dashboard load hone mein time lag raha hai. Firestore Rules publish aur internet connection check karein; phir page refresh karein.");setLoading(false);},12000);
       try{
         await user.reload();
-        if(!user.emailVerified){setError("Pehle apne Gmail par bheja verification link open karein, phir dobara login karein.");await signOut(auth);setLoading(false);return;}
+        if(!user.emailVerified){clearTimeout(loadTimeout);setError("Pehle apne Gmail par bheja verification link open karein, phir dobara login karein.");await signOut(auth);setLoading(false);return;}
         const snap=await getDoc(doc(db,"communityJoins",user.uid));
-        if(!snap.exists()){setError("Is Gmail se community joining request nahi mili.");await signOut(auth);setLoading(false);return;}
+        if(!snap.exists()){clearTimeout(loadTimeout);setError("Is Gmail se community joining request nahi mili.");await signOut(auth);setLoading(false);return;}
         const data={id:snap.id,...snap.data()};
         setMember(data);
         if(data.status==="approved"&&data.referralCode){
           if(window.location.pathname!=="/member/dashboard")navigate("/member/dashboard",{replace:true});
           const q=query(collection(db,"donations"),where("referralCode","==",data.referralCode),where("status","==","verified"),limit(250));
           stopReferrals=onSnapshot(q,ss=>setReferrals(ss.docs.map(x=>({id:x.id,...x.data()}))),err=>setError("Referral details load nahi hui: "+err.message));
-          setLoading(false);
+          clearTimeout(loadTimeout);setLoading(false);
           return;
         }
       }catch(err){console.error("Member dashboard load error:",err);setError("Member details load nahi hui: "+(err.code||err.message||"Unknown error"));}
-      setLoading(false);
+      clearTimeout(loadTimeout);setLoading(false);
     });
     return ()=>{stopAuth();if(stopReferrals)stopReferrals();};
   },[]);
