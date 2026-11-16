@@ -648,6 +648,17 @@ function Admin({settings}) {
     }catch(err){setError(err.message||"Payment entry save nahi hui.");}
   }
 
+  async function markMemberLeft(member){
+    if(member.status==="left")return;
+    const ok=window.confirm(`${member.name||"Ye member"} ko Left mark karna hai? Naam aur purani payment history rahegi, lekin nayi payment entry ka option band ho jayega.`);
+    if(!ok)return;
+    try{
+      await updateDoc(doc(db,"communityJoins",member.id),{status:"left",leftAt:serverTimestamp(),leftMarkedBy:user.email});
+      if(selectedPaymentMember?.id===member.id)setSelectedPaymentMember({...member,status:"left"});
+      alert("Member ko Left mark kar diya. Purana record safe hai.");
+    }catch(err){setError(err.message||"Member status update nahi hua.");}
+  }
+
   function memberPaymentTotal(memberId){
     return memberPayments.filter(p=>p.memberId===memberId).reduce((sum,p)=>sum+Number(p.amount||0),0);
   }
@@ -874,13 +885,15 @@ function Admin({settings}) {
         <h2>Member Payments & Earnings</h2>
         <p className="formFine">Approved member ko select karke uski har payment ki entry save karein. Har member ka record alag rahega.</p>
         <div className="memberPaymentCards">
-          {joinRequests.filter(j=>j.status==="approved").map(j=><button type="button" key={j.id} className={"memberPaymentCard"+(selectedPaymentMember?.id===j.id?" selected":"")} onClick={()=>setSelectedPaymentMember(j)}>
-            <b>{j.name}</b><span>{j.mobile||"—"}</span><strong>{money(memberPaymentTotal(j.id))}</strong><small>{memberPayments.filter(p=>p.memberId===j.id).length} payment entries</small>
+          {joinRequests.filter(j=>j.status==="approved"||j.status==="left").map(j=><button type="button" key={j.id} className={"memberPaymentCard"+(selectedPaymentMember?.id===j.id?" selected":"")} onClick={()=>setSelectedPaymentMember(j)}>
+            <b>{j.name}</b><span>{j.mobile||"—"}</span><strong>{money(memberPaymentTotal(j.id))}</strong><small>{memberPayments.filter(p=>p.memberId===j.id).length} payment entries · {j.status==="left"?"Left":"Active"}</small>
           </button>)}
-          {!joinRequests.some(j=>j.status==="approved")&&<p className="empty">Abhi koi approved member nahi hai.</p>}
+          {!joinRequests.some(j=>j.status==="approved"||j.status==="left")&&<p className="empty">Abhi koi approved member nahi hai.</p>}
         </div>
         {selectedPaymentMember&&<section className="adminPanel selectedMemberPayments">
-          <div className="sectionHead"><div><div className="sectionLabel">SELECTED MEMBER</div><h2>{selectedPaymentMember.name}</h2><p>{selectedPaymentMember.email||"—"} · {selectedPaymentMember.mobile||"—"}</p></div><b className="amount">{money(memberPaymentTotal(selectedPaymentMember.id))}</b></div>
+          <div className="sectionHead"><div><div className="sectionLabel">SELECTED MEMBER · {selectedPaymentMember.status==="left"?"LEFT":"ACTIVE"}</div><h2>{selectedPaymentMember.name}</h2><p>{selectedPaymentMember.email||"—"} · {selectedPaymentMember.mobile||"—"}</p></div><b className="amount">{money(memberPaymentTotal(selectedPaymentMember.id))}</b></div>
+          {selectedPaymentMember.status==="approved"&&<div className="actions"><button type="button" onClick={()=>markMemberLeft(selectedPaymentMember)}>Mark member as Left</button></div>}
+          {selectedPaymentMember.status==="left"&&<p className="formFine">Ye member Left mark hai. Purana record safe hai aur nayi payment entry band hai.</p>}
           <div className="memberReportControls">
             <label>PDF ke liye month select karein<input type="month" value={paymentReportMonth} onChange={e=>setPaymentReportMonth(e.target.value)}/></label>
             <div className="memberReportTotals">
@@ -889,14 +902,14 @@ function Admin({settings}) {
               <div><span>25% Member share</span><b>{money(memberShare)}</b></div>
             </div>
           </div>
-          <form className="settingsForm" onSubmit={saveMemberPayment}>
+          {selectedPaymentMember.status==="approved"&&<form className="settingsForm" onSubmit={saveMemberPayment}>
             <h3>Add payment entry</h3>
             <label>Payment amount (₹)<input type="number" min="1" step="0.01" value={paymentForm.amount} onChange={e=>setPaymentForm(p=>({...p,amount:e.target.value}))} required placeholder="Enter amount"/></label>
             <label>Payment date & time<input type="datetime-local" value={paymentForm.paidAt} onChange={e=>setPaymentForm(p=>({...p,paidAt:e.target.value}))} required/></label>
             <label>Payment reference ID<input value={paymentForm.referenceId} onChange={e=>setPaymentForm(p=>({...p,referenceId:e.target.value}))} required placeholder="UPI / bank reference ID"/></label>
             {error&&<p className="error">{error}</p>}
             <button className="primaryBtn">Save payment entry</button>
-          </form>
+          </form>}
           <div className="actions"><button type="button" onClick={()=>window.print()}>Download this member PDF</button></div>
           <div className="tableWrap">
             <table><thead><tr><th>Payment date & time</th><th>Amount</th><th>Reference ID</th></tr></thead>
