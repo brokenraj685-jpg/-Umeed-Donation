@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, FileText, UsersRound, LogOut, UploadCloud, Image as ImageIcon, Video, Play, Instagram, Facebook } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, signOut, getIdToken, sendEmailVerification, onAuthStateChanged } from "firebase/auth";
 import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, deleteDoc, doc, where, limit, getDocs, getDoc, writeBatch, setDoc } from "firebase/firestore";
 
 const ADMIN_EMAIL = "rajbabushaikh18@gmail.com";
@@ -329,11 +329,12 @@ function MemberLogin(){
   useEffect(()=>{
     if(!auth||!db){setError("Firebase connection missing hai. Vercel Environment Variables check karein.");setLoading(false);return;}
     let stopReferrals=null;
-    const stopAuth=auth.onAuthStateChanged(async user=>{
+    const stopAuth=onAuthStateChanged(auth,async user=>{
       if(stopReferrals){stopReferrals();stopReferrals=null;}
       setLoading(true);setMember(null);setReferrals([]);setError("");
       if(!user){setLoading(false);return;}
       if(user.email?.toLowerCase()===ADMIN_EMAIL){setError("Admin account ko Admin page se login karein.");setLoading(false);return;}
+      const loadTimeout=setTimeout(()=>{setError("Dashboard load hone mein time lag raha hai. Firestore Rules publish aur internet connection check karein; phir page refresh karein.");setLoading(false);},12000);
       try{
         await user.reload();
         if(!user.emailVerified){setError("Pehle apne Gmail par bheja verification link open karein, phir dobara login karein.");await signOut(auth);setLoading(false);return;}
