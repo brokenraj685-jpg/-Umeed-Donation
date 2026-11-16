@@ -57,6 +57,19 @@ service cloud.firestore {
       allow list: if isAdmin();
       allow update, delete: if isAdmin();
     }
+    match /helpRequests/{requestId} {
+      allow create: if request.resource.data.keys().hasOnly(["message","address","mobile","status","createdAt"])
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 8
+        && request.resource.data.message.size() <= 1500
+        && request.resource.data.address is string
+        && request.resource.data.address.size() >= 5
+        && request.resource.data.address.size() <= 500
+        && request.resource.data.mobile is string
+        && request.resource.data.mobile.matches("^[6-9][0-9]{9}$")
+        && request.resource.data.status == "new";
+      allow read, update, delete: if isAdmin();
+    }
     match /memberPayments/{paymentId} {
       allow read, create, update, delete: if isAdmin();
     }
