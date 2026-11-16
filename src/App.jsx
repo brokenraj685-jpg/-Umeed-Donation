@@ -322,32 +322,62 @@ function MemberLogin(){
   const [password,setPassword]=useState("");
   const [busy,setBusy]=useState(false);
   const [member,setMember]=useState(null);
+  const [referrals,setReferrals]=useState([]);
   const [error,setError]=useState("");
+  const [loading,setLoading]=useState(true);
   useEffect(()=>{
     if(!auth||!db)return;
     return auth.onAuthStateChanged(async user=>{
-      if(!user){setMember(null);return;}
-      if(user.email?.toLowerCase()===ADMIN_EMAIL){setMember(null);return;}
+      setLoading(true);setMember(null);setReferrals([]);setError("");
+      if(!user){setLoading(false);return;}
+      if(user.email?.toLowerCase()===ADMIN_EMAIL){setError("Admin account ko Admin page se login karein.");setLoading(false);return;}
       try{
+        await user.reload();
+        if(!user.emailVerified){setError("Pehle apne Gmail par bheja verification link open karein, phir dobara login karein.");await signOut(auth);setLoading(false);return;}
         const snap=await getDoc(doc(db,"communityJoins",user.uid));
-        if(snap.exists())setMember({id:snap.id,...snap.data()});
-        else setError("Is account ke saath member request nahi mili.");
+        if(!snap.exists()){setError("Is Gmail se community joining request nahi mili.");await signOut(auth);setLoading(false);return;}
+        const data={id:snap.id,...snap.data()};
+        setMember(data);
+        if(data.status==="approved"&&data.referralCode){
+          const q=query(collection(db,"donations"),where("referralCode","==",data.referralCode),where("status","==","verified"),limit(250));
+          const stop=onSnapshot(q,ss=>setReferrals(ss.docs.map(x=>({id:x.id,...x.data()}))),err=>setError("Referral details load nahi hui: "+err.message));
+          setLoading(false);
+          return ()=>stop();
+        }
       }catch(err){setError("Member details load nahi hui. Please dobara login karein.");}
+      setLoading(false);
     });
   },[]);
   async function login(e){
     e.preventDefault();setError("");
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())){setError("Valid Gmail / email address enter karein.");return;}
+    if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())){setError("Valid Gmail / email address enter karein.");return;}
     setBusy(true);
     try{await signInWithEmailAndPassword(auth,email.trim().toLowerCase(),password);}
     catch(err){setError("Gmail ya password galat hai.");}
     finally{setBusy(false);}
   }
+  if(loading)return <main className="adminPage"><section className="adminLogin"><h2>Loading your private dashboard…</h2></section></main>;
   if(member){
-    return <main className="adminPage"><section className="adminLogin">
-      <div className="brandIcon"><UsersRound/></div><h1>Welcome, {member.name}</h1>
-      {member.status==="approved"?<><p>Your Umeed membership is approved. Member dashboard agle setup step mein activate hoga.</p><p><b>Mobile:</b> {member.mobile}</p>{member.referralCode&&<p><b>Referral Code:</b> {member.referralCode}</p>}</>:<><p>Your joining request abhi <b>{member.status==="rejected"?"rejected":"pending admin approval"}</b> hai. Approval ke baad member access activate hoga.</p></>}
-      <button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button><Link to="/" className="textBtn">Back to website</Link>
+    const total=referrals.reduce((sum,d)=>sum+Number(d.amount||0),0);
+    const earning=Math.floor(total*0.25);
+    const share=total-earning;
+    const referralUrl=member.referralCode?window.location.origin+"/donate?ref="+encodeURIComponent(member.referralCode):"";
+    return <main className="adminPage"><section className="adminLogin memberDashboard">
+      <div className="brandIcon"><UsersRound/></div><div className="sectionLabel">PRIVATE MEMBER AREA</div><h1>Welcome, {member.name}</h1>
+      {member.status!=="approved"?<><p>Your joining request is <b>{member.status==="rejected"?"rejected":"pending admin approval"}</b>. Approval ke baad aapka personal dashboard activate hoga.</p><button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button></>:<>
+        <p>Your membership is approved. Ye dashboard sirf aapke account ke liye hai.</p>
+        <div className="adminCards memberStats">
+          <article><span>Verified donations via your link</span><b>{money(total)}</b></article>
+          <article><span>Your 25% earning</span><b>{money(earning)}</b></article>
+          <article><span>Umeed 75% share</span><b>{money(share)}</b></article>
+          <article><span>Verified contributions</span><b>{referrals.length}</b></article>
+        </div>
+        <div className="adminPanel memberReferral"><h2>Your referral link</h2><p>Is link ko share karein. Is link se aane wale verified donations aapke dashboard mein count honge.</p><input readOnly value={referralUrl}/><button className="primaryBtn full" onClick={()=>navigator.clipboard?.writeText(referralUrl).then(()=>alert("Referral link copied."))}>Copy referral link</button><p><b>Referral Code:</b> {member.referralCode||"Admin approval ke baad milega"}</p></div>
+        <div className="adminPanel"><h2>Your referred donations</h2><div className="tableWrap"><table><thead><tr><th>Donor</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>{referrals.map(d=><tr key={d.id}><td>{d.name}</td><td>{money(d.amount)}</td><td>Verified</td><td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN")||"—"}</td></tr>)}{!referrals.length&&<tr><td colSpan="4" className="empty">Abhi aapke referral se koi verified donation nahi aaya.</td></tr>}</tbody></table></div></div>
+        <p className="formFine">Earning verified donations ke 25% ke hisaab se dikhayi jaati hai. Withdrawal feature abhi activate nahi hua hai.</p>
+        <button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button>
+      </>}
+      <Link to="/" className="textBtn">Back to website</Link>
     </section></main>;
   }
   return <main className="adminPage"><form className="adminLogin" onSubmit={login}>
@@ -361,7 +391,7 @@ function MemberLogin(){
 }
 
 function Donate({settings}) {
-  const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});
+  const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});\n  const referralCode=new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase()||"";
   const [busy,setBusy]=useState(false),[done,setDone]=useState(()=>Boolean(localStorage.getItem("umeedLastDonationId"))),[error,setError]=useState("");
   const [submittedId,setSubmittedId]=useState(()=>localStorage.getItem("umeedLastDonationId")||"");
   const [certificateCode,setCertificateCode]=useState(()=>localStorage.getItem("umeedLastCertificateCode")||"");
@@ -654,7 +684,13 @@ function Admin({settings}) {
   }
 
   async function reviewJoin(d,approved){
-    await updateDoc(doc(db,"communityJoins",d.id),{status:approved?"approved":"rejected",reviewedAt:serverTimestamp(),reviewedBy:user.email});
+    if(approved){
+      const referralCode=d.referralCode||("UM"+d.id.replace(/[^a-z0-9]/gi,"").slice(0,8).toUpperCase());
+      await setDoc(doc(db,"referralCodes",referralCode),{memberUid:d.id,createdAt:serverTimestamp()},{merge:true});
+      await updateDoc(doc(db,"communityJoins",d.id),{status:"approved",referralCode,reviewedAt:serverTimestamp(),reviewedBy:user.email});
+    }else{
+      await updateDoc(doc(db,"communityJoins",d.id),{status:"rejected",reviewedAt:serverTimestamp(),reviewedBy:user.email});
+    }
   }
 
   async function verify(d,approved) {
