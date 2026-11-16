@@ -45,12 +45,9 @@ service cloud.firestore {
       allow update, delete: if false;
     }
     match /communityJoins/{joinId} {
-      allow create: if signedIn()
-        && request.auth.uid == joinId
-        && request.resource.data.keys().hasOnly(["name","email","mobile","state","age","status","createdAt","termsAccepted","memberUid"])
-        && request.resource.data.memberUid == request.auth.uid
-        && request.resource.data.email is string
-        && request.resource.data.email == request.auth.token.email
+      allow create: if (!signedIn() || isAdmin())
+        && request.resource.data.keys().hasOnly(["name","email","mobile","state","age","status","createdAt","termsAccepted"])
+        && request.resource.data.email is string && request.resource.data.email.size() > 3 && request.resource.data.email.size() <= 254
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80
         && request.resource.data.mobile is string && request.resource.data.mobile.matches("^[6-9][0-9]{9}$")
         && request.resource.data.state is string && request.resource.data.state.size() > 0
@@ -59,6 +56,9 @@ service cloud.firestore {
       allow get: if isAdmin() || (signedIn() && request.auth.uid == joinId);
       allow list: if isAdmin();
       allow update, delete: if isAdmin();
+    }
+    match /memberPayments/{paymentId} {
+      allow read, create, update, delete: if isAdmin();
     }
     match /referralCodes/{code} {
       allow get: if true;
