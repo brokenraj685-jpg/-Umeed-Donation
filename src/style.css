@@ -1034,3 +1034,30 @@ footer .brand{font-size:14px}
   .nav .navItem { justify-content:flex-start; width:100%; min-height:43px; padding:10px 13px; font-size:13px; }
   .nav .navDonate { width:100%; justify-content:center; min-height:44px; }
 }
+
+
+/* Admin member-wise payment records */
+.memberPaymentCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:18px 0}
+.memberPaymentCard{display:grid;gap:6px;text-align:left;padding:15px;border:1px solid #dce8de;border-radius:12px;background:#fff;color:#355844;cursor:pointer}
+.memberPaymentCard.selected{border:2px solid #287448;background:#f2faf3}
+.memberPaymentCard b{font-size:14px;color:#1b5634}
+.memberPaymentCard span,.memberPaymentCard small{font-size:11px;color:#718071}
+.memberPaymentCard strong{font-size:18px;color:#17633a}
+.selectedMemberPayments{margin-top:18px}
+.memberPaymentPrint{display:none}
+@media(max-width:700px){.memberPaymentCards{grid-template-columns:1fr 1fr}.memberPaymentCard{padding:11px}.memberPaymentCard strong{font-size:16px}}
+@media print{
+  @page{size:A4 portrait;margin:10mm!important}
+  html,body,#root{height:auto!important;min-height:0!important;overflow:visible!important;background:#fff!important}
+  body *{visibility:hidden!important}
+  .joinCertificatePrint{display:none!important;visibility:hidden!important}
+  .memberPaymentPrint,.memberPaymentPrint *{visibility:visible!important}
+  .memberPaymentPrint{display:block!important;position:absolute!important;left:0!important;top:0!important;width:100%!important;padding:8mm!important;box-sizing:border-box!important;background:#fff!important;color:#18352a!important;font-family:Arial,sans-serif!important}
+  .memberPaymentPrint h1{font-size:22px!important;color:#1b5634!important;margin:0 0 12px!important}
+  .memberPaymentPrint h2{font-size:19px!important;margin:8px 0!important}
+  .memberPaymentPrint h3{font-size:16px!important;margin:14px 0!important}
+  .memberPaymentPrint p{font-size:11px!important}
+  .memberPaymentPrint table{width:100%!important;border-collapse:collapse!important;font-size:10px!important}
+  .memberPaymentPrint th,.memberPaymentPrint td{border:1px solid #b9cbbd!important;padding:8px!important;text-align:left!important}
+  .memberPaymentPrint th{background:#eff7ef!important}
+}
