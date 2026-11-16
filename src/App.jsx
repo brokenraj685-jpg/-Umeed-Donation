@@ -468,6 +468,8 @@ function Donate({settings}) {
     if(Number(form.amount)<1){setError("Please enter a valid donation amount.");return;}
     setBusy(true);
     try {
+      let validReferralCode="";
+      if(referralCode){const referralSnap=await getDoc(doc(db,"referralCodes",referralCode));if(referralSnap.exists())validReferralCode=referralCode;}
       let newCode="",docRef=null,lastError=null;
       // Generate an unbiased random 6-digit code. Firestore rules atomically
       // reject a code that already exists, so a collision can never overwrite it.
@@ -688,7 +690,7 @@ function Admin({settings}) {
 
   async function reviewJoin(d,approved){
     if(approved){
-      const referralCode=d.referralCode||("UM"+d.id.replace(/[^a-z0-9]/gi,"").slice(0,8).toUpperCase());
+      const referralCode=d.referralCode||("UM"+d.id.replace(/[^a-z0-9]/gi,"").toUpperCase());
       await setDoc(doc(db,"referralCodes",referralCode),{memberUid:d.id,createdAt:serverTimestamp()},{merge:true});
       await updateDoc(doc(db,"communityJoins",d.id),{status:"approved",referralCode,reviewedAt:serverTimestamp(),reviewedBy:user.email});
     }else{
