@@ -3,8 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, FileText, UsersRound, LogOut, UploadCloud, Image as ImageIcon, Video, Play, Instagram, Facebook } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
-import { signInWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
-import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, deleteDoc, doc, where, limit, getDocs, getDoc, writeBatch } from "firebase/firestore";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, deleteDoc, doc, where, limit, getDocs, getDoc, writeBatch, setDoc } from "firebase/firestore";
 
 const ADMIN_EMAIL = "rajbabushaikh18@gmail.com";
 
@@ -253,28 +253,35 @@ function CommunityService({settings}) {
 }
 
 
+function memberEmail(mobile){return `+91${String(mobile).replace(/\\D/g,"")}@members.umeed.local`;}
+
 function JoinCommunity() {
-  const [form,setForm]=useState({name:"",mobile:"",state:"",age:""});
+  const [form,setForm]=useState({name:"",mobile:"",state:"",age:"",password:"",confirmPassword:""});
   const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[error,setError]=useState(""),[joinId,setJoinId]=useState("");
   const change=e=>setForm(p=>({...p,[e.target.name]:e.target.value}));
   async function submit(e){
     e.preventDefault();setError("");
-    if(!db){setError("Joining service abhi available nahi hai.");return;}
-    if(!/^[6-9]\d{9}$/.test(form.mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
+    if(!db||!auth){setError("Joining service abhi available nahi hai.");return;}
+    if(!/^[6-9]\\d{9}$/.test(form.mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
     if(Number(form.age)<18||Number(form.age)>100){setError("Joining ke liye age 18 se 100 ke beech honi chahiye.");return;}
+    if(form.password.length<8){setError("Password kam se kam 8 characters ka hona chahiye.");return;}
+    if(form.password!==form.confirmPassword){setError("Dono password match nahi kar rahe.");return;}
     setBusy(true);
     try{
-      const ref=await addDoc(collection(db,"communityJoins"),{
+      const credential=await createUserWithEmailAndPassword(auth,memberEmail(form.mobile),form.password);
+      await setDoc(doc(db,"communityJoins",credential.user.uid),{
         name:form.name.trim(),mobile:form.mobile.trim(),state:form.state,age:Number(form.age),
-        status:"pending",createdAt:serverTimestamp(),termsAccepted:true
+        status:"pending",createdAt:serverTimestamp(),termsAccepted:true,memberUid:credential.user.uid
       });
-      setJoinId(ref.id);setDone(true);
-    }catch(err){setError(err.message||"Request submit nahi hui. Dobara try karein.");}
-    finally{setBusy(false);}
+      setJoinId(credential.user.uid);setDone(true);
+    }catch(err){
+      if(err.code==="auth/email-already-in-use")setError("Is mobile number se account pehle se bana hua hai. Member Login karein.");
+      else setError(err.message||"Request submit nahi hui. Dobara try karein.");
+    }finally{setBusy(false);}
   }
   return <main className="joinPage">
     <section className="joinHero"><span className="sectionLabel">BE A PART OF THE CHANGE</span><h1>Join Umeed Community</h1><p>Apni skills aur mehnat se kamayein, aur community ke zariye zarooratmand logon ki madad ka hissa banein.</p></section>
-    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Thank you for joining Umeed Community!</h2><p>Aapki joining request successfully submit ho gayi hai. Admin verification ke baad hi membership approve hogi.</p><small>Joining Request ID: {joinId}</small><div className="joinPendingStamp">PENDING ADMIN APPROVAL</div><button className="primaryBtn" onClick={()=>window.print()}>Download joining receipt / PDF</button></section>:<>
+    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Thank you for joining Umeed Community!</h2><p>Aapki joining request successfully submit ho gayi hai. Admin approval ke baad aap apne mobile number aur banaye hue password se login kar sakte hain.</p><small>Joining Request ID: {joinId}</small><div className="joinPendingStamp">PENDING ADMIN APPROVAL</div><Link className="primaryBtn" to="/member-login">Member Login</Link><button className="primaryBtn" onClick={()=>window.print()}>Download joining receipt / PDF</button></section>:<>
       <section className="joinInfoGrid">
         <article><h2>Joining Rules</h2><ul>
           <li>Member ki identity verification ke liye Aadhaar Card, PAN Card aur passport-size photo dena zaroori hoga.</li>
@@ -286,21 +293,67 @@ function JoinCommunity() {
           <li>Umeed Community ke network ke through kaam aur earning ke mauke.</li>
           <li>Har earning ka transparent record maintain kiya jayega.</li>
           <li>Community ke social-help projects ka hissa banne ka mauka.</li>
-        </ul><div className="joinShare"><b>90% Community</b><span>10% Earning member</span></div><p className="joinFine">Website ke through member ke source se aayi earning mein 90% Umeed Community ka aur 10% us member ka hoga jiske through earning aayi hai. Har kaam/payment se pehle calculation aur terms clear hongi.</p></article>
+        </ul><div className="joinShare"><b>75% Community</b><span>25% Referring Member</span></div><p className="joinFine">Verified donation mein 75% Umeed Community ka aur 25% us approved member ka hoga jiske referral link se donation aaya hai.</p></article>
       </section>
       <section className="joinFormCard"><h2>Join Community Form</h2><p>Form submit karne ke baad admin approval ka wait karein.</p>
         <form onSubmit={submit}>
           <label>Full name<input name="name" value={form.name} onChange={change} maxLength="80" required placeholder="Apna poora naam"/></label>
-          <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
+          <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
           <label>State<select name="state" value={form.state} onChange={change} required><option value="">Select state</option>{states.map(x=><option key={x}>{x}</option>)}</select></label>
           <label>Age<input name="age" type="number" min="18" max="100" value={form.age} onChange={change} required placeholder="Your age"/></label>
-          <p className="joinFine">Submit karke aap confirm karte hain ki aapki di hui details sahi hain aur 90% / 10% sharing rule padh liya hai.</p>
+          <label>Create password<input name="password" type="password" minLength="8" autoComplete="new-password" value={form.password} onChange={change} required placeholder="At least 8 characters"/></label>
+          <label>Confirm password<input name="confirmPassword" type="password" minLength="8" autoComplete="new-password" value={form.confirmPassword} onChange={change} required placeholder="Enter password again"/></label>
+          <p className="joinFine">Password secure Firebase Authentication mein save hoga; website ke database mein plain password save nahi hoga. Submit karke aap 75% / 25% sharing rule accept karte hain.</p>
           {error&&<p className="error">{error}</p>}
           <button className="primaryBtn" disabled={busy}>{busy?"Submitting…":"Join Community"}</button>
+          <p className="formFine">Already joined? <Link to="/member-login">Member Login</Link></p>
         </form>
       </section>
     </>}
   </main>;
+}
+
+function MemberLogin(){
+  const [mobile,setMobile]=useState("");
+  const [password,setPassword]=useState("");
+  const [busy,setBusy]=useState(false);
+  const [member,setMember]=useState(null);
+  const [error,setError]=useState("");
+  useEffect(()=>{
+    if(!auth||!db)return;
+    return auth.onAuthStateChanged(async user=>{
+      if(!user){setMember(null);return;}
+      if(user.email?.toLowerCase()===ADMIN_EMAIL){setMember(null);return;}
+      try{
+        const snap=await getDoc(doc(db,"communityJoins",user.uid));
+        if(snap.exists())setMember({id:snap.id,...snap.data()});
+        else setError("Is account ke saath member request nahi mili.");
+      }catch(err){setError("Member details load nahi hui. Please dobara login karein.");}
+    });
+  },[]);
+  async function login(e){
+    e.preventDefault();setError("");
+    if(!/^[6-9]\\d{9}$/.test(mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
+    setBusy(true);
+    try{await signInWithEmailAndPassword(auth,memberEmail(mobile),password);}
+    catch(err){setError("Mobile number ya password galat hai.");}
+    finally{setBusy(false);}
+  }
+  if(member){
+    return <main className="adminPage"><section className="adminLogin">
+      <div className="brandIcon"><UsersRound/></div><h1>Welcome, {member.name}</h1>
+      {member.status==="approved"?<><p>Your Umeed membership is approved. Member dashboard agle setup step mein activate hoga.</p><p><b>Mobile:</b> {member.mobile}</p>{member.referralCode&&<p><b>Referral Code:</b> {member.referralCode}</p>}</>:<><p>Your joining request abhi <b>{member.status==="rejected"?"rejected":"pending admin approval"}</b> hai. Approval ke baad member access activate hoga.</p></>}
+      <button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button><Link to="/" className="textBtn">Back to website</Link>
+    </section></main>;
+  }
+  return <main className="adminPage"><form className="adminLogin" onSubmit={login}>
+    <div className="brandIcon"><UsersRound/></div><h1>Member Login</h1><p>Apne registered mobile number aur password se login karein.</p>
+    <label>Mobile number<input type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={mobile} onChange={e=>setMobile(e.target.value.replace(/\\D/g,"").slice(0,10))} required/></label>
+    <label>Password<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>
+    {error&&<p className="error">{error}</p>}
+    <button className="primaryBtn full" disabled={busy}>{busy?"Signing in…":"Member Sign in"}</button>
+    <Link to="/join-community" className="textBtn">New member? Join here</Link><Link to="/" className="textBtn">Back to website</Link>
+  </form></main>;
 }
 
 function Donate({settings}) {
@@ -873,6 +926,7 @@ export default function App() {
       <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
       <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
       <Route path="/join-community" element={<JoinCommunity/>}/>
+      <Route path="/member-login" element={<MemberLogin/>}/>
       <Route path="/donate" element={<Donate settings={data.settings}/>}/>
       <Route path="/admin" element={<Admin settings={data.settings}/>}/>
     </Routes>
