@@ -1012,3 +1012,25 @@ footer .brand{font-size:14px}
     padding-top: 2px !important;
   }
 }
+
+
+/* Clean outlined navigation buttons with matching line icons */
+.nav { gap: 9px !important; }
+.nav .navItem {
+  display:inline-flex; align-items:center; justify-content:center; gap:7px;
+  min-height:38px; padding:8px 11px; border:1px solid #dce8de;
+  border-radius:9px; background:#fff; color:#355844;
+  font-size:12px; font-weight:650; white-space:nowrap;
+  transition:background .18s ease,border-color .18s ease,color .18s ease,transform .18s ease;
+}
+.nav .navItem:hover { background:#f0f7f1; border-color:#83ad8d; color:#17633a; transform:translateY(-1px); }
+.nav .navIcon { flex:0 0 auto; stroke-width:1.8; }
+.nav .joinNav { border-color:#9fc6a6; background:#f4faf4; color:#17633a!important; }
+.nav .adminLink { color:#52665b; font-size:12px; }
+.nav .navDonate { min-height:38px; padding:9px 13px; border:1px solid #17633a; border-radius:9px; gap:7px; font-size:12px; }
+.nav .navDonate:hover { background:#245d3c; }
+@media(max-width:760px) {
+  .nav { gap:10px !important; padding:17px 6% !important; }
+  .nav .navItem { justify-content:flex-start; width:100%; min-height:43px; padding:10px 13px; font-size:13px; }
+  .nav .navDonate { width:100%; justify-content:center; min-height:44px; }
+}
