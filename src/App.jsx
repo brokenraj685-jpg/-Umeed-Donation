@@ -657,13 +657,13 @@ function Admin({settings}) {
     return Number.isNaN(date.getTime())?"":date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0");
   }
 
-  const selectedMemberDonations=selectedPaymentMember
-    ?pending.filter(d=>d.status==="verified"&&d.referralCode===selectedPaymentMember.referralCode&&donationMonthKey(d)===paymentReportMonth)
-      .sort((a,b)=>donationMonthKey(a).localeCompare(donationMonthKey(b))||String(a.createdAt?.seconds||"").localeCompare(String(b.createdAt?.seconds||"")))
+  const selectedMonthPayments=selectedPaymentMember
+    ?memberPayments.filter(p=>p.memberId===selectedPaymentMember.id&&String(p.paidAt||"").slice(0,7)===paymentReportMonth)
+      .sort((a,b)=>String(a.paidAt||"").localeCompare(String(b.paidAt||"")))
     :[];
-  const selectedMemberDonationTotal=selectedMemberDonations.reduce((sum,d)=>sum+Number(d.amount||0),0);
-  const communityShare=Math.round(selectedMemberDonationTotal*0.75*100)/100;
-  const memberShare=Math.round(selectedMemberDonationTotal*0.25*100)/100;
+  const selectedMonthTotal=selectedMonthPayments.reduce((sum,p)=>sum+Number(p.amount||0),0);
+  const communityShare=Math.round(selectedMonthTotal*0.75*100)/100;
+  const memberShare=Math.round(selectedMonthTotal*0.25*100)/100;
   const reportMonthLabel=new Date(paymentReportMonth+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
 
   async function verify(d,approved) {
@@ -884,7 +884,7 @@ function Admin({settings}) {
           <div className="memberReportControls">
             <label>PDF ke liye month select karein<input type="month" value={paymentReportMonth} onChange={e=>setPaymentReportMonth(e.target.value)}/></label>
             <div className="memberReportTotals">
-              <div><span>Verified donations through member</span><b>{money(selectedMemberDonationTotal)}</b></div>
+              <div><span>Verified donations through member</span><b>{money(selectedMonthTotal)}</b></div>
               <div><span>75% Umeed Community</span><b>{money(communityShare)}</b></div>
               <div><span>25% Member share</span><b>{money(memberShare)}</b></div>
             </div>
@@ -910,19 +910,14 @@ function Admin({settings}) {
             <p>Mobile: {selectedPaymentMember.mobile||"—"} | Email: {selectedPaymentMember.email||"—"}</p>
             <h3>Statement month: {reportMonthLabel}</h3>
             <div className="memberPdfSummary">
-              <p>Total verified donations received through this member: <b>{money(selectedMemberDonationTotal)}</b></p>
+              <p>Total verified donations received through this member: <b>{money(selectedMonthTotal)}</b></p>
               <p>Umeed Community share (75%): <b>{money(communityShare)}</b></p>
               <p>Member share (25%): <b>{money(memberShare)}</b></p>
             </div>
-            <h3>Verified donation details</h3>
-            <table><thead><tr><th>Date</th><th>Donor</th><th>Amount</th><th>Transaction Reference</th></tr></thead><tbody>
-              {selectedMemberDonations.map(d=><tr key={d.id}><td>{d.createdAt?.toDate?.().toLocaleString("en-IN")||"—"}</td><td>{d.name||"—"}</td><td>{money(d.amount)}</td><td>{d.transactionId||"—"}</td></tr>)}
-              {!selectedMemberDonations.length&&<tr><td colSpan="4">No verified referral donations for this month.</td></tr>}
-            </tbody></table>
-            <h3>Manually recorded member payment entries (all dates)</h3>
-            <table><thead><tr><th>Date & Time</th><th>Amount</th><th>Payment Reference ID</th></tr></thead><tbody>
-              {memberPayments.filter(p=>p.memberId===selectedPaymentMember.id&&String(p.paidAt||"").slice(0,7)===paymentReportMonth).sort((a,b)=>String(a.paidAt||"").localeCompare(String(b.paidAt||""))).map(p=><tr key={p.id}><td>{p.paidAt?new Date(p.paidAt).toLocaleString("en-IN"):"—"}</td><td>{money(p.amount)}</td><td>{p.referenceId}</td></tr>)}
-              {!memberPayments.some(p=>p.memberId===selectedPaymentMember.id&&String(p.paidAt||"").slice(0,7)===paymentReportMonth)&&<tr><td colSpan="3">No manual payment entries for this month.</td></tr>}
+            <h3>Monthly payment entries</h3>
+            <table><thead><tr><th>Date & Time</th><th>Amount received through member</th><th>Payment Reference ID</th></tr></thead><tbody>
+              {selectedMonthPayments.map(p=><tr key={p.id}><td>{p.paidAt?new Date(p.paidAt).toLocaleString("en-IN"):"—"}</td><td>{money(p.amount)}</td><td>{p.referenceId}</td></tr>)}
+              {!selectedMonthPayments.length&&<tr><td colSpan="3">No payment entries for this month.</td></tr>}
             </tbody></table>
             <p>Generated from Umeed Community admin records.</p>
           </div>
