@@ -327,7 +327,9 @@ function MemberLogin(){
   const [loading,setLoading]=useState(true);
   useEffect(()=>{
     if(!auth||!db)return;
-    return auth.onAuthStateChanged(async user=>{
+    let stopReferrals=null;
+    const stopAuth=auth.onAuthStateChanged(async user=>{
+      if(stopReferrals){stopReferrals();stopReferrals=null;}
       setLoading(true);setMember(null);setReferrals([]);setError("");
       if(!user){setLoading(false);return;}
       if(user.email?.toLowerCase()===ADMIN_EMAIL){setError("Admin account ko Admin page se login karein.");setLoading(false);return;}
@@ -340,13 +342,14 @@ function MemberLogin(){
         setMember(data);
         if(data.status==="approved"&&data.referralCode){
           const q=query(collection(db,"donations"),where("referralCode","==",data.referralCode),where("status","==","verified"),limit(250));
-          const stop=onSnapshot(q,ss=>setReferrals(ss.docs.map(x=>({id:x.id,...x.data()}))),err=>setError("Referral details load nahi hui: "+err.message));
+          stopReferrals=onSnapshot(q,ss=>setReferrals(ss.docs.map(x=>({id:x.id,...x.data()}))),err=>setError("Referral details load nahi hui: "+err.message));
           setLoading(false);
-          return ()=>stop();
+          return;
         }
       }catch(err){setError("Member details load nahi hui. Please dobara login karein.");}
       setLoading(false);
     });
+    return ()=>{stopAuth();if(stopReferrals)stopReferrals();};
   },[]);
   async function login(e){
     e.preventDefault();setError("");
