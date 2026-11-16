@@ -1,7 +1,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
-import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, LogOut, UploadCloud, Image as ImageIcon, Video, Play, Instagram, Facebook } from "lucide-react";
+import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, FileText, UsersRound, LogOut, UploadCloud, Image as ImageIcon, Video, Play, Instagram, Facebook } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
 import { signInWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
 import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, deleteDoc, doc, where, limit, getDocs, getDoc, writeBatch } from "firebase/firestore";
@@ -39,13 +39,13 @@ function Header({settings}) {
     <Link to="/" className="brand"><span className="brandIcon"><HeartHandshake size={22}/></span><span>{settings.siteName || "Umeed"}</span></Link>
     <button className="mobileMenu" onClick={()=>setOpen(!open)} aria-label="Menu">{open?<X/>:<Menu/>}</button>
     <nav className={open?"nav open":"nav"}>
-      <Link to="/details" onClick={()=>setOpen(false)}>Donation details</Link>
-      <Link to="/service" onClick={()=>setOpen(false)}>Service</Link>
-      <Link to="/join-community" className="joinNav" onClick={()=>setOpen(false)}>Join Community</Link>
-      <a href="/#leaderboard" onClick={()=>setOpen(false)}>Leaderboard</a>
-      <a href="/#gallery" onClick={()=>setOpen(false)}>Stories</a>
-      <Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}>Donate now <ArrowRight size={16}/></Link>
-      <Link to="/admin" className="adminLink" onClick={()=>setOpen(false)}>Community</Link>
+      <Link to="/details" className="navItem" onClick={()=>setOpen(false)}><FileText className="navIcon" size={17}/><span>Donation details</span></Link>
+      <Link to="/service" className="navItem" onClick={()=>setOpen(false)}><HeartHandshake className="navIcon" size={17}/><span>Service</span></Link>
+      <Link to="/join-community" className="navItem joinNav" onClick={()=>setOpen(false)}><UsersRound className="navIcon" size={17}/><span>Join Community</span></Link>
+      <a href="/#leaderboard" className="navItem" onClick={()=>setOpen(false)}><Trophy className="navIcon" size={17}/><span>Leaderboard</span></a>
+      <a href="/#gallery" className="navItem" onClick={()=>setOpen(false)}><Camera className="navIcon" size={17}/><span>Stories</span></a>
+      <Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}><HeartHandshake size={17}/><span>Donate now</span><ArrowRight size={15}/></Link>
+      <Link to="/admin" className="navItem adminLink" onClick={()=>setOpen(false)}><ShieldCheck className="navIcon" size={17}/><span>Community</span></Link>
     </nav>
   </header>;
 }
