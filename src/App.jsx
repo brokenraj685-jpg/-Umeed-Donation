@@ -331,8 +331,9 @@ function MemberLogin(){
     let stopReferrals=null;
     const stopAuth=onAuthStateChanged(auth,async user=>{
       if(stopReferrals){stopReferrals();stopReferrals=null;}
-      setLoading(true);setMember(null);setReferrals([]);setError("");
+      setLoading(true);setMember(null);setReferrals([]);
       if(!user){setLoading(false);return;}
+      setError("");
       if(user.email?.toLowerCase()===ADMIN_EMAIL){setError("Admin account ko Admin page se login karein.");setLoading(false);return;}
       const loadTimeout=setTimeout(()=>{setError("Dashboard load hone mein time lag raha hai. Firestore Rules publish aur internet connection check karein; phir page refresh karein.");setLoading(false);},12000);
       try{
