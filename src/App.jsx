@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, FileText, UsersRound, LogOut, UploadCloud, Image as ImageIcon, Video, Play, Instagram, Facebook } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
 import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, deleteDoc, doc, where, limit, getDocs, getDoc, writeBatch, setDoc } from "firebase/firestore";
 
 const ADMIN_EMAIL = "rajbabushaikh18@gmail.com";
@@ -42,6 +42,7 @@ function Header({settings}) {
       <Link to="/details" className="navItem" onClick={()=>setOpen(false)}><FileText className="navIcon" size={17}/><span>Donation details</span></Link>
       <Link to="/service" className="navItem" onClick={()=>setOpen(false)}><HeartHandshake className="navIcon" size={17}/><span>Service</span></Link>
       <Link to="/join-community" className="navItem joinNav" onClick={()=>setOpen(false)}><UsersRound className="navIcon" size={17}/><span>Join Community</span></Link>
+      <Link to="/member-login" className="navItem" onClick={()=>setOpen(false)}><UsersRound className="navIcon" size={17}/><span>Member Login</span></Link>
       <a href="/#leaderboard" className="navItem" onClick={()=>setOpen(false)}><Trophy className="navIcon" size={17}/><span>Leaderboard</span></a>
       <a href="/#gallery" className="navItem" onClick={()=>setOpen(false)}><Camera className="navIcon" size={17}/><span>Stories</span></a>
       <Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}><HeartHandshake size={17}/><span>Donate now</span><ArrowRight size={15}/></Link>
@@ -253,7 +254,7 @@ function CommunityService({settings}) {
 }
 
 
-function memberEmail(mobile){return `+91${String(mobile).replace(/\\D/g,"")}@members.umeed.local`;}
+function memberEmail(mobile){return `member${String(mobile).replace(/\D/g,"")}@umeed-members.com`;}
 
 function JoinCommunity() {
   const [form,setForm]=useState({name:"",mobile:"",state:"",age:"",password:"",confirmPassword:""});
@@ -262,19 +263,22 @@ function JoinCommunity() {
   async function submit(e){
     e.preventDefault();setError("");
     if(!db||!auth){setError("Joining service abhi available nahi hai.");return;}
-    if(!/^[6-9]\\d{9}$/.test(form.mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
+    if(!/^[6-9]\d{9}$/.test(form.mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
     if(Number(form.age)<18||Number(form.age)>100){setError("Joining ke liye age 18 se 100 ke beech honi chahiye.");return;}
     if(form.password.length<8){setError("Password kam se kam 8 characters ka hona chahiye.");return;}
     if(form.password!==form.confirmPassword){setError("Dono password match nahi kar rahe.");return;}
     setBusy(true);
+    let createdUser=null;
     try{
       const credential=await createUserWithEmailAndPassword(auth,memberEmail(form.mobile),form.password);
+      createdUser=credential.user;
       await setDoc(doc(db,"communityJoins",credential.user.uid),{
         name:form.name.trim(),mobile:form.mobile.trim(),state:form.state,age:Number(form.age),
         status:"pending",createdAt:serverTimestamp(),termsAccepted:true,memberUid:credential.user.uid
       });
       setJoinId(credential.user.uid);setDone(true);
     }catch(err){
+      if(createdUser)await deleteUser(createdUser).catch(()=>{});
       if(err.code==="auth/email-already-in-use")setError("Is mobile number se account pehle se bana hua hai. Member Login karein.");
       else setError(err.message||"Request submit nahi hui. Dobara try karein.");
     }finally{setBusy(false);}
@@ -298,7 +302,7 @@ function JoinCommunity() {
       <section className="joinFormCard"><h2>Join Community Form</h2><p>Form submit karne ke baad admin approval ka wait karein.</p>
         <form onSubmit={submit}>
           <label>Full name<input name="name" value={form.name} onChange={change} maxLength="80" required placeholder="Apna poora naam"/></label>
-          <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
+          <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
           <label>State<select name="state" value={form.state} onChange={change} required><option value="">Select state</option>{states.map(x=><option key={x}>{x}</option>)}</select></label>
           <label>Age<input name="age" type="number" min="18" max="100" value={form.age} onChange={change} required placeholder="Your age"/></label>
           <label>Create password<input name="password" type="password" minLength="8" autoComplete="new-password" value={form.password} onChange={change} required placeholder="At least 8 characters"/></label>
@@ -333,7 +337,7 @@ function MemberLogin(){
   },[]);
   async function login(e){
     e.preventDefault();setError("");
-    if(!/^[6-9]\\d{9}$/.test(mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
+    if(!/^[6-9]\d{9}$/.test(mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
     setBusy(true);
     try{await signInWithEmailAndPassword(auth,memberEmail(mobile),password);}
     catch(err){setError("Mobile number ya password galat hai.");}
@@ -348,7 +352,7 @@ function MemberLogin(){
   }
   return <main className="adminPage"><form className="adminLogin" onSubmit={login}>
     <div className="brandIcon"><UsersRound/></div><h1>Member Login</h1><p>Apne registered mobile number aur password se login karein.</p>
-    <label>Mobile number<input type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={mobile} onChange={e=>setMobile(e.target.value.replace(/\\D/g,"").slice(0,10))} required/></label>
+    <label>Mobile number<input type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={mobile} onChange={e=>setMobile(e.target.value.replace(/\D/g,"").slice(0,10))} required/></label>
     <label>Password<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>
     {error&&<p className="error">{error}</p>}
     <button className="primaryBtn full" disabled={busy}>{busy?"Signing in…":"Member Sign in"}</button>
