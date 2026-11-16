@@ -1073,3 +1073,12 @@ footer .brand{font-size:14px}
   .memberPaymentPrint th,.memberPaymentPrint td{border:1px solid #b9cbbd!important;padding:8px!important;text-align:left!important}
   .memberPaymentPrint th{background:#eff7ef!important}
 }
+
+/* Helpline form and footer shortcut */
+.socialLinks{flex-wrap:wrap}
+.helplineLink{background:#f2f8f3!important;border-color:#b9d6c0!important;color:#17633a!important;text-decoration:none}
+.helpFormPanel{width:min(100% - 36px,720px);margin:28px auto 70px;padding:clamp(18px,4vw,32px);background:#fff;border:1px solid #e0e9e1;border-radius:18px;box-shadow:0 12px 35px rgba(25,70,40,.07)}
+.helpFormPanel .settingsForm{max-width:none}
+.helpFormPanel textarea{width:100%;resize:vertical;min-height:88px;padding:12px;border:1px solid #d5e0d7;border-radius:9px;font:inherit;box-sizing:border-box}
+.helplineMessage{min-width:220px;white-space:pre-wrap;overflow-wrap:anywhere}
+@media(max-width:700px){.helpFormPanel{width:calc(100% - 28px);margin:18px auto 45px;padding:17px}.socialLinks{gap:9px}}
