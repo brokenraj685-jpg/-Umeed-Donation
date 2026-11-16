@@ -394,7 +394,8 @@ function MemberLogin(){
 }
 
 function Donate({settings}) {
-  const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});\n  const referralCode=new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase()||"";
+  const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});
+  const referralCode=new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase()||"";
   const [busy,setBusy]=useState(false),[done,setDone]=useState(()=>Boolean(localStorage.getItem("umeedLastDonationId"))),[error,setError]=useState("");
   const [submittedId,setSubmittedId]=useState(()=>localStorage.getItem("umeedLastDonationId")||"");
   const [certificateCode,setCertificateCode]=useState(()=>localStorage.getItem("umeedLastCertificateCode")||"");
