@@ -1,9 +1,9 @@
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, FileText, UsersRound, LogOut, UploadCloud, Image as ImageIcon, Video, Play, Instagram, Facebook } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, signOut, getIdToken, sendEmailVerification, onAuthStateChanged } from "firebase/auth";
+import { signInWithEmailAndPassword, signOut, getIdToken } from "firebase/auth";
 import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, updateDoc, deleteDoc, doc, where, limit, getDocs, getDoc, writeBatch, setDoc } from "firebase/firestore";
 
 const ADMIN_EMAIL = "rajbabushaikh18@gmail.com";
@@ -42,7 +42,6 @@ function Header({settings}) {
       <Link to="/details" className="navItem" onClick={()=>setOpen(false)}><FileText className="navIcon" size={17}/><span>Donation details</span></Link>
       <Link to="/service" className="navItem" onClick={()=>setOpen(false)}><HeartHandshake className="navIcon" size={17}/><span>Service</span></Link>
       <Link to="/join-community" className="navItem joinNav" onClick={()=>setOpen(false)}><UsersRound className="navIcon" size={17}/><span>Join Community</span></Link>
-      <Link to="/member/login" className="navItem" onClick={()=>setOpen(false)}><UsersRound className="navIcon" size={17}/><span>Member Login</span></Link>
       <a href="/#leaderboard" className="navItem" onClick={()=>setOpen(false)}><Trophy className="navIcon" size={17}/><span>Leaderboard</span></a>
       <a href="/#gallery" className="navItem" onClick={()=>setOpen(false)}><Camera className="navIcon" size={17}/><span>Stories</span></a>
       <Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}><HeartHandshake size={17}/><span>Donate now</span><ArrowRight size={15}/></Link>
@@ -255,37 +254,29 @@ function CommunityService({settings}) {
 
 
 function JoinCommunity() {
-  const [form,setForm]=useState({name:"",email:"",mobile:"",state:"",age:"",password:"",confirmPassword:""});
+  const [form,setForm]=useState({name:"",email:"",mobile:"",state:"",age:""});
   const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[error,setError]=useState(""),[joinId,setJoinId]=useState("");
   const change=e=>setForm(p=>({...p,[e.target.name]:e.target.value}));
   async function submit(e){
     e.preventDefault();setError("");
-    if(!db||!auth){setError("Joining service abhi available nahi hai.");return;}
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())){setError("Valid Gmail / email address enter karein.");return;}
-    if(!/^[6-9]\d{9}$/.test(form.mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
+    if(!db){setError("Joining service abhi available nahi hai.");return;}
+    if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(form.email.trim())){setError("Valid Gmail / email address enter karein.");return;}
+    if(!/^[6-9]\\d{9}$/.test(form.mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
     if(Number(form.age)<18||Number(form.age)>100){setError("Joining ke liye age 18 se 100 ke beech honi chahiye.");return;}
-    if(form.password.length<8){setError("Password kam se kam 8 characters ka hona chahiye.");return;}
-    if(form.password!==form.confirmPassword){setError("Dono password match nahi kar rahe.");return;}
     setBusy(true);
-    let createdUser=null;
     try{
-      const credential=await createUserWithEmailAndPassword(auth,form.email.trim().toLowerCase(),form.password);
-      await sendEmailVerification(credential.user);
-      createdUser=credential.user;
-      await setDoc(doc(db,"communityJoins",credential.user.uid),{
+      const requestRef=doc(collection(db,"communityJoins"));
+      await setDoc(requestRef,{
         name:form.name.trim(),email:form.email.trim().toLowerCase(),mobile:form.mobile.trim(),state:form.state,age:Number(form.age),
-        status:"pending",createdAt:serverTimestamp(),termsAccepted:true,memberUid:credential.user.uid
+        status:"pending",createdAt:serverTimestamp(),termsAccepted:true
       });
-      setJoinId(credential.user.uid);setDone(true);
-    }catch(err){
-      if(createdUser)await deleteUser(createdUser).catch(()=>{});
-      if(err.code==="auth/email-already-in-use")setError("Is Gmail se account pehle se bana hua hai. Member Login karein.");
-      else setError(err.message||"Request submit nahi hui. Dobara try karein.");
-    }finally{setBusy(false);}
+      setJoinId(requestRef.id);setDone(true);
+    }catch(err){setError(err.message||"Request submit nahi hui. Dobara try karein.");}
+    finally{setBusy(false);}
   }
   return <main className="joinPage">
     <section className="joinHero"><span className="sectionLabel">BE A PART OF THE CHANGE</span><h1>Join Umeed Community</h1><p>Apni skills aur mehnat se kamayein, aur community ke zariye zarooratmand logon ki madad ka hissa banein.</p></section>
-    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Thank you for joining Umeed Community!</h2><p>Aapki joining request successfully submit ho gayi hai. Apne Gmail par verification link check karein. Admin approval ke baad aap Gmail aur password se login kar sakte hain.</p><small>Joining Request ID: {joinId}</small><div className="joinPendingStamp">PENDING ADMIN APPROVAL</div><Link className="primaryBtn" to="/member-login">Member Login</Link><button className="primaryBtn" onClick={()=>window.print()}>Download joining receipt / PDF</button></section>:<>
+    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Thank you for joining Umeed Community!</h2><p>Aapki joining request successfully submit ho gayi hai. Admin aapki details check karke joining approve karega.</p><small>Joining Request ID: {joinId}</small><div className="joinPendingStamp">PENDING ADMIN APPROVAL</div><button className="primaryBtn" onClick={()=>window.print()}>Download joining receipt / PDF</button></section>:<>
       <section className="joinInfoGrid">
         <article><h2>Joining Rules</h2><ul>
           <li>Member ki identity verification ke liye Aadhaar Card, PAN Card aur passport-size photo dena zaroori hoga.</li>
@@ -303,98 +294,15 @@ function JoinCommunity() {
         <form onSubmit={submit}>
           <label>Full name<input name="name" value={form.name} onChange={change} maxLength="80" required placeholder="Apna poora naam"/></label>
           <label>Gmail / Email address<input name="email" type="email" autoComplete="email" value={form.email} onChange={change} required placeholder="example@gmail.com"/></label>
-          <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
+          <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
           <label>State<select name="state" value={form.state} onChange={change} required><option value="">Select state</option>{states.map(x=><option key={x}>{x}</option>)}</select></label>
           <label>Age<input name="age" type="number" min="18" max="100" value={form.age} onChange={change} required placeholder="Your age"/></label>
-          <label>Create password<input name="password" type="password" minLength="8" autoComplete="new-password" value={form.password} onChange={change} required placeholder="At least 8 characters"/></label>
-          <label>Confirm password<input name="confirmPassword" type="password" minLength="8" autoComplete="new-password" value={form.confirmPassword} onChange={change} required placeholder="Enter password again"/></label>
           {error&&<p className="error">{error}</p>}
           <button className="primaryBtn" disabled={busy}>{busy?"Submitting…":"Join Community"}</button>
-          <p className="formFine">Already joined? <Link to="/member-login">Member Login</Link></p>
         </form>
       </section>
     </>}
   </main>;
-}
-
-function MemberLogin(){
-  const navigate=useNavigate();
-  const [email,setEmail]=useState("");
-  const [password,setPassword]=useState("");
-  const [busy,setBusy]=useState(false);
-  const [member,setMember]=useState(null);
-  const [referrals,setReferrals]=useState([]);
-  const [error,setError]=useState("");
-  const [loading,setLoading]=useState(true);
-  useEffect(()=>{
-    if(!auth||!db){setError("Firebase connection missing hai. Vercel Environment Variables check karein.");setLoading(false);return;}
-    let stopReferrals=null;
-    const stopAuth=onAuthStateChanged(auth,async user=>{
-      if(stopReferrals){stopReferrals();stopReferrals=null;}
-      setLoading(true);setMember(null);setReferrals([]);
-      if(!user){setLoading(false);return;}
-      setError("");
-      if(user.email?.toLowerCase()===ADMIN_EMAIL){setError("Admin account ko Admin page se login karein.");setLoading(false);return;}
-      const loadTimeout=setTimeout(()=>{setError("Dashboard load hone mein time lag raha hai. Firestore Rules publish aur internet connection check karein; phir page refresh karein.");setLoading(false);},12000);
-      try{
-        await user.reload();
-        if(!user.emailVerified){clearTimeout(loadTimeout);setError("Pehle apne Gmail par bheja verification link open karein, phir dobara login karein.");await signOut(auth);setLoading(false);return;}
-        const snap=await getDoc(doc(db,"communityJoins",user.uid));
-        if(!snap.exists()){clearTimeout(loadTimeout);setError("Is Gmail se community joining request nahi mili.");await signOut(auth);setLoading(false);return;}
-        const data={id:snap.id,...snap.data()};
-        setMember(data);
-        if(data.status==="approved"&&data.referralCode){
-          if(window.location.pathname!=="/member/dashboard")navigate("/member/dashboard",{replace:true});
-          const q=query(collection(db,"donations"),where("referralCode","==",data.referralCode),where("status","==","verified"),limit(250));
-          stopReferrals=onSnapshot(q,ss=>setReferrals(ss.docs.map(x=>({id:x.id,...x.data()}))),err=>setError("Referral details load nahi hui: "+err.message));
-          clearTimeout(loadTimeout);setLoading(false);
-          return;
-        }
-      }catch(err){console.error("Member dashboard load error:",err);setError("Member details load nahi hui: "+(err.code||err.message||"Unknown error"));}
-      clearTimeout(loadTimeout);setLoading(false);
-    });
-    return ()=>{stopAuth();if(stopReferrals)stopReferrals();};
-  },[]);
-  async function login(e){
-    e.preventDefault();setError("");
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())){setError("Valid Gmail / email address enter karein.");return;}
-    setBusy(true);
-    try{await signInWithEmailAndPassword(auth,email.trim().toLowerCase(),password);}
-    catch(err){console.error("Member login error:",err);const messages={"auth/invalid-credential":"Gmail ya password galat hai.","auth/user-not-found":"Is Gmail se account nahi mila. Pehle Join Community karein.","auth/wrong-password":"Password galat hai.","auth/too-many-requests":"Bahut attempts hue hain. Thodi der baad try karein.","auth/invalid-email":"Gmail address sahi nahi hai."};setError(messages[err.code]||("Login nahi hua: "+(err.code||err.message)));}
-    finally{setBusy(false);}
-  }
-  if(loading)return <main className="adminPage"><section className="adminLogin"><h2>Loading your private dashboard…</h2></section></main>;
-  if(member){
-    const total=referrals.reduce((sum,d)=>sum+Number(d.amount||0),0);
-    const earning=Math.floor(total*0.25);
-    const share=total-earning;
-    const referralUrl=member.referralCode?window.location.origin+"/donate?ref="+encodeURIComponent(member.referralCode):"";
-    return <main className="adminPage"><section className="adminLogin memberDashboard">
-      <div className="brandIcon"><UsersRound/></div><div className="sectionLabel">PRIVATE MEMBER DASHBOARD</div><h1>Welcome, {member.name}</h1>
-      {member.status!=="approved"?<><p>Your joining request is <b>{member.status==="rejected"?"rejected":"pending admin approval"}</b>. Approval ke baad aapka personal dashboard activate hoga.</p><button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button></>:<>
-        <p>Your membership is approved. Ye dashboard sirf aapke account ke liye hai.</p>
-        <div className="adminCards memberStats">
-          <article><span>Verified donations via your link</span><b>{money(total)}</b></article>
-          <article><span>Your 25% earning</span><b>{money(earning)}</b></article>
-          <article><span>Umeed 75% share</span><b>{money(share)}</b></article>
-          <article><span>Verified contributions</span><b>{referrals.length}</b></article>
-        </div>
-        <div className="adminPanel memberReferral"><h2>Your referral link</h2><p>Is link ko share karein. Is link se aane wale verified donations aapke dashboard mein count honge.</p><input readOnly value={referralUrl}/><button className="primaryBtn full" onClick={()=>navigator.clipboard?.writeText(referralUrl).then(()=>alert("Referral link copied."))}>Copy referral link</button><p><b>Referral Code:</b> {member.referralCode||"Admin approval ke baad milega"}</p><Link className="primaryBtn full" to={"/donate?ref="+encodeURIComponent(member.referralCode||"")}>Donate</Link></div>
-        <div className="adminPanel"><h2>Your referred donations</h2><div className="tableWrap"><table><thead><tr><th>Donor</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>{referrals.map(d=><tr key={d.id}><td>{d.name}</td><td>{money(d.amount)}</td><td>Verified</td><td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN")||"—"}</td></tr>)}{!referrals.length&&<tr><td colSpan="4" className="empty">Abhi aapke referral se koi verified donation nahi aaya.</td></tr>}</tbody></table></div></div>
-        <p className="formFine">Earning verified donations ke 25% ke hisaab se dikhayi jaati hai. Withdrawal feature abhi activate nahi hua hai.</p>
-        <button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button>
-      </>}
-      <Link to="/" className="textBtn">Back to website</Link>
-    </section></main>;
-  }
-  return <main className="adminPage"><form className="adminLogin" onSubmit={login}>
-    <div className="brandIcon"><UsersRound/></div><h1>Member Login</h1><p>Apne registered Gmail aur password se login karein.</p>
-    <label>Gmail / Email address<input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label>
-    <label>Password<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>
-    {error&&<p className="error">{error}</p>}
-    <button className="primaryBtn full" disabled={busy}>{busy?"Signing in…":"Member Sign in"}</button>
-    <Link to="/join-community" className="textBtn">New member? Join here</Link><Link to="/" className="textBtn">Back to website</Link>
-  </form></main>;
 }
 
 function Donate({settings}) {
@@ -611,6 +519,9 @@ function Admin({settings}) {
   const [pending,setPending]=useState([]);
   const [joinRequests,setJoinRequests]=useState([]);
   const [selectedJoin,setSelectedJoin]=useState(null);
+  const [memberPayments,setMemberPayments]=useState([]);
+  const [selectedPaymentMember,setSelectedPaymentMember]=useState(null);
+  const [paymentForm,setPaymentForm]=useState({amount:"",paidAt:"",referenceId:""});
   const [form,setForm]=useState(settings);
   const [mediaTitle,setMediaTitle]=useState("");
   const [mediaCaption,setMediaCaption]=useState("");
@@ -670,6 +581,14 @@ function Admin({settings}) {
     return onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(100)),s=>setMediaItems(s.docs.map(d=>({id:d.id,...d.data()}))),err=>setError(err.message));
   },[user,isAdmin]);
 
+  useEffect(()=>{
+    if(!db||!user||!isAdmin)return;
+    return onSnapshot(query(collection(db,"memberPayments"),orderBy("paidAt","desc"),limit(1000)),
+      s=>setMemberPayments(s.docs.map(d=>({id:d.id,...d.data()}))),
+      err=>setError("Member payment records load nahi hue: "+err.message)
+    );
+  },[user,isAdmin]);
+
   async function login(e) {
     e.preventDefault();
     setError("");
@@ -704,6 +623,31 @@ function Admin({settings}) {
     }else{
       await updateDoc(doc(db,"communityJoins",d.id),{status:"rejected",reviewedAt:serverTimestamp(),reviewedBy:user.email});
     }
+  }
+
+  async function saveMemberPayment(e){
+    e.preventDefault();setError("");
+    if(!selectedPaymentMember){setError("Pehle member select karein.");return;}
+    if(!(Number(paymentForm.amount)>0)){setError("Valid payment amount enter karein.");return;}
+    if(!paymentForm.paidAt){setError("Payment ki date aur time select karein.");return;}
+    if(!paymentForm.referenceId.trim()){setError("Payment reference ID enter karein.");return;}
+    try{
+      await addDoc(collection(db,"memberPayments"),{
+        memberId:selectedPaymentMember.id,
+        memberName:selectedPaymentMember.name||"",
+        amount:Number(paymentForm.amount),
+        paidAt:paymentForm.paidAt,
+        referenceId:paymentForm.referenceId.trim(),
+        createdAt:serverTimestamp(),
+        enteredBy:user.email
+      });
+      setPaymentForm({amount:"",paidAt:"",referenceId:""});
+      alert("Member payment entry save ho gayi.");
+    }catch(err){setError(err.message||"Payment entry save nahi hui.");}
+  }
+
+  function memberPaymentTotal(memberId){
+    return memberPayments.filter(p=>p.memberId===memberId).reduce((sum,p)=>sum+Number(p.amount||0),0);
   }
 
   async function verify(d,approved) {
@@ -855,7 +799,7 @@ function Admin({settings}) {
     <button className="textBtn" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
-  const nav=[["overview","Overview"],["donations","Donations"],["communityJoins","Community Join"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
+  const nav=[["overview","Overview"],["donations","Donations"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
 
   return <main className="adminShell">
     <aside className="adminSide">
@@ -909,6 +853,45 @@ function Admin({settings}) {
           <div className="certificateSignature"><span>With gratitude,</span><img src="data:image/png;base64,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" alt="Umeed Community handwritten signature"/><small>Umeed Community</small></div>
         </section>}
 
+      </div>}
+      {tab==="memberPayments"&&<div className="adminPanel memberPaymentsAdmin">
+        <h2>Member Payments & Earnings</h2>
+        <p className="formFine">Approved member ko select karke uski har payment ki entry save karein. Har member ka record alag rahega.</p>
+        <div className="memberPaymentCards">
+          {joinRequests.filter(j=>j.status==="approved").map(j=><button type="button" key={j.id} className={"memberPaymentCard"+(selectedPaymentMember?.id===j.id?" selected":"")} onClick={()=>setSelectedPaymentMember(j)}>
+            <b>{j.name}</b><span>{j.mobile||"—"}</span><strong>{money(memberPaymentTotal(j.id))}</strong><small>{memberPayments.filter(p=>p.memberId===j.id).length} payment entries</small>
+          </button>)}
+          {!joinRequests.some(j=>j.status==="approved")&&<p className="empty">Abhi koi approved member nahi hai.</p>}
+        </div>
+        {selectedPaymentMember&&<section className="adminPanel selectedMemberPayments">
+          <div className="sectionHead"><div><div className="sectionLabel">SELECTED MEMBER</div><h2>{selectedPaymentMember.name}</h2><p>{selectedPaymentMember.email||"—"} · {selectedPaymentMember.mobile||"—"}</p></div><b className="amount">{money(memberPaymentTotal(selectedPaymentMember.id))}</b></div>
+          <form className="settingsForm" onSubmit={saveMemberPayment}>
+            <h3>Add payment entry</h3>
+            <label>Payment amount (₹)<input type="number" min="1" step="0.01" value={paymentForm.amount} onChange={e=>setPaymentForm(p=>({...p,amount:e.target.value}))} required placeholder="Enter amount"/></label>
+            <label>Payment date & time<input type="datetime-local" value={paymentForm.paidAt} onChange={e=>setPaymentForm(p=>({...p,paidAt:e.target.value}))} required/></label>
+            <label>Payment reference ID<input value={paymentForm.referenceId} onChange={e=>setPaymentForm(p=>({...p,referenceId:e.target.value}))} required placeholder="UPI / bank reference ID"/></label>
+            {error&&<p className="error">{error}</p>}
+            <button className="primaryBtn">Save payment entry</button>
+          </form>
+          <div className="actions"><button type="button" onClick={()=>window.print()}>Download this member PDF</button></div>
+          <div className="tableWrap">
+            <table><thead><tr><th>Payment date & time</th><th>Amount</th><th>Reference ID</th></tr></thead>
+              <tbody>{memberPayments.filter(p=>p.memberId===selectedPaymentMember.id).sort((a,b)=>String(b.paidAt||"").localeCompare(String(a.paidAt||""))).map(p=><tr key={p.id}><td>{p.paidAt?new Date(p.paidAt).toLocaleString("en-IN"):"—"}</td><td className="amount">{money(p.amount)}</td><td>{p.referenceId}</td></tr>)}
+              {!memberPayments.some(p=>p.memberId===selectedPaymentMember.id)&&<tr><td colSpan="3" className="empty">Is member ki payment entry abhi nahi hai.</td></tr>}</tbody>
+            </table>
+          </div>
+          <div className="memberPaymentPrint">
+            <h1>Umeed Community – Member Payment Statement</h1>
+            <h2>{selectedPaymentMember.name}</h2>
+            <p>Mobile: {selectedPaymentMember.mobile||"—"} | Email: {selectedPaymentMember.email||"—"}</p>
+            <h3>Total earnings: {money(memberPaymentTotal(selectedPaymentMember.id))}</h3>
+            <table><thead><tr><th>Date & Time</th><th>Amount</th><th>Payment Reference ID</th></tr></thead><tbody>
+              {memberPayments.filter(p=>p.memberId===selectedPaymentMember.id).sort((a,b)=>String(a.paidAt||"").localeCompare(String(b.paidAt||""))).map(p=><tr key={p.id}><td>{p.paidAt?new Date(p.paidAt).toLocaleString("en-IN"):"—"}</td><td>{money(p.amount)}</td><td>{p.referenceId}</td></tr>)}
+              {!memberPayments.some(p=>p.memberId===selectedPaymentMember.id)&&<tr><td colSpan="3">No payment entries</td></tr>}
+            </tbody></table>
+            <p>Generated from Umeed Community admin records.</p>
+          </div>
+        </section>}
       </div>}
       {tab==="settings"&&<form className="adminPanel settingsForm" onSubmit={saveSettings}>
         <h2>Website content & payment details</h2>
@@ -979,9 +962,6 @@ export default function App() {
       <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
       <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
       <Route path="/join-community" element={<JoinCommunity/>}/>
-      <Route path="/member/*" element={<MemberLogin/>}/>
-      <Route path="/member-login" element={<Navigate to="/member/login" replace/>}/>
-      <Route path="/member-dashboard" element={<Navigate to="/member/dashboard" replace/>}/>
       <Route path="/donate" element={<Donate settings={data.settings}/>}/>
       <Route path="/admin" element={<Admin settings={data.settings}/>}/>
     </Routes>
