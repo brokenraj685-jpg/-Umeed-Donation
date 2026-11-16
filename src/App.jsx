@@ -1,6 +1,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, Route, Routes, useNavigate } from "react-router-dom";
 import { HeartHandshake, ShieldCheck, Camera, Trophy, Menu, X, ArrowRight, CheckCircle2, FileText, UsersRound, LogOut, UploadCloud, Image as ImageIcon, Video, Play, Instagram, Facebook } from "lucide-react";
 import { auth, db, firebaseReady } from "./firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, deleteUser, signOut, getIdToken, sendEmailVerification } from "firebase/auth";
@@ -318,6 +318,7 @@ function JoinCommunity() {
 }
 
 function MemberLogin(){
+  const navigate=useNavigate();
   const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
   const [busy,setBusy]=useState(false);
@@ -341,6 +342,7 @@ function MemberLogin(){
         const data={id:snap.id,...snap.data()};
         setMember(data);
         if(data.status==="approved"&&data.referralCode){
+          navigate("/member-dashboard",{replace:true});
           const q=query(collection(db,"donations"),where("referralCode","==",data.referralCode),where("status","==","verified"),limit(250));
           stopReferrals=onSnapshot(q,ss=>setReferrals(ss.docs.map(x=>({id:x.id,...x.data()}))),err=>setError("Referral details load nahi hui: "+err.message));
           setLoading(false);
@@ -366,7 +368,7 @@ function MemberLogin(){
     const share=total-earning;
     const referralUrl=member.referralCode?window.location.origin+"/donate?ref="+encodeURIComponent(member.referralCode):"";
     return <main className="adminPage"><section className="adminLogin memberDashboard">
-      <div className="brandIcon"><UsersRound/></div><div className="sectionLabel">PRIVATE MEMBER AREA</div><h1>Welcome, {member.name}</h1>
+      <div className="brandIcon"><UsersRound/></div><div className="sectionLabel">PRIVATE MEMBER DASHBOARD</div><h1>Welcome, {member.name}</h1>
       {member.status!=="approved"?<><p>Your joining request is <b>{member.status==="rejected"?"rejected":"pending admin approval"}</b>. Approval ke baad aapka personal dashboard activate hoga.</p><button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button></>:<>
         <p>Your membership is approved. Ye dashboard sirf aapke account ke liye hai.</p>
         <div className="adminCards memberStats">
@@ -375,7 +377,7 @@ function MemberLogin(){
           <article><span>Umeed 75% share</span><b>{money(share)}</b></article>
           <article><span>Verified contributions</span><b>{referrals.length}</b></article>
         </div>
-        <div className="adminPanel memberReferral"><h2>Your referral link</h2><p>Is link ko share karein. Is link se aane wale verified donations aapke dashboard mein count honge.</p><input readOnly value={referralUrl}/><button className="primaryBtn full" onClick={()=>navigator.clipboard?.writeText(referralUrl).then(()=>alert("Referral link copied."))}>Copy referral link</button><p><b>Referral Code:</b> {member.referralCode||"Admin approval ke baad milega"}</p></div>
+        <div className="adminPanel memberReferral"><h2>Your referral link</h2><p>Is link ko share karein. Is link se aane wale verified donations aapke dashboard mein count honge.</p><input readOnly value={referralUrl}/><button className="primaryBtn full" onClick={()=>navigator.clipboard?.writeText(referralUrl).then(()=>alert("Referral link copied."))}>Copy referral link</button><p><b>Referral Code:</b> {member.referralCode||"Admin approval ke baad milega"}</p><Link className="primaryBtn full" to={"/donate?ref="+encodeURIComponent(member.referralCode||"")}>Donate</Link></div>
         <div className="adminPanel"><h2>Your referred donations</h2><div className="tableWrap"><table><thead><tr><th>Donor</th><th>Amount</th><th>Status</th><th>Date</th></tr></thead><tbody>{referrals.map(d=><tr key={d.id}><td>{d.name}</td><td>{money(d.amount)}</td><td>Verified</td><td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN")||"—"}</td></tr>)}{!referrals.length&&<tr><td colSpan="4" className="empty">Abhi aapke referral se koi verified donation nahi aaya.</td></tr>}</tbody></table></div></div>
         <p className="formFine">Earning verified donations ke 25% ke hisaab se dikhayi jaati hai. Withdrawal feature abhi activate nahi hua hai.</p>
         <button className="primaryBtn full" onClick={()=>signOut(auth)}>Sign out</button>
@@ -396,6 +398,8 @@ function MemberLogin(){
 function Donate({settings}) {
   const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});
   const referralCode=new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase()||"";
+  const [referralMemberName,setReferralMemberName]=useState("");
+  useEffect(()=>{let active=true;if(!db||!referralCode)return;getDoc(doc(db,"referralCodes",referralCode)).then(s=>{if(active&&s.exists())setReferralMemberName(s.data().memberName||"Umeed Community Member");}).catch(()=>{});return()=>{active=false;};},[referralCode]);
   const [busy,setBusy]=useState(false),[done,setDone]=useState(()=>Boolean(localStorage.getItem("umeedLastDonationId"))),[error,setError]=useState("");
   const [submittedId,setSubmittedId]=useState(()=>localStorage.getItem("umeedLastDonationId")||"");
   const [certificateCode,setCertificateCode]=useState(()=>localStorage.getItem("umeedLastCertificateCode")||"");
@@ -558,6 +562,7 @@ function Donate({settings}) {
     {lookupRecord&&renderCertificate(lookupRecord)}
     {!done&&<div className="formIntro">
       <div className="sectionLabel">GIVE WITH PURPOSE</div>
+      {referralCode&&<p className="referralAttribution">You are donating through <b>{referralMemberName||"Umeed Community Member"}</b></p>}
       <h1>Your kindness<br/><em>creates hope.</em></h1>
       <p>Fill in your details, make the payment using the payment details shown below, then submit your transaction reference.</p>
     </div>}
@@ -692,7 +697,7 @@ function Admin({settings}) {
   async function reviewJoin(d,approved){
     if(approved){
       const referralCode=d.referralCode||("UM"+d.id.replace(/[^a-z0-9]/gi,"").toUpperCase());
-      await setDoc(doc(db,"referralCodes",referralCode),{memberUid:d.id,createdAt:serverTimestamp()},{merge:true});
+      await setDoc(doc(db,"referralCodes",referralCode),{memberUid:d.id,memberName:d.name||"Umeed Community Member",createdAt:serverTimestamp()},{merge:true});
       await updateDoc(doc(db,"communityJoins",d.id),{status:"approved",referralCode,reviewedAt:serverTimestamp(),reviewedBy:user.email});
     }else{
       await updateDoc(doc(db,"communityJoins",d.id),{status:"rejected",reviewedAt:serverTimestamp(),reviewedBy:user.email});
@@ -973,6 +978,7 @@ export default function App() {
       <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
       <Route path="/join-community" element={<JoinCommunity/>}/>
       <Route path="/member-login" element={<MemberLogin/>}/>
+      <Route path="/member-dashboard" element={<MemberLogin/>}/>
       <Route path="/donate" element={<Donate settings={data.settings}/>}/>
       <Route path="/admin" element={<Admin settings={data.settings}/>}/>
     </Routes>
