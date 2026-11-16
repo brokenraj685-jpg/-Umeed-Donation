@@ -561,7 +561,7 @@ function Admin({settings}) {
   useEffect(()=>{
     if(!db||!user||!isAdmin)return;
     return onSnapshot(
-      query(collection(db,"donations"),orderBy("createdAt","desc"),limit(250)),
+      query(collection(db,"donations"),orderBy("createdAt","desc"),limit(1000)),
       s=>setPending(s.docs.map(d=>({id:d.id,...d.data()}))),
       err=>setError(err.message)
     );
