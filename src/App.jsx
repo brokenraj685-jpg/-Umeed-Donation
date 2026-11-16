@@ -254,15 +254,14 @@ function CommunityService({settings}) {
 }
 
 
-function memberEmail(mobile){return `member${String(mobile).replace(/\D/g,"")}@umeed-members.com`;}
-
 function JoinCommunity() {
-  const [form,setForm]=useState({name:"",mobile:"",state:"",age:"",password:"",confirmPassword:""});
+  const [form,setForm]=useState({name:"",email:"",mobile:"",state:"",age:"",password:"",confirmPassword:""});
   const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[error,setError]=useState(""),[joinId,setJoinId]=useState("");
   const change=e=>setForm(p=>({...p,[e.target.name]:e.target.value}));
   async function submit(e){
     e.preventDefault();setError("");
     if(!db||!auth){setError("Joining service abhi available nahi hai.");return;}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())){setError("Valid Gmail / email address enter karein.");return;}
     if(!/^[6-9]\d{9}$/.test(form.mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
     if(Number(form.age)<18||Number(form.age)>100){setError("Joining ke liye age 18 se 100 ke beech honi chahiye.");return;}
     if(form.password.length<8){setError("Password kam se kam 8 characters ka hona chahiye.");return;}
@@ -270,22 +269,23 @@ function JoinCommunity() {
     setBusy(true);
     let createdUser=null;
     try{
-      const credential=await createUserWithEmailAndPassword(auth,memberEmail(form.mobile),form.password);
+      const credential=await createUserWithEmailAndPassword(auth,form.email.trim().toLowerCase(),form.password);
+      await sendEmailVerification(credential.user);
       createdUser=credential.user;
       await setDoc(doc(db,"communityJoins",credential.user.uid),{
-        name:form.name.trim(),mobile:form.mobile.trim(),state:form.state,age:Number(form.age),
+        name:form.name.trim(),email:form.email.trim().toLowerCase(),mobile:form.mobile.trim(),state:form.state,age:Number(form.age),
         status:"pending",createdAt:serverTimestamp(),termsAccepted:true,memberUid:credential.user.uid
       });
       setJoinId(credential.user.uid);setDone(true);
     }catch(err){
       if(createdUser)await deleteUser(createdUser).catch(()=>{});
-      if(err.code==="auth/email-already-in-use")setError("Is mobile number se account pehle se bana hua hai. Member Login karein.");
+      if(err.code==="auth/email-already-in-use")setError("Is Gmail se account pehle se bana hua hai. Member Login karein.");
       else setError(err.message||"Request submit nahi hui. Dobara try karein.");
     }finally{setBusy(false);}
   }
   return <main className="joinPage">
     <section className="joinHero"><span className="sectionLabel">BE A PART OF THE CHANGE</span><h1>Join Umeed Community</h1><p>Apni skills aur mehnat se kamayein, aur community ke zariye zarooratmand logon ki madad ka hissa banein.</p></section>
-    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Thank you for joining Umeed Community!</h2><p>Aapki joining request successfully submit ho gayi hai. Admin approval ke baad aap apne mobile number aur banaye hue password se login kar sakte hain.</p><small>Joining Request ID: {joinId}</small><div className="joinPendingStamp">PENDING ADMIN APPROVAL</div><Link className="primaryBtn" to="/member-login">Member Login</Link><button className="primaryBtn" onClick={()=>window.print()}>Download joining receipt / PDF</button></section>:<>
+    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Thank you for joining Umeed Community!</h2><p>Aapki joining request successfully submit ho gayi hai. Apne Gmail par verification link check karein. Admin approval ke baad aap Gmail aur password se login kar sakte hain.</p><small>Joining Request ID: {joinId}</small><div className="joinPendingStamp">PENDING ADMIN APPROVAL</div><Link className="primaryBtn" to="/member-login">Member Login</Link><button className="primaryBtn" onClick={()=>window.print()}>Download joining receipt / PDF</button></section>:<>
       <section className="joinInfoGrid">
         <article><h2>Joining Rules</h2><ul>
           <li>Member ki identity verification ke liye Aadhaar Card, PAN Card aur passport-size photo dena zaroori hoga.</li>
@@ -302,6 +302,7 @@ function JoinCommunity() {
       <section className="joinFormCard"><h2>Join Community Form</h2><p>Form submit karne ke baad admin approval ka wait karein.</p>
         <form onSubmit={submit}>
           <label>Full name<input name="name" value={form.name} onChange={change} maxLength="80" required placeholder="Apna poora naam"/></label>
+          <label>Gmail / Email address<input name="email" type="email" autoComplete="email" value={form.email} onChange={change} required placeholder="example@gmail.com"/></label>
           <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
           <label>State<select name="state" value={form.state} onChange={change} required><option value="">Select state</option>{states.map(x=><option key={x}>{x}</option>)}</select></label>
           <label>Age<input name="age" type="number" min="18" max="100" value={form.age} onChange={change} required placeholder="Your age"/></label>
@@ -317,7 +318,7 @@ function JoinCommunity() {
 }
 
 function MemberLogin(){
-  const [mobile,setMobile]=useState("");
+  const [email,setEmail]=useState("");
   const [password,setPassword]=useState("");
   const [busy,setBusy]=useState(false);
   const [member,setMember]=useState(null);
@@ -336,10 +337,10 @@ function MemberLogin(){
   },[]);
   async function login(e){
     e.preventDefault();setError("");
-    if(!/^[6-9]\d{9}$/.test(mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())){setError("Valid Gmail / email address enter karein.");return;}
     setBusy(true);
-    try{await signInWithEmailAndPassword(auth,memberEmail(mobile),password);}
-    catch(err){setError("Mobile number ya password galat hai.");}
+    try{await signInWithEmailAndPassword(auth,email.trim().toLowerCase(),password);}
+    catch(err){setError("Gmail ya password galat hai.");}
     finally{setBusy(false);}
   }
   if(member){
@@ -350,8 +351,8 @@ function MemberLogin(){
     </section></main>;
   }
   return <main className="adminPage"><form className="adminLogin" onSubmit={login}>
-    <div className="brandIcon"><UsersRound/></div><h1>Member Login</h1><p>Apne registered mobile number aur password se login karein.</p>
-    <label>Mobile number<input type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={mobile} onChange={e=>setMobile(e.target.value.replace(/\D/g,"").slice(0,10))} required/></label>
+    <div className="brandIcon"><UsersRound/></div><h1>Member Login</h1><p>Apne registered Gmail aur password se login karein.</p>
+    <label>Gmail / Email address<input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} required/></label>
     <label>Password<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required/></label>
     {error&&<p className="error">{error}</p>}
     <button className="primaryBtn full" disabled={busy}>{busy?"Signing in…":"Member Sign in"}</button>
