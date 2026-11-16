@@ -353,7 +353,7 @@ function MemberLogin(){
   },[]);
   async function login(e){
     e.preventDefault();setError("");
-    if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email.trim())){setError("Valid Gmail / email address enter karein.");return;}
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())){setError("Valid Gmail / email address enter karein.");return;}
     setBusy(true);
     try{await signInWithEmailAndPassword(auth,email.trim().toLowerCase(),password);}
     catch(err){setError("Gmail ya password galat hai.");}
