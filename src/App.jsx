@@ -920,10 +920,10 @@ function Admin({settings}) {
         <h2>Community joining requests ({joinRequests.length})</h2>
         <div className="tableWrap"><table><thead><tr><th>Name / Request ID</th><th>Mobile</th><th>State</th><th>Age</th><th>Gender</th><th>Status</th><th>Action / PDF</th></tr></thead>
           <tbody>{joinRequests.map(j=><tr key={j.id}><td><b>{j.name}</b><small className="joinAdminId">{j.id}</small></td><td>{j.mobile}</td><td>{j.state}</td><td>{j.age}</td><td>{j.gender||"Not specified"}</td><td><span className={"status "+(j.status==="approved"?"verified":j.status==="rejected"?"rejected":"pending")}>{j.status}</span></td>
-          <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<><button onClick={()=>{setSelectedJoin(j);setTimeout(()=>printWithMode("print-join-certificate"),300);}}>Joining PDF</button><button onClick={()=>{setSelectedIdCard(j);setTimeout(()=>printWithMode("print-member-id"),300);}}>ID Card PDF</button></>}</div></td></tr>)}
+          <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<><button onClick={()=>{setSelectedJoin(j);setSelectedIdCard(j);setTimeout(()=>printWithMode("print-member-bundle"),400);}}>Joining + ID Card PDF</button></>}</div></td></tr>)}
           {!joinRequests.length&&<tr><td colSpan="7" className="empty">Abhi koi joining request nahi aayi.</td></tr>}</tbody></table></div>
         <p className="formFine">Approved member ka PDF print/download karne ke liye request ko select karke browser print dialog mein Save as PDF choose karein.</p>
-        {selectedIdCard&&<section className="memberIdCardPrint">
+        <div className="memberPrintBundle">{selectedIdCard&&<section className="memberIdCardPrint">
           <div className="memberIdCardTop"><span className="memberIdCardLogo"><HeartHandshake size={25}/></span><b>UMEED COMMUNITY</b><small>OFFICIAL MEMBER ID CARD</small></div>
           <div className="memberIdCardBody">
             <h1>{selectedIdCard.name}</h1>
@@ -945,6 +945,7 @@ function Admin({settings}) {
         </section>}
 
       </div>}
+      </div>
       {tab==="memberPayments"&&<div className="adminPanel memberPaymentsAdmin">
         <h2>Member Payments & Earnings</h2>
         <p className="formFine">Approved member ko select karke uski har payment ki entry save karein. Har member ka record alag rahega.</p>
