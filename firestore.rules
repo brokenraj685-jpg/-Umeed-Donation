@@ -47,7 +47,7 @@ service cloud.firestore {
     match /communityJoins/{joinId} {
       allow create: if (!signedIn() || isAdmin())
         && request.resource.data.keys().hasOnly(["name","email","mobile","state","age","gender","status","createdAt","termsAccepted"])
-        && request.resource.data.email is string && request.resource.data.email.size() > 3 && request.resource.data.email.size() <= 254
+        && (!("email" in request.resource.data) || (request.resource.data.email is string && request.resource.data.email.size() <= 254 && (request.resource.data.email.size() == 0 || request.resource.data.email.size() > 3)))
         && request.resource.data.name is string && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 80
         && request.resource.data.mobile is string && request.resource.data.mobile.matches("^[6-9][0-9]{9}$")
         && request.resource.data.state is string && request.resource.data.state.size() > 0
