@@ -261,7 +261,7 @@ function HelpLine() {
   async function submit(e){
     e.preventDefault();setError("");
     if(!db){setError("Helpline abhi available nahi hai.");return;}
-    if(!/^[6-9]\\d{9}$/.test(form.mobile.trim())){setError("Valid 10-digit mobile number enter karein.");return;}
+    if(!/^[6-9][0-9]{9}$/.test(form.mobile.trim())){setError("Valid 10-digit mobile number enter karein.");return;}
     if(form.message.trim().length<8){setError("Please help ke baare mein thoda detail mein likhein.");return;}
     if(form.address.trim().length<5){setError("Apna poora address enter karein.");return;}
     setBusy(true);
@@ -280,7 +280,7 @@ function HelpLine() {
       <form className="settingsForm" onSubmit={submit}>
         <label>Kis cheez ke liye help chahiye?<textarea rows="5" maxLength="1500" value={form.message} onChange={e=>setForm(p=>({...p,message:e.target.value}))} placeholder="Apni problem ya help ki zaroorat detail mein likhein..." required/></label>
         <label>Poora address<textarea rows="3" maxLength="500" value={form.address} onChange={e=>setForm(p=>({...p,address:e.target.value}))} placeholder="House / area / city / pincode" required/></label>
-        <label>Mobile number<input type="tel" inputMode="numeric" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\\D/g,"").slice(0,10)}))} placeholder="10-digit mobile number" required/></label>
+        <label>Mobile number<input type="tel" inputMode="numeric" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/[^0-9]/g,"").slice(0,10)}))} placeholder="10-digit mobile number" required/></label>
         {error&&<p className="error">{error}</p>}
         <button className="primaryBtn" disabled={busy}>{busy?"Submitting…":"Submit Helpline Request"}</button>
       </form>
