@@ -864,7 +864,6 @@ function Admin({settings}) {
     <div className="brandIcon"><ShieldCheck/></div>
     <h1>Email verification required</h1>
     <p>Your email address is correct, but Firebase shows it is not verified yet.</p>
-    <p>Login email: {user.email}</p>
     <button className="primaryBtn full" onClick={async()=>{
       try {
         await sendEmailVerification(user);
