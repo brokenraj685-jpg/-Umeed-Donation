@@ -53,10 +53,13 @@ function Header({settings}) {
 
 function DonationProgress({settings,donations}) {
   const received=donations.reduce((sum,d)=>sum+Number(d.amount||0),0);
-  const targets=(Array.isArray(settings.targetAmounts)?settings.targetAmounts:[]).map(Number).filter(n=>Number.isFinite(n)&&n>0);
+  const targets=(Array.isArray(settings.targetAmounts)?settings.targetAmounts:[]).map(item=>{
+    if(item&&typeof item==="object")return {amount:Number(item.amount)||0,reason:String(item.reason||"")};
+    return {amount:Number(item)||0,reason:""};
+  }).filter(item=>Number.isFinite(item.amount)&&item.amount>0);
   let remainingDonation=received, currentIndex=0;
-  while(currentIndex<targets.length&&remainingDonation>=targets[currentIndex]){remainingDonation-=targets[currentIndex];currentIndex++;}
-  const currentTarget=targets[currentIndex]||0;
+  while(currentIndex<targets.length&&remainingDonation>=targets[currentIndex].amount){remainingDonation-=targets[currentIndex].amount;currentIndex++;}
+  const currentTarget=targets[currentIndex]?.amount||0;
   const currentRaised=currentTarget?Math.min(remainingDonation,currentTarget):0;
   const targetRemaining=currentTarget?Math.max(0,currentTarget-currentRaised):0;
   const percent=currentTarget?Math.min(100,Math.round(currentRaised/currentTarget*100)):0;
@@ -70,7 +73,7 @@ function DonationProgress({settings,donations}) {
       <div className="targetTitle"><b>Current target {currentIndex+1} of {targets.length}</b><strong>{money(currentTarget)}</strong></div>
       <div className="targetMeta"><span>{money(currentRaised)} received</span><b>{percent}% complete</b></div>
       <div className="targetTrack"><span style={{width:percent+"%"}}/></div>
-      {currentIndex+1<targets.length&&<small>Next target: {money(targets[currentIndex+1])}</small>}
+      {targets[currentIndex].reason&&<small className="publicTargetReason">{targets[currentIndex].reason}</small>}{currentIndex+1<targets.length&&<small>Next target: {money(targets[currentIndex+1].amount)}</small>}
     </div>:<p className="formFine">Donation target will be displayed here when Admin sets it.</p>}
   </section>;
 }
@@ -621,6 +624,7 @@ function Admin({settings}) {
   const [expenseForm,setExpenseForm]=useState({amount:"",purpose:"",expenseDate:new Date().toISOString().slice(0,10)});
   const [fundReportMonth,setFundReportMonth]=useState(()=>new Date().toISOString().slice(0,7));
   const [newTargetAmount,setNewTargetAmount]=useState("");
+  const [newTargetReason,setNewTargetReason]=useState("");
   const [joinRequests,setJoinRequests]=useState([]);
   const [helpRequests,setHelpRequests]=useState([]);
   const [selectedJoin,setSelectedJoin]=useState(null);
@@ -877,8 +881,11 @@ function Admin({settings}) {
 
   async function saveTargetPlan(e){
     e.preventDefault();setError("");
-    const targets=(Array.isArray(form.targetAmounts)?form.targetAmounts:[]).map(Number);
-    if(!targets.length||targets.some(n=>!Number.isFinite(n)||n<=0)){setError("Kam se kam ek valid target amount add karein.");return;}
+    const targets=(Array.isArray(form.targetAmounts)?form.targetAmounts:[]).map(item=>{
+      if(item&&typeof item==="object")return {amount:Number(item.amount),reason:String(item.reason||"").trim()};
+      return {amount:Number(item),reason:""};
+    });
+    if(!targets.length||targets.some(item=>!Number.isFinite(item.amount)||item.amount<=0)){setError("Kam se kam ek valid target amount add karein.");return;}
     try{
       await setDoc(doc(db,"site","settings"),{targetAmounts:targets,updatedAt:serverTimestamp()},{merge:true});
       setForm(p=>({...p,targetAmounts:targets}));
@@ -1118,11 +1125,12 @@ function Admin({settings}) {
       {tab==="funds"&&<div className="adminPanel fundsAdmin">
         <h2>Donation targets</h2>
         <p className="formFine">Targets ko order mein add karein. Ek target poora hone ke baad extra donation agle target mein automatically count hoga.</p>
-        <form className="targetAddForm" onSubmit={e=>{e.preventDefault();const n=Number(newTargetAmount);if(!Number.isFinite(n)||n<=0)return;setForm(p=>({...p,targetAmounts:[...(Array.isArray(p.targetAmounts)?p.targetAmounts:[]),n]}));setNewTargetAmount("");}}>
+        <form className="targetAddForm" onSubmit={e=>{e.preventDefault();const n=Number(newTargetAmount);if(!Number.isFinite(n)||n<=0||!newTargetReason.trim())return;setForm(p=>({...p,targetAmounts:[...(Array.isArray(p.targetAmounts)?p.targetAmounts:[]),{amount:n,reason:newTargetReason.trim()}]}));setNewTargetAmount("");setNewTargetReason("");}}>
           <label>New target amount (₹)<input type="number" min="1" value={newTargetAmount} onChange={e=>setNewTargetAmount(e.target.value)} placeholder="Example: 25000" required/></label>
+          <label>Target kis kaam ke liye hai?<input value={newTargetReason} onChange={e=>setNewTargetReason(e.target.value)} maxLength="160" placeholder="Example: Zarooratmand parivaron ke liye ration" required/></label>
           <button className="primaryBtn">Add target</button>
         </form>
-        <ol className="targetAdminList">{(Array.isArray(form.targetAmounts)?form.targetAmounts:[]).map((amount,index)=><li key={index}><span>Target {index+1}</span><b>{money(amount)}</b><button type="button" className="dangerAction" onClick={()=>setForm(p=>({...p,targetAmounts:p.targetAmounts.filter((_,i)=>i!==index)}))}>Remove</button></li>)}</ol>
+        <ol className="targetAdminList">{(Array.isArray(form.targetAmounts)?form.targetAmounts:[]).map((item,index)=>{const amount=item&&typeof item==="object"?Number(item.amount):Number(item);const reason=item&&typeof item==="object"?item.reason||"":"";return <li key={index}><span>Target {index+1}<small className="targetAdminReason">{reason||"Purpose not added"}</small></span><b>{money(amount)}</b><button type="button" className="dangerAction" onClick={()=>setForm(p=>({...p,targetAmounts:p.targetAmounts.filter((_,i)=>i!==index)}))}>Remove</button></li>;})}</ol>
         <button className="primaryBtn" onClick={saveTargetPlan}>Save target plan</button>
         <div className="fundsDivider"/>
         <h2>Expense management</h2>
