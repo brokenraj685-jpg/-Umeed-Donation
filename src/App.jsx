@@ -288,6 +288,13 @@ function HelpLine() {
   </main>;
 }
 
+function printWithMode(mode) {
+  document.body.classList.add(mode);
+  const cleanup=()=>document.body.classList.remove(mode);
+  window.addEventListener("afterprint",cleanup,{once:true});
+  window.print();
+}
+
 function JoinCommunity() {
   const [form,setForm]=useState({name:"",email:"",mobile:"",state:"",age:"",gender:""});
   const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[error,setError]=useState(""),[joinId,setJoinId]=useState("");
@@ -311,7 +318,7 @@ function JoinCommunity() {
   }
   return <main className="joinPage">
     <section className="joinHero"><span className="sectionLabel">BE A PART OF THE CHANGE</span><h1>Join Umeed Community</h1><p>Apni skills aur mehnat se kamayein, aur community ke zariye zarooratmand logon ki madad ka hissa banein.</p></section>
-    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Thank you for joining Umeed Community!</h2><p>Aapki joining request successfully submit ho gayi hai. Admin aapki details check karke joining approve karega.</p><small>Joining Request ID: {joinId}</small><div className="joinPendingStamp">PENDING ADMIN APPROVAL</div><button className="primaryBtn" onClick={()=>window.print()}>Download joining receipt / PDF</button></section>:<>
+    {done?<section className="joinSuccess"><div className="joinSuccessIcon">✓</div><h2>Thank you for joining Umeed Community!</h2><p>Aapki joining request successfully submit ho gayi hai. Admin aapki details check karke joining approve karega.</p><small>Joining Request ID: {joinId}</small><div className="joinPendingStamp">PENDING ADMIN APPROVAL</div><button className="primaryBtn" onClick={()=>printWithMode("print-join-receipt")}>Download joining receipt / PDF</button><section className="joinReceiptPrint"><div className="receiptBrand">UMEED COMMUNITY</div><h1>Community Joining Receipt</h1><p className="receiptThanks">Thank you for becoming a part of Umeed Community.</p><div className="receiptStatus">PENDING ADMIN APPROVAL</div><dl><dt>Member Name</dt><dd>{form.name}</dd><dt>Mobile Number</dt><dd>{form.mobile}</dd><dt>Email</dt><dd>{form.email||"Not provided"}</dd><dt>State</dt><dd>{form.state}</dd><dt>Age</dt><dd>{form.age} Years</dd><dt>Gender</dt><dd>{form.gender}</dd><dt>Joining Request ID</dt><dd>{joinId}</dd></dl><p className="receiptFooter">Together, we can turn compassion into action and hope into reality.</p></section></section>:<>
       <section className="joinInfoGrid">
         <article><h2>Joining Rules</h2><ul>
           <li>Member ki identity verification ke liye Aadhaar Card, PAN Card aur passport-size photo dena zaroori hoga.</li>
@@ -913,7 +920,7 @@ function Admin({settings}) {
         <h2>Community joining requests ({joinRequests.length})</h2>
         <div className="tableWrap"><table><thead><tr><th>Name / Request ID</th><th>Mobile</th><th>State</th><th>Age</th><th>Gender</th><th>Status</th><th>Action / PDF</th></tr></thead>
           <tbody>{joinRequests.map(j=><tr key={j.id}><td><b>{j.name}</b><small className="joinAdminId">{j.id}</small></td><td>{j.mobile}</td><td>{j.state}</td><td>{j.age}</td><td>{j.gender||"Not specified"}</td><td><span className={"status "+(j.status==="approved"?"verified":j.status==="rejected"?"rejected":"pending")}>{j.status}</span></td>
-          <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<><button onClick={()=>{setSelectedJoin(j);setTimeout(()=>window.print(),300);}}>Joining PDF</button><button onClick={()=>{setSelectedIdCard(j);setTimeout(()=>window.print(),300);}}>ID Card PDF</button></>}</div></td></tr>)}
+          <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<><button onClick={()=>{setSelectedJoin(j);setTimeout(()=>printWithMode("print-join-certificate"),300);}}>Joining PDF</button><button onClick={()=>{setSelectedIdCard(j);setTimeout(()=>printWithMode("print-member-id"),300);}}>ID Card PDF</button></>}</div></td></tr>)}
           {!joinRequests.length&&<tr><td colSpan="7" className="empty">Abhi koi joining request nahi aayi.</td></tr>}</tbody></table></div>
         <p className="formFine">Approved member ka PDF print/download karne ke liye request ko select karke browser print dialog mein Save as PDF choose karein.</p>
         {selectedIdCard&&<section className="memberIdCardPrint">
