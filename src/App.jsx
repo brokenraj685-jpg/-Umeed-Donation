@@ -251,7 +251,7 @@ function CommunityService({settings}) {
     <section className="serviceContent">
       {content.trim() ? <div className="serviceText">{content}</div> : <div className="serviceEmpty">Community service information will be added soon.</div>}
     </section>
-    <div className="founderMessageAction"><button type="button" onClick={()=>setFounderOpen(true)}>A Message From The Founder <span>Read more</span></button></div>
+    <div className="founderMessageAction"><button type="button" onClick={()=>setFounderOpen(true)}><HeartHandshake size={21}/><span><b>A Message From The Founder</b><small>Read my story &amp; purpose</small></span><span className="founderMessageArrow">Read more →</span></button></div>
     {founderOpen&&<div className="founderMessageOverlay" role="dialog" aria-modal="true" aria-label="A Message From The Founder" onClick={()=>setFounderOpen(false)}>
       <article className="founderMessageModal" onClick={e=>e.stopPropagation()}>
         <button className="founderMessageClose" type="button" onClick={()=>setFounderOpen(false)} aria-label="Close">×</button>
