@@ -195,7 +195,7 @@ function tryMediaFallback(event,url){
   const candidate=parsed.origin+paths[index]+file;
   if(candidate!==media.src)media.src=candidate;
 }
-function MediaPage({media,type}) {
+function MediaPage({media,type,donations}) {
   const [selected,setSelected]=useState(null);
   const mediaUrl = (url) => {
     try {
@@ -223,6 +223,17 @@ function MediaPage({media,type}) {
           <span className="mediaNumber">{String(i+1).padStart(2,"0")}</span>
         </button>
         <div className="mediaPageCaption"><b>{m.title||heading.slice(0,-1)+" "+(i+1)}</b>{m.caption&&<p>{m.caption}</p>}</div>
+        {Number(m.targetAmount)>0&&(()=>{
+          const raised=donations.filter(d=>d.storyId===m.id&&d.status==="verified").reduce((sum,d)=>sum+Number(d.amount||0),0);
+          const target=Number(m.targetAmount), remaining=Math.max(0,target-raised), percent=Math.min(100,Math.round(raised/target*100));
+          return <div className="storyDonationProgress">
+            {m.targetReason&&<small>{m.targetReason}</small>}
+            <div className="storyDonationNumbers"><span>Target <b>{money(target)}</b></span><span>Received <b>{money(raised)}</b></span></div>
+            <div className="storyDonationTrack"><span style={{width:percent+"%"}}/></div>
+            <div className="storyDonationFoot"><b>{percent}% complete</b><span>{money(remaining)} baki</span></div>
+            <Link className="primaryBtn storyDonateBtn" to={`/donate?story=${encodeURIComponent(m.id)}`}>Donate for this story <ArrowRight size={16}/></Link>
+          </div>;
+        })()}
       </article>):<div className="emptyGallery"><Camera size={30}/><span>No {type==="video"?"videos":"photos"} have been uploaded yet.</span></div>}
     </div>
     {selected&&<div className="mediaLightbox" onClick={()=>setSelected(null)}>
@@ -407,6 +418,9 @@ function JoinCommunity() {
 
 function Donate({settings}) {
   const [form,setForm]=useState({name:"",mobile:"",state:"",amount:"",transactionId:"",note:""});
+  const storyId=new URLSearchParams(window.location.search).get("story")?.trim()||"";
+  const [storyInfo,setStoryInfo]=useState(null);
+  useEffect(()=>{let active=true;if(!db||!storyId)return;getDoc(doc(db,"media",storyId)).then(s=>{if(active&&s.exists())setStoryInfo({id:s.id,...s.data()});}).catch(()=>{});return()=>{active=false;};},[storyId]);
   const referralCode=new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase()||"";
   const [referralMemberName,setReferralMemberName]=useState("");
   useEffect(()=>{let active=true;if(!db||!referralCode)return;getDoc(doc(db,"referralCodes",referralCode)).then(s=>{if(active&&s.exists())setReferralMemberName(s.data().memberName||"Umeed Community Member");}).catch(()=>{});return()=>{active=false;};},[referralCode]);
@@ -504,6 +518,7 @@ function Donate({settings}) {
           name:form.name.trim(),mobile:form.mobile.trim(),state:form.state,amount:Number(form.amount),
           transactionId:form.transactionId.trim(),note:form.note.trim(),
           ...(referralCode?{referralCode}:{}),
+          ...(storyId?{storyId}:{}),
           certificateCode:newCode,status:"pending",createdAt:serverTimestamp()
         });
         // This mapping is create-only in Firestore rules; existing numbers cannot be reused.
@@ -574,6 +589,7 @@ function Donate({settings}) {
     {lookupRecord&&renderCertificate(lookupRecord)}
     {!done&&<div className="formIntro">
       <div className="sectionLabel">GIVE WITH PURPOSE</div>
+      {storyId&&<div className="storyDonationNotice">{storyInfo?<><b>Story donation: {storyInfo.title||"Umeed Community Story"}</b><small>{storyInfo.targetReason||"Your donation will be counted only for this story."}</small></>:<b>Story donation selected. Please wait while its details load.</b>}</div>}
       {referralCode&&<p className="referralAttribution">You are donating through <b>{referralMemberName||"Umeed Community Member"}</b></p>}
       <h1>Your kindness<br/><em>creates hope.</em></h1>
       <p>Fill in your details, make the payment using the payment details shown below, then submit your donation details. Transaction reference dena optional hai.</p>
@@ -639,6 +655,10 @@ function Admin({settings}) {
   const [form,setForm]=useState(settings);
   const [mediaTitle,setMediaTitle]=useState("");
   const [mediaCaption,setMediaCaption]=useState("");
+  const [mediaTargetAmount,setMediaTargetAmount]=useState("");
+  const [mediaTargetReason,setMediaTargetReason]=useState("");
+  const [editTargetAmount,setEditTargetAmount]=useState("");
+  const [editTargetReason,setEditTargetReason]=useState("");
   const [mediaType,setMediaType]=useState("image");
   const [file,setFile]=useState(null);
   const [uploading,setUploading]=useState(false);
@@ -975,11 +995,14 @@ function Admin({settings}) {
       const put=await fetch(uploadUrl,{method:"PUT",headers:{"Content-Type":file.type},body:file});
       if(!put.ok)throw new Error("Upload failed.");
       await addDoc(collection(db,"media"),{
-        title:mediaTitle,caption:mediaCaption,type:mediaType,url:publicUrl,key,createdAt:serverTimestamp()
+        title:mediaTitle.trim(),caption:mediaCaption.trim(),type:mediaType,url:publicUrl,key,
+        targetAmount:Number(mediaTargetAmount),targetReason:mediaTargetReason.trim(),createdAt:serverTimestamp()
       });
       setFile(null);
       setMediaTitle("");
       setMediaCaption("");
+      setMediaTargetAmount("");
+      setMediaTargetReason("");
       alert("Media uploaded.");
     } catch(err) {
       setError(err.message);
@@ -1028,7 +1051,9 @@ function Admin({settings}) {
         if(!put.ok)throw new Error("Nayi file upload nahi hui.");
         newUrl=signed.publicUrl;newKey=signed.key;
       }
-      await updateDoc(doc(db,"media",item.id),{title:editTitle.trim(),caption:editCaption.trim(),url:newUrl,key:newKey,updatedAt:serverTimestamp()});
+      const targetAmount=Number(editTargetAmount);
+      if(!Number.isFinite(targetAmount)||targetAmount<=0)throw new Error("Valid story target amount enter karein.");
+      await updateDoc(doc(db,"media",item.id),{title:editTitle.trim(),caption:editCaption.trim(),url:newUrl,key:newKey,targetAmount,targetReason:editTargetReason.trim(),updatedAt:serverTimestamp()});
       if(replacementFile){
         const oldKey=item.key||getMediaKey(item);
         if(oldKey&&oldKey!==newKey){try{await callMediaDelete(oldKey);}catch(err){console.warn("Old media cleanup failed:",err);}}
@@ -1390,6 +1415,8 @@ function Admin({settings}) {
           </select></label>
           <label>Title<input value={mediaTitle} onChange={e=>setMediaTitle(e.target.value)}/></label>
           <label>Caption<input value={mediaCaption} onChange={e=>setMediaCaption(e.target.value)}/></label>
+          <label>Donation target amount (₹)<input type="number" min="1" value={mediaTargetAmount} onChange={e=>setMediaTargetAmount(e.target.value)} required placeholder="Example: 20000"/></label>
+          <label>Target kis liye hai?<input value={mediaTargetReason} onChange={e=>setMediaTargetReason(e.target.value)} maxLength="180" required placeholder="Example: Ilaaj ke liye"/></label>
           <label>Choose file<input type="file" accept={mediaType==="video"?"video/*":"image/*"} onChange={e=>setFile(e.target.files?.[0]||null)} required/></label>
           {file&&<p>{file.name} · {(file.size/1024/1024).toFixed(1)} MB</p>}
           {error&&<p className="error">{error}</p>}
@@ -1400,14 +1427,16 @@ function Admin({settings}) {
           <h2>Uploaded photos & videos ({mediaItems.length})</h2>
           {mediaItems.length===0?<p className="formFine">Abhi koi photo ya video upload nahi hua.</p>:<div className="adminMediaGrid">{mediaItems.map(item=><article className="adminMediaItem" key={item.id}>
             {item.type==="video"?<video src={adminMediaUrl(item.url)} onError={e=>tryMediaFallback(e,item.url)} controls preload="metadata"/>:<img src={adminMediaUrl(item.url)} onError={e=>tryMediaFallback(e,item.url)} alt={item.title||"Uploaded community media"}/>}
-            <div className="adminMediaInfo"><b>{item.title||"Untitled"}</b><small>{item.type==="video"?"Video":"Photo"}</small>{item.caption&&<p>{item.caption}</p>}</div>
+            <div className="adminMediaInfo"><b>{item.title||"Untitled"}</b><small>{item.type==="video"?"Video":"Photo"} · Target {money(item.targetAmount||0)}</small>{item.targetReason&&<p>{item.targetReason}</p>}<p>Verified story donations: {money(pending.filter(d=>d.storyId===item.id&&d.status==="verified").reduce((sum,d)=>sum+Number(d.amount||0),0))}</p></div>
             {editingMedia===item.id?<div className="adminMediaEdit">
               <label>Title<input value={editTitle} onChange={e=>setEditTitle(e.target.value)}/></label>
               <label>Caption<input value={editCaption} onChange={e=>setEditCaption(e.target.value)}/></label>
+              <label>Donation target amount (₹)<input type="number" min="1" value={editTargetAmount} onChange={e=>setEditTargetAmount(e.target.value)} required/></label>
+              <label>Target purpose<input value={editTargetReason} onChange={e=>setEditTargetReason(e.target.value)} maxLength="180"/></label>
               <label>Replace file (optional)<input type="file" accept={item.type==="video"?"video/*":"image/*"} onChange={e=>setReplacementFile(e.target.files?.[0]||null)}/></label>
               <div className="actions"><button disabled={mediaBusy} onClick={()=>saveMediaEdit(item)}>{mediaBusy?"Saving…":"Save changes"}</button><button onClick={()=>{setEditingMedia(null);setReplacementFile(null);}}>Cancel</button></div>
             </div>:<div className="actions">
-              <button onClick={()=>{setEditingMedia(item.id);setEditTitle(item.title||"");setEditCaption(item.caption||"");setReplacementFile(null);}}>Edit / Change</button>
+              <button onClick={()=>{setEditingMedia(item.id);setEditTitle(item.title||"");setEditCaption(item.caption||"");setEditTargetAmount(String(item.targetAmount||""));setEditTargetReason(item.targetReason||"");setReplacementFile(null);}}>Edit / Change</button>
               <button disabled={mediaBusy} onClick={()=>removeMedia(item)}>Delete</button>
             </div>}
           </article>)}</div>}
@@ -1423,8 +1452,8 @@ export default function App() {
     <Header settings={data.settings}/>
     <Routes>
       <Route path="/" element={<Home data={data}/>}/>
-      <Route path="/photos" element={<MediaPage media={data.media} type="image"/>}/>
-      <Route path="/videos" element={<MediaPage media={data.media} type="video"/>}/>
+      <Route path="/photos" element={<MediaPage media={data.media} donations={data.donations} type="image"/>}/>
+      <Route path="/videos" element={<MediaPage media={data.media} donations={data.donations} type="video"/>}/>
       <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
       <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
       <Route path="/join-community" element={<JoinCommunity/>}/>
