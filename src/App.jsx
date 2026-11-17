@@ -289,7 +289,7 @@ function HelpLine() {
 }
 
 function JoinCommunity() {
-  const [form,setForm]=useState({name:"",email:"",mobile:"",state:"",age:""});
+  const [form,setForm]=useState({name:"",email:"",mobile:"",state:"",age:"",gender:""});
   const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[error,setError]=useState(""),[joinId,setJoinId]=useState("");
   const change=e=>setForm(p=>({...p,[e.target.name]:e.target.value}));
   async function submit(e){
@@ -302,7 +302,7 @@ function JoinCommunity() {
     try{
       const requestRef=doc(collection(db,"communityJoins"));
       await setDoc(requestRef,{
-        name:form.name.trim(),email:form.email.trim().toLowerCase(),mobile:form.mobile.trim(),state:form.state,age:Number(form.age),
+        name:form.name.trim(),email:form.email.trim().toLowerCase(),mobile:form.mobile.trim(),state:form.state,age:Number(form.age),gender:form.gender,
         status:"pending",createdAt:serverTimestamp(),termsAccepted:true
       });
       setJoinId(requestRef.id);setDone(true);
@@ -332,6 +332,7 @@ function JoinCommunity() {
           <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
           <label>State<select name="state" value={form.state} onChange={change} required><option value="">Select state</option>{states.map(x=><option key={x}>{x}</option>)}</select></label>
           <label>Age<input name="age" type="number" min="18" max="100" value={form.age} onChange={change} required placeholder="Your age"/></label>
+          <label>Gender<select name="gender" value={form.gender} onChange={change} required><option value="">Select gender</option><option value="Male">Male</option><option value="Female">Female</option></select></label>
           {error&&<p className="error">{error}</p>}
           <button className="primaryBtn" disabled={busy}>{busy?"Submitting…":"Join Community"}</button>
         </form>
@@ -556,6 +557,7 @@ function Admin({settings}) {
   const [joinRequests,setJoinRequests]=useState([]);
   const [helpRequests,setHelpRequests]=useState([]);
   const [selectedJoin,setSelectedJoin]=useState(null);
+  const [selectedIdCard,setSelectedIdCard]=useState(null);
   const [memberPayments,setMemberPayments]=useState([]);
   const [selectedPaymentMember,setSelectedPaymentMember]=useState(null);
   const [paymentForm,setPaymentForm]=useState({amount:"",paidAt:"",referenceId:""});
@@ -909,11 +911,21 @@ function Admin({settings}) {
 
       {tab==="communityJoins"&&<div className="adminPanel communityJoinAdmin">
         <h2>Community joining requests ({joinRequests.length})</h2>
-        <div className="tableWrap"><table><thead><tr><th>Name / Request ID</th><th>Mobile</th><th>State</th><th>Age</th><th>Status</th><th>Action / PDF</th></tr></thead>
-          <tbody>{joinRequests.map(j=><tr key={j.id}><td><b>{j.name}</b><small className="joinAdminId">{j.id}</small></td><td>{j.mobile}</td><td>{j.state}</td><td>{j.age}</td><td><span className={"status "+(j.status==="approved"?"verified":j.status==="rejected"?"rejected":"pending")}>{j.status}</span></td>
-          <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<button onClick={()=>{setSelectedJoin(j);setTimeout(()=>window.print(),300);}}>Joining PDF</button>}</div></td></tr>)}
-          {!joinRequests.length&&<tr><td colSpan="6" className="empty">Abhi koi joining request nahi aayi.</td></tr>}</tbody></table></div>
+        <div className="tableWrap"><table><thead><tr><th>Name / Request ID</th><th>Mobile</th><th>State</th><th>Age</th><th>Gender</th><th>Status</th><th>Action / PDF</th></tr></thead>
+          <tbody>{joinRequests.map(j=><tr key={j.id}><td><b>{j.name}</b><small className="joinAdminId">{j.id}</small></td><td>{j.mobile}</td><td>{j.state}</td><td>{j.age}</td><td>{j.gender||"Not specified"}</td><td><span className={"status "+(j.status==="approved"?"verified":j.status==="rejected"?"rejected":"pending")}>{j.status}</span></td>
+          <td><div className="actions">{j.status==="pending"&&<><button onClick={()=>reviewJoin(j,true)}>Approve</button><button onClick={()=>reviewJoin(j,false)}>Reject</button></>}{j.status==="approved"&&<><button onClick={()=>{setSelectedJoin(j);setTimeout(()=>window.print(),300);}}>Joining PDF</button><button onClick={()=>{setSelectedIdCard(j);setTimeout(()=>window.print(),300);}}>ID Card PDF</button></>}</div></td></tr>)}
+          {!joinRequests.length&&<tr><td colSpan="7" className="empty">Abhi koi joining request nahi aayi.</td></tr>}</tbody></table></div>
         <p className="formFine">Approved member ka PDF print/download karne ke liye request ko select karke browser print dialog mein Save as PDF choose karein.</p>
+        {selectedIdCard&&<section className="memberIdCardPrint">
+          <div className="memberIdCardTop"><span className="memberIdCardLogo"><HeartHandshake size={25}/></span><b>UMEED COMMUNITY</b><small>OFFICIAL MEMBER ID CARD</small></div>
+          <div className="memberIdCardBody">
+            <h1>{selectedIdCard.name}</h1>
+            <div className="memberIdCardLine"><span>STATE</span><b>{selectedIdCard.state||"—"}</b></div>
+            <div className="memberIdCardLine"><span>AGE</span><b>{selectedIdCard.age||"—"} Years</b></div>
+            <div className="memberIdCardLine"><span>GENDER</span><b>{selectedIdCard.gender||"Not specified"}</b></div>
+          </div>
+          <div className="memberIdCardFooter"><span>UMEED COMMUNITY</span><small>Member ID: {selectedIdCard.id}</small></div>
+        </section>}
         {selectedJoin&&<section className="joinCertificatePrint">
           <div className="certificateLogo"><span className="brandIcon"><HeartHandshake/></span> UMEED COMMUNITY</div>
           <div className="sectionLabel">OFFICIAL MEMBERSHIP CONFIRMATION</div>
