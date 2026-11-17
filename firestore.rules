@@ -78,7 +78,7 @@ service cloud.firestore {
     }
     match /referralCodes/{code} {
       allow get: if true;
-      allow list: if false;
+      allow list: if isAdmin();
       allow create, update, delete: if isAdmin();
     }
     match /expenses/{expenseId} {
