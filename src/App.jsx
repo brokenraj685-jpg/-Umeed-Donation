@@ -82,9 +82,9 @@ const top = useMemo(() => [...donations]
         <Trophy size={34}/>
       </div>
       <div className="tableWrap"><table>
-        <thead><tr><th>Rank</th><th>Donor</th><th>State</th><th>Amount</th><th>Date</th></tr></thead>
+        <thead><tr><th>Rank</th><th>Donor</th><th>Mobile</th><th>State</th><th>Amount</th><th>Date</th></tr></thead>
         <tbody>{top.length?top.map((d,i)=><tr key={d.id}>
-          <td><span className="rank">{i+1}</span></td><td>{d.name}</td><td>{d.state}</td><td className="amount">{money(d.amount)}</td>
+          <td><span className="rank">{i+1}</span></td><td>{d.name}</td><td>{d.mobile||"—"}</td><td>{d.state}</td><td className="amount">{money(d.amount)}</td>
           <td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN") || "Recently"}</td>
         </tr>):<tr><td colSpan="5" className="empty">Be the first to make a contribution.</td></tr>}</tbody>
       </table></div>
@@ -377,7 +377,7 @@ function JoinCommunity() {
 }
 
 function Donate({settings}) {
-  const [form,setForm]=useState({name:"",state:"",amount:"",transactionId:"",note:""});
+  const [form,setForm]=useState({name:"",mobile:"",state:"",amount:"",transactionId:"",note:""});
   const referralCode=new URLSearchParams(window.location.search).get("ref")?.trim().toUpperCase()||"";
   const [referralMemberName,setReferralMemberName]=useState("");
   useEffect(()=>{let active=true;if(!db||!referralCode)return;getDoc(doc(db,"referralCodes",referralCode)).then(s=>{if(active&&s.exists())setReferralMemberName(s.data().memberName||"Umeed Community Member");}).catch(()=>{});return()=>{active=false;};},[referralCode]);
@@ -411,7 +411,7 @@ function Donate({settings}) {
   }
 
   function startNewDonation(){
-    setForm({name:"",state:"",amount:"",transactionId:"",note:""});
+    setForm({name:"",mobile:"",state:"",amount:"",transactionId:"",note:""});
     setDone(false);
     setSubmittedId("");
     setCertificateCode("");
@@ -451,6 +451,7 @@ function Donate({settings}) {
     e.preventDefault();
     setError("");
     if(!db){setError("Firebase is not configured yet. Please try again after setup.");return;}
+    if(!/^[6-9][0-9]{9}$/.test(form.mobile.trim())){setError("Valid 10-digit mobile number enter karein.");return;}
     if(Number(form.amount)<1){setError("Please enter a valid donation amount.");return;}
     setBusy(true);
     try {
@@ -471,7 +472,7 @@ function Donate({settings}) {
         docRef=doc(collection(db,"donations"));
         const batch=writeBatch(db);
         batch.set(docRef,{
-          name:form.name.trim(),state:form.state,amount:Number(form.amount),
+          name:form.name.trim(),mobile:form.mobile.trim(),state:form.state,amount:Number(form.amount),
           transactionId:form.transactionId.trim(),note:form.note.trim(),
           ...(referralCode?{referralCode}:{}),
           certificateCode:newCode,status:"pending",createdAt:serverTimestamp()
@@ -481,7 +482,7 @@ function Donate({settings}) {
         try{await batch.commit();lastError=null;break;}catch(err){lastError=err;docRef=null;}
       }
       if(!docRef)throw lastError||new Error("Unique number reserve nahi ho paya. Please dobara try karein.");
-      const preview={name:form.name.trim(),state:form.state,amount:Number(form.amount),status:"pending",certificateCode:newCode,createdAt:new Date().toISOString()};
+      const preview={name:form.name.trim(),mobile:form.mobile.trim(),state:form.state,amount:Number(form.amount),status:"pending",certificateCode:newCode,createdAt:new Date().toISOString()};
       setSubmittedId(docRef.id);
       setCertificateCode(newCode);
       setDonationRecord({...preview,id:docRef.id});
@@ -551,6 +552,7 @@ function Donate({settings}) {
     {!done&&<form className="donateForm" onSubmit={submit}>
       <h2>Donation details</h2>
       <label>Your full name<input name="name" required maxLength="80" value={form.name} onChange={change} placeholder="Enter your name"/></label>
+      <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" required value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/[^0-9]/g,"").slice(0,10)}))} placeholder="Enter 10-digit mobile number"/></label>
       <label>State<select name="state" required value={form.state} onChange={change}>
         <option value="">Select your state</option>{states.map(s=><option key={s}>{s}</option>)}
       </select></label>
