@@ -1307,3 +1307,24 @@ footer .brand{font-size:14px}
   font-weight:700;
 }
 .memberPaymentsAdmin .dangerBtn:active{transform:scale(.98)}
+
+
+/* Member archive and monthly membership report */
+.memberArchiveAdmin .tableWrap td{vertical-align:top;min-width:110px}
+.memberArchiveAdmin .tableWrap td:last-child{min-width:260px;white-space:normal}
+.memberArchiveAdmin .tableWrap td:last-child hr{border:0;border-top:1px solid #e3e9e4;margin:5px 0}
+.memberArchivePrint{display:none}
+@media print{
+  body.print-member-archive-report *{visibility:hidden!important}
+  body.print-member-archive-report .memberArchivePrint,
+  body.print-member-archive-report .memberArchivePrint *{visibility:visible!important}
+  body.print-member-archive-report .memberArchivePrint{display:block!important;position:absolute!important;left:0!important;top:0!important;width:100%!important;box-sizing:border-box!important;background:#fff!important;color:#18352a!important;font-family:Arial,sans-serif!important;font-size:8pt!important}
+  body.print-member-archive-report .memberArchivePrint h1{font-size:18pt!important;margin:0 0 5mm!important;color:#17613f!important}
+  body.print-member-archive-report .memberArchivePrint h2{font-size:13pt!important;margin:0 0 5mm!important}
+  body.print-member-archive-report .memberArchivePrint table{width:100%!important;border-collapse:collapse!important;table-layout:auto!important;font-size:7pt!important}
+  body.print-member-archive-report .memberArchivePrint th,
+  body.print-member-archive-report .memberArchivePrint td{border:1px solid #b9cbbd!important;padding:4px!important;text-align:left!important;vertical-align:top!important;overflow-wrap:anywhere!important}
+  body.print-member-archive-report .memberArchivePrint th{background:#eff7ef!important}
+  body.print-member-archive-report .memberArchivePrint .monthlyFundPrintSummary{border:1px solid #dce8df!important;padding:3mm!important;margin:3mm 0!important}
+  body.print-member-archive-report .memberArchivePrint .monthlyFundPrintSummary p{margin:1mm 0!important}
+}
