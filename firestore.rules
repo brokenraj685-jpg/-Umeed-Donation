@@ -14,10 +14,12 @@ service cloud.firestore {
     }
     match /donations/{donationId} {
       allow read: if isAdmin() || resource.data.status == "verified";
-      allow create: if request.resource.data.keys().hasOnly(["name","state","amount","transactionId","note","referralCode","certificateCode","status","createdAt"])
+      allow create: if request.resource.data.keys().hasOnly(["name","mobile","state","amount","transactionId","note","referralCode","certificateCode","status","createdAt"])
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 80
+        && request.resource.data.mobile is string
+        && request.resource.data.mobile.matches("^[6-9][0-9]{9}$")
         && request.resource.data.state is string
         && request.resource.data.amount is number
         && request.resource.data.amount > 0
