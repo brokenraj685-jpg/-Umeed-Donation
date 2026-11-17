@@ -1147,3 +1147,27 @@ footer .brand{font-size:14px}
   body.print-member-id .memberIdCardBody{flex:1 1 auto!important;min-height:0!important;padding:5mm 4mm!important}
   body.print-member-id .memberIdCardFooter{position:static!important;flex:0 0 13mm!important;width:100%!important;box-sizing:border-box!important}
 }
+
+
+/* One combined, two-page PDF: certificate first, pocket ID card second */
+.memberPrintBundle{display:none}
+@media print{
+  @page{size:A4 portrait;margin:10mm}
+  body.print-member-bundle *{visibility:hidden!important}
+  body.print-member-bundle .memberPrintBundle,
+  body.print-member-bundle .memberPrintBundle *{visibility:visible!important}
+  body.print-member-bundle .memberPrintBundle{display:flex!important;flex-direction:column!important;position:static!important;width:190mm!important;margin:0 auto!important;overflow:visible!important}
+  body.print-member-bundle .joinCertificatePrint{display:flex!important;order:1!important;position:relative!important;left:auto!important;top:auto!important;width:190mm!important;height:277mm!important;min-height:277mm!important;margin:0!important;padding:18mm!important;box-sizing:border-box!important;overflow:visible!important;page-break-after:always!important;break-after:page!important;border:2px solid #17633a!important;background:#fff!important;color:#18352a!important;align-items:center!important;text-align:center!important}
+  body.print-member-bundle .joinCertificatePrint .certificateLogo{font-size:23pt!important;margin:10mm auto!important}
+  body.print-member-bundle .joinCertificatePrint .sectionLabel{font-size:11pt!important;margin-top:12mm!important}
+  body.print-member-bundle .joinCertificatePrint h1{font-size:27pt!important;line-height:1.2!important;margin:12mm 0!important}
+  body.print-member-bundle .joinCertificatePrint h2{font-size:25pt!important;overflow-wrap:anywhere!important}
+  body.print-member-bundle .joinCertificatePrint p{font-size:13pt!important;line-height:1.6!important}
+  body.print-member-bundle .joinCertificatePrint .joinCertDetails{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8mm!important;width:100%!important;margin:12mm 0!important;text-align:left!important}
+  body.print-member-bundle .joinCertificatePrint .joinFine{font-size:10pt!important;max-width:150mm!important}
+  body.print-member-bundle .joinCertificatePrint .certificateSignature{position:absolute!important;right:18mm!important;bottom:15mm!important;width:35mm!important}
+  body.print-member-bundle .memberIdCardPrint{display:flex!important;order:2!important;position:relative!important;left:auto!important;top:auto!important;flex-direction:column!important;width:54mm!important;height:86mm!important;min-height:86mm!important;margin:85mm auto 0!important;box-sizing:border-box!important;overflow:visible!important;border:1.5px solid #17633a!important;border-radius:3mm!important;outline:1px solid #17633a!important;outline-offset:1mm!important;background:#fff!important;color:#18352a!important;page-break-before:always!important;break-before:page!important;page-break-inside:avoid!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body.print-member-bundle .memberIdCardTop{flex:0 0 24mm!important}
+  body.print-member-bundle .memberIdCardBody{flex:1 1 auto!important;min-height:0!important;padding:5mm 4mm!important}
+  body.print-member-bundle .memberIdCardFooter{position:static!important;flex:0 0 13mm!important;width:100%!important;box-sizing:border-box!important}
+}
