@@ -857,6 +857,24 @@ function Admin({settings}) {
     catch(err){setError(err.message||"Expense delete nahi hua.");}
   }
 
+  async function solveHelpRequest(item){
+    if(item.status==="solved")return;
+    try{
+      await updateDoc(doc(db,"helpRequests",item.id),{
+        status:"solved",
+        solvedAt:serverTimestamp(),
+        solvedBy:user.email
+      });
+    }catch(err){setError(err.message||"Request solve mark nahi hui.");}
+  }
+
+  async function deleteHelpRequest(item){
+    if(!window.confirm("Is helpline request ko permanently delete karna hai?"))return;
+    try{
+      await deleteDoc(doc(db,"helpRequests",item.id));
+    }catch(err){setError(err.message||"Helpline request delete nahi hui.");}
+  }
+
   async function saveTargetPlan(e){
     e.preventDefault();setError("");
     const targets=(Array.isArray(form.targetAmounts)?form.targetAmounts:[]).map(Number);
@@ -1319,11 +1337,16 @@ function Admin({settings}) {
         <h2>Helpline Requests ({helpRequests.length})</h2>
         <p className="formFine">Website se submit hui sabhi help requests yahan date aur time ke saath dikhengi.</p>
         {helpRequests.length===0?<p className="empty">Abhi koi helpline request nahi aayi hai.</p>:<div className="tableWrap"><table>
-          <thead><tr><th>Date & Time</th><th>Mobile</th><th>Address</th><th>Help message</th></tr></thead>
-          <tbody>{helpRequests.map(r=><tr key={r.id}>
+          <thead><tr><th>Date & Time</th><th>Mobile</th><th>Address</th><th>Help message</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>{helpRequests.map(r=><tr key={r.id} className={r.status==="solved"?"helplineSolvedRow":""}>
             <td>{r.createdAt?.toDate?r.createdAt.toDate().toLocaleString("en-IN"):"Submitting…"}</td>
             <td><a href={`tel:${r.mobile}`}>{r.mobile}</a></td>
             <td>{r.address}</td><td className="helplineMessage">{r.message}</td>
+            <td><span className={r.status==="solved"?"helplineSolvedStatus":"helplinePendingStatus"}>{r.status==="solved"?"Solved":"Pending"}</span></td>
+            <td><div className="helplineActions">
+              <button type="button" className="helplineSolveBtn" disabled={r.status==="solved"} onClick={()=>solveHelpRequest(r)}>{r.status==="solved"?"Solved":"Solve"}</button>
+              <button type="button" className="helplineDeleteBtn" onClick={()=>deleteHelpRequest(r)}>Delete</button>
+            </div></td>
           </tr>)}</tbody>
         </table></div>}
       </div>}
