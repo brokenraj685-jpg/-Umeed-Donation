@@ -22,7 +22,7 @@ function useSiteData() {
     if (!db) return;
     const stopA = onSnapshot(doc(db,"site","settings"), s => { if(s.exists()) setSettings(p=>({...p,...s.data()})); });
     const stopB = onSnapshot(
-  query(collection(db,"donations"),where("status","==","verified"),limit(100)),
+  query(collection(db,"donations"),where("status","==","verified"),limit(1000)),
   s => setDonations(s.docs.map(d=>({id:d.id,...d.data()}))),
   err => console.error("Verified donations error:",err)
 );
@@ -72,7 +72,7 @@ function DonationProgress({settings,donations,expenses=[]}) {
       <article><span>Available balance</span><b>{money(balance)}</b></article>
       <article><span>Current target remaining</span><b>{currentTarget?money(targetRemaining):"Target not set"}</b></article>
     </div>
-    {currentTarget>0?<div className="currentDonationTarget">
+    {expenses.length>0&&<div className="publicExpenseHistory"><h3>Expense details</h3><div className="tableWrap"><table><thead><tr><th>Date</th><th>Purpose</th><th>Amount</th></tr></thead><tbody>{expenses.map(item=><tr key={item.id}><td>{item.expenseDate||"—"}</td><td>{item.purpose}</td><td>{money(item.amount)}</td></tr>)}</tbody></table></div></div>}\n    {currentTarget>0?<div className="currentDonationTarget">
       <div className="targetTitle"><b>Current target {currentIndex+1} of {targets.length}</b><strong>{money(currentTarget)}</strong></div>
       <div className="targetMeta"><span>{money(currentRaised)} received</span><b>{percent}% complete</b></div>
       <div className="targetTrack"><span style={{width:percent+"%"}}/></div>
