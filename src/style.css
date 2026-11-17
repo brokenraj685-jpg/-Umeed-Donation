@@ -1225,3 +1225,42 @@ footer .brand{font-size:14px}
 .founderMessageAction button small{font-size:10px;font-weight:400;opacity:.85}
 .founderMessageAction button .founderMessageArrow{margin-left:auto;font-size:11px;white-space:nowrap;font-weight:600}
 @media(max-width:640px){.founderMessageAction{margin-top:12px}.founderMessageAction button{padding:9px 11px;gap:9px}.founderMessageAction button b{font-size:11px}.founderMessageAction button .founderMessageArrow{font-size:10px}}
+
+
+/* Public donation progress and expense transparency */
+.donationProgress{max-width:1120px;margin:26px auto;padding:24px;border:1px solid #e1ebe3;border-radius:18px;background:#fff;box-shadow:0 8px 28px rgba(22,72,44,.06)}
+.donationProgress h2{margin:6px 0 18px;color:#173e2d;font-size:clamp(21px,3vw,28px)}
+.donationProgressGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.donationProgressGrid article{padding:15px;border:1px solid #e7eee8;border-radius:12px;background:#f8fbf8;display:flex;flex-direction:column;gap:8px;min-width:0}
+.donationProgressGrid article span{font-size:12px;color:#65766b}
+.donationProgressGrid article b{font-size:clamp(17px,2.4vw,23px);color:#185c3b;overflow-wrap:anywhere}
+.currentDonationTarget{margin-top:20px;padding:17px;border-radius:13px;background:#f1f7f1;border:1px solid #dceade}
+.targetTitle,.targetMeta{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.targetTitle{color:#174b32;margin-bottom:12px}
+.targetTitle strong{font-size:19px}
+.targetMeta{font-size:12px;color:#617267;margin-bottom:8px}
+.targetTrack{height:11px;border-radius:30px;background:#dce8de;overflow:hidden}
+.targetTrack span{display:block;height:100%;border-radius:30px;background:#21834f;transition:width .25s}
+.currentDonationTarget>small{display:block;margin-top:10px;color:#65766b}
+.publicExpenseHistory{margin-top:20px}
+.publicExpenseHistory h3{font-size:16px;color:#174b32;margin-bottom:8px}
+.fundsAdmin .targetAddForm{display:flex;align-items:end;gap:12px;max-width:620px;margin:14px 0}
+.targetAddForm label{flex:1}
+.targetAddForm label,.expenseEntryForm label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:700;color:#40594a}
+.targetAddForm input,.expenseEntryForm input{width:100%;padding:11px;border:1px solid #d7e2d9;border-radius:9px;font:inherit}
+.targetAdminList{padding-left:24px;max-width:650px}
+.targetAdminList li{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid #e8eee9}
+.targetAdminList li b{margin-left:auto;color:#17613f}
+.fundsAdmin>.primaryBtn{margin-top:10px}
+.fundsDivider{height:1px;background:#e2eae4;margin:26px 0}
+.expenseEntryForm{max-width:620px;display:grid;gap:12px;margin:14px 0 24px}
+.fundsAdmin h3{margin:18px 0 10px;color:#174b32}
+@media(max-width:720px){
+ .donationProgress{margin:18px 12px;padding:17px;border-radius:14px}
+ .donationProgressGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ .donationProgressGrid article{padding:12px}
+ .donationProgressGrid article span{font-size:11px}
+ .targetTitle strong{font-size:16px}
+ .fundsAdmin .targetAddForm{align-items:stretch;flex-direction:column}
+ .targetAddForm li{gap:8px}
+}
