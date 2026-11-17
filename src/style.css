@@ -1082,3 +1082,16 @@ footer .brand{font-size:14px}
 .helpFormPanel textarea{width:100%;resize:vertical;min-height:88px;padding:12px;border:1px solid #d5e0d7;border-radius:9px;font:inherit;box-sizing:border-box}
 .helplineMessage{min-width:220px;white-space:pre-wrap;overflow-wrap:anywhere}
 @media(max-width:700px){.helpFormPanel{width:calc(100% - 28px);margin:18px auto 45px;padding:17px}.socialLinks{gap:9px}}
+
+
+/* Keep Instagram, Helpline and Facebook together on one row */
+.socialLinks{display:flex;flex-wrap:nowrap!important;align-items:center;gap:7px;width:auto;min-width:0}
+.socialLinks .socialLink{flex:1 1 0;min-width:0;justify-content:center;gap:6px;padding:7px 8px}
+@media(max-width:640px){
+  footer .socialLinks{width:100%;flex:0 0 100%;gap:6px;justify-content:center}
+  .socialLinks .socialLink{flex:1 1 0;min-width:0;padding:6px 4px;gap:4px;border-radius:8px}
+  .socialLinks .socialLink svg{width:15px;height:15px;flex:0 0 15px}
+  .socialLinks .socialLink b{font-size:10px;white-space:nowrap}
+  .socialLinks .socialLink small{font-size:7px;white-space:nowrap}
+  .socialLinks .socialLink span{min-width:0}
+}
