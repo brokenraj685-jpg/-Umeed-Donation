@@ -330,7 +330,7 @@ function JoinCommunity() {
           <li>Umeed Community ke network ke through kaam aur earning ke mauke.</li>
           <li>Har earning ka transparent record maintain kiya jayega.</li>
           <li>Community ke social-help projects ka hissa banne ka mauka.</li>
-        </ul><div className="joinShare"><b>75% Community</b><span>25% Referring Member</span></div></article>
+        </ul><div className="joinShare"><b>85% Community</b><span>15% Member & Service Charges</span></div><p className="formFine">85% donation amount community help and service work ke liye use hoga. 15% member support/incentives aur service charges ke liye use hoga.</p></article>
       </section>
       <section className="joinFormCard"><h2>Join Community Form</h2><p>Form submit karne ke baad admin approval ka wait karein.</p>
         <form onSubmit={submit}>
@@ -727,8 +727,8 @@ function Admin({settings}) {
       .sort((a,b)=>String(a.paidAt||"").localeCompare(String(b.paidAt||"")))
     :[];
   const selectedMonthTotal=selectedMonthPayments.reduce((sum,p)=>sum+Number(p.amount||0),0);
-  const communityShare=Math.round(selectedMonthTotal*0.75*100)/100;
-  const memberShare=Math.round(selectedMonthTotal*0.25*100)/100;
+  const communityShare=Math.round(selectedMonthTotal*0.85*100)/100;
+  const memberShare=Math.round(selectedMonthTotal*0.15*100)/100;
   const reportMonthLabel=new Date(paymentReportMonth+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
 
   async function verify(d,approved) {
@@ -961,8 +961,8 @@ function Admin({settings}) {
             <label>PDF ke liye month select karein<input type="month" value={paymentReportMonth} onChange={e=>setPaymentReportMonth(e.target.value)}/></label>
             <div className="memberReportTotals">
               <div><span>Total amount entered for this month</span><b>{money(selectedMonthTotal)}</b></div>
-              <div><span>75% Umeed Community</span><b>{money(communityShare)}</b></div>
-              <div><span>25% Member share</span><b>{money(memberShare)}</b></div>
+              <div><span>85% Umeed Community</span><b>{money(communityShare)}</b></div>
+              <div><span>15% Member & Service Charges</span><b>{money(memberShare)}</b></div>
             </div>
           </div>
           {selectedPaymentMember.status==="approved"&&<form className="settingsForm" onSubmit={saveMemberPayment}>
@@ -987,8 +987,8 @@ function Admin({settings}) {
             <h3>Statement month: {reportMonthLabel}</h3>
             <div className="memberPdfSummary">
               <p>Total verified donations received through this member: <b>{money(selectedMonthTotal)}</b></p>
-              <p>Umeed Community share (75%): <b>{money(communityShare)}</b></p>
-              <p>Member share (25%): <b>{money(memberShare)}</b></p>
+              <p>Umeed Community share (85%): <b>{money(communityShare)}</b></p>
+              <p>Member & Service Charges (15%): <b>{money(memberShare)}</b></p>
             </div>
             <h3>Monthly payment entries</h3>
             <table><thead><tr><th>Date & Time</th><th>Amount received through member</th><th>Payment Reference ID</th></tr></thead><tbody>
