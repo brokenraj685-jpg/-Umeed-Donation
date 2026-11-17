@@ -323,7 +323,7 @@ function JoinCommunity() {
           <li>Umeed Community ke network ke through kaam aur earning ke mauke.</li>
           <li>Har earning ka transparent record maintain kiya jayega.</li>
           <li>Community ke social-help projects ka hissa banne ka mauka.</li>
-        </ul><div className="joinShare"><b>75% Community</b><span>25% Referring Member</span></div><p className="joinFine">Verified donation jo approved member apni mehnat se logon se directly collect karega, uska 75% Umeed Community ko aur 25% us member ko milega. Is process mein referral link ka use nahi hoga.</p></article>
+        </ul><div className="joinShare"><b>75% Community</b><span>25% Referring Member</span></div></article>
       </section>
       <section className="joinFormCard"><h2>Join Community Form</h2><p>Form submit karne ke baad admin approval ka wait karein.</p>
         <form onSubmit={submit}>
