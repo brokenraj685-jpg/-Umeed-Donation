@@ -510,7 +510,7 @@ function Donate({settings}) {
       <div className="sectionLabel">GIVE WITH PURPOSE</div>
       {referralCode&&<p className="referralAttribution">You are donating through <b>{referralMemberName||"Umeed Community Member"}</b></p>}
       <h1>Your kindness<br/><em>creates hope.</em></h1>
-      <p>Fill in your details, make the payment using the payment details shown below, then submit your transaction reference.</p>
+      <p>Fill in your details, make the payment using the payment details shown below, then submit your donation details. Transaction reference dena optional hai.</p>
     </div>}
     {!done&&<form className="donateForm" onSubmit={submit}>
       <h2>Donation details</h2>
@@ -525,9 +525,9 @@ function Donate({settings}) {
         {settings.upiId&&<p>UPI ID: <b>{settings.upiId}</b></p>}
         {settings.upiName&&<p>Payee: {settings.upiName}</p>}
         {settings.phone&&<p>UPI / Mobile: {settings.phone}</p>}
-        <small>Pay only to the details shown here. Keep your transaction reference.</small>
+        <small>Pay only to the details shown here. Transaction reference mile to use sambhal kar rakhein; form mein bharna optional hai.</small>
       </div>
-      <label>UPI transaction ID / reference<input name="transactionId" required value={form.transactionId} onChange={change} placeholder="Enter payment reference"/></label>
+      <label>UPI transaction ID / reference (optional)<input name="transactionId" value={form.transactionId} onChange={change} placeholder="Agar pata ho to yahan likhein"/></label>
       <label>Message (optional)<textarea name="note" rows="3" maxLength="300" value={form.note} onChange={change} placeholder="A short message"/></label>
       {error&&<p className="error">{error}</p>}
       <button className="primaryBtn full" disabled={busy}>{busy?"Submitting…":"Submit donation"}</button>
