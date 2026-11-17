@@ -784,6 +784,32 @@ function Admin({settings}) {
     }catch(err){setError(err.message||"Member status update nahi hua.");}
   }
 
+  async function deleteMemberCompletely(member){
+    const ok=window.confirm(`${member.name||"Ye member"} ka member profile, payment entries, adjustments aur referral code permanently delete ho jayega. Ye action wapas nahi hoga. Is member se jude original donation records financial history ke liye safe rahenge. Kya aap sure hain?`);
+    if(!ok)return;
+    setError("");
+    try{
+      const [paymentSnap,referralSnap]=await Promise.all([
+        getDocs(query(collection(db,"memberPayments"),where("memberId","==",member.id))),
+        getDocs(query(collection(db,"referralCodes"),where("memberUid","==",member.id)))
+      ]);
+      const refs=[
+        ...paymentSnap.docs.map(item=>item.ref),
+        ...referralSnap.docs.map(item=>item.ref),
+        doc(db,"communityJoins",member.id)
+      ];
+      for(let i=0;i<refs.length;i+=450){
+        const batch=writeBatch(db);
+        refs.slice(i,i+450).forEach(ref=>batch.delete(ref));
+        await batch.commit();
+      }
+      setSelectedPaymentMember(current=>current?.id===member.id?null:current);
+      alert("Member profile, payment history aur referral code permanently delete ho gaye. Original donation records safe hain.");
+    }catch(err){
+      setError(err.message||"Member delete nahi ho paya. Kuch records delete hue hon to admin records check karein.");
+    }
+  }
+
   function memberPaymentTotal(memberId){
     return memberPayments.filter(p=>p.memberId===memberId&&p.entryType!=="adjustment").reduce((sum,p)=>sum+Number(p.amount||0),0);
   }
@@ -1164,7 +1190,10 @@ function Admin({settings}) {
         </div>
         {selectedPaymentMember&&<section className="adminPanel selectedMemberPayments">
           <div className="sectionHead"><div><div className="sectionLabel">SELECTED MEMBER · {selectedPaymentMember.status==="left"?"LEFT":"ACTIVE"}</div><h2>{selectedPaymentMember.name}</h2><p>{selectedPaymentMember.email||"—"} · {selectedPaymentMember.mobile||"—"}</p></div><b className="amount">{money(memberPaymentTotal(selectedPaymentMember.id))}</b></div>
-          {selectedPaymentMember.status==="approved"&&<div className="actions"><button type="button" onClick={()=>markMemberLeft(selectedPaymentMember)}>Mark member as Left</button></div>}
+          <div className="actions">
+            {selectedPaymentMember.status==="approved"&&<button type="button" onClick={()=>markMemberLeft(selectedPaymentMember)}>Mark member as Left</button>}
+            <button type="button" className="dangerBtn" onClick={()=>deleteMemberCompletely(selectedPaymentMember)}>Delete Member & All Data</button>
+          </div>
           {selectedPaymentMember.status==="approved"&&<form className="settingsForm" onSubmit={saveMemberPercent}>
             <h3>Set this member's percentage</h3>
             <p className="formFine">Is member ke kaam ke hisaab se uska percentage set karein. Default 15% hai.</p>
