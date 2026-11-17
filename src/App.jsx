@@ -52,7 +52,7 @@ function Header({settings}) {
 
 
 function DonationProgress({settings,donations}) {
-  const received=donations.reduce((sum,d)=>sum+Number(d.amount||0),0);
+  const received=donations.filter(d=>!d.storyId).reduce((sum,d)=>sum+Number(d.amount||0),0);
   const targets=(Array.isArray(settings.targetAmounts)?settings.targetAmounts:[]).map(item=>{
     if(item&&typeof item==="object")return {amount:Number(item.amount)||0,reason:String(item.reason||"")};
     return {amount:Number(item)||0,reason:""};
