@@ -1171,3 +1171,31 @@ footer .brand{font-size:14px}
   body.print-member-bundle .memberIdCardBody{flex:1 1 auto!important;min-height:0!important;padding:5mm 4mm!important}
   body.print-member-bundle .memberIdCardFooter{position:static!important;flex:0 0 13mm!important;width:100%!important;box-sizing:border-box!important}
 }
+
+
+/* Final isolated A4 print modes: each action prints exactly one document */
+@media print{
+  @page{size:A4 portrait;margin:10mm}
+  html,body,#root{width:210mm!important;min-width:210mm!important;min-height:297mm!important;margin:0!important;padding:0!important;background:#fff!important}
+  body.print-join-certificate *{visibility:hidden!important}
+  body.print-join-certificate .memberPrintBundle{display:contents!important}
+  body.print-join-certificate .joinCertificatePrint,
+  body.print-join-certificate .joinCertificatePrint *{visibility:visible!important}
+  body.print-join-certificate .joinCertificatePrint{display:flex!important;position:absolute!important;left:10mm!important;top:10mm!important;width:190mm!important;height:277mm!important;min-height:277mm!important;margin:0!important;padding:18mm!important;box-sizing:border-box!important;overflow:hidden!important;flex-direction:column!important;justify-content:flex-start!important;align-items:center!important;text-align:center!important;border:2px solid #17633a!important;background:#fff!important;color:#18352a!important;break-after:avoid!important;page-break-after:avoid!important}
+  body.print-join-certificate .joinCertificatePrint .certificateLogo{font-size:22pt!important;margin:10mm auto!important}
+  body.print-join-certificate .joinCertificatePrint .sectionLabel{font-size:11pt!important;margin-top:12mm!important}
+  body.print-join-certificate .joinCertificatePrint h1{font-size:27pt!important;line-height:1.2!important;margin:10mm 0!important}
+  body.print-join-certificate .joinCertificatePrint h2{font-size:25pt!important;overflow-wrap:anywhere!important}
+  body.print-join-certificate .joinCertificatePrint p{font-size:13pt!important;line-height:1.6!important}
+  body.print-join-certificate .joinCertificatePrint .joinCertDetails{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8mm!important;width:100%!important;margin:12mm 0!important;text-align:left!important}
+  body.print-join-certificate .joinCertificatePrint .joinFine{font-size:10pt!important;max-width:150mm!important}
+  body.print-join-certificate .joinCertificatePrint .certificateSignature{position:absolute!important;right:18mm!important;bottom:14mm!important;width:35mm!important}
+  body.print-member-id *{visibility:hidden!important}
+  body.print-member-id .memberPrintBundle{display:contents!important}
+  body.print-member-id .memberIdCardPrint,
+  body.print-member-id .memberIdCardPrint *{visibility:visible!important}
+  body.print-member-id .memberIdCardPrint{display:flex!important;position:absolute!important;left:78mm!important;top:105.5mm!important;flex-direction:column!important;width:54mm!important;height:86mm!important;min-height:86mm!important;margin:0!important;box-sizing:border-box!important;overflow:hidden!important;border:1.5px solid #17633a!important;border-radius:3mm!important;outline:1px solid #17633a!important;outline-offset:1mm!important;background:#fff!important;color:#18352a!important;break-before:avoid!important;page-break-before:avoid!important;break-after:avoid!important;page-break-after:avoid!important;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  body.print-member-id .memberIdCardTop{flex:0 0 24mm!important}
+  body.print-member-id .memberIdCardBody{flex:1 1 auto!important;min-height:0!important;padding:5mm 4mm!important}
+  body.print-member-id .memberIdCardFooter{position:static!important;flex:0 0 13mm!important;width:100%!important;box-sizing:border-box!important}
+}
