@@ -23,7 +23,7 @@ service cloud.firestore {
         && request.resource.data.amount > 0
         && request.resource.data.amount <= 10000000
         && request.resource.data.transactionId is string
-        && request.resource.data.transactionId.size() > 0
+        && request.resource.data.transactionId.size() <= 120
         && request.resource.data.certificateCode is string
         && request.resource.data.certificateCode.matches("^[0-9]{6}$")
         && (!("referralCode" in request.resource.data)
