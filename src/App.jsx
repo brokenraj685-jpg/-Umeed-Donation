@@ -16,6 +16,7 @@ function useSiteData() {
   const [settings,setSettings] = useState({siteName:"Umeed",tagline:"Together, we can bring hope.",about:"A community-led effort to support families and individuals facing hardship. Every verified contribution is recorded transparently.",upiId:"",upiName:"",qrUrl:"",phone:"",heroImage:"",serviceTitle:"Umeed Community Service",serviceContent:"",totalHelped:"0",goal:"500000",instagramUrl:"",facebookUrl:""});
   const [donations,setDonations] = useState([]);
   const [media,setMedia] = useState([]);
+  const [expenses,setExpenses] = useState([]);
 
   useEffect(() => {
     if (!db) return;
@@ -26,10 +27,11 @@ function useSiteData() {
   err => console.error("Verified donations error:",err)
 );
     const stopC = onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(50)), s => setMedia(s.docs.map(d=>({id:d.id,...d.data()}))));
-    return () => { stopA(); stopB(); stopC(); };
+    const stopD = onSnapshot(query(collection(db,"expenses"),orderBy("expenseDate","desc"),limit(1000)), s => setExpenses(s.docs.map(d=>({id:d.id,...d.data()}))), err => console.error("Expense records error:",err));
+    return () => { stopA(); stopB(); stopC(); stopD(); };
   },[]);
 
-  return {settings,donations,media};
+  return {settings,donations,media,expenses};
 }
 
 function Header({settings}) {
@@ -50,8 +52,37 @@ function Header({settings}) {
   </header>;
 }
 
+
+function DonationProgress({settings,donations,expenses=[]}) {
+  const received=donations.reduce((sum,d)=>sum+Number(d.amount||0),0);
+  const spent=expenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
+  const balance=received-spent;
+  const targets=(Array.isArray(settings.targetAmounts)?settings.targetAmounts:[]).map(Number).filter(n=>Number.isFinite(n)&&n>0);
+  let remainingDonation=received, currentIndex=0;
+  while(currentIndex<targets.length&&remainingDonation>=targets[currentIndex]){remainingDonation-=targets[currentIndex];currentIndex++;}
+  const currentTarget=targets[currentIndex]||0;
+  const currentRaised=currentTarget?Math.min(remainingDonation,currentTarget):0;
+  const targetRemaining=currentTarget?Math.max(0,currentTarget-currentRaised):0;
+  const percent=currentTarget?Math.min(100,Math.round(currentRaised/currentTarget*100)):0;
+  return <section className="donationProgress section">
+    <div className="sectionLabel">TRANSPARENT DONATION TRACKER</div><h2>Donation & expense report</h2>
+    <div className="donationProgressGrid">
+      <article><span>Total donation received</span><b>{money(received)}</b></article>
+      <article><span>Total expenses</span><b>{money(spent)}</b></article>
+      <article><span>Available balance</span><b>{money(balance)}</b></article>
+      <article><span>Current target remaining</span><b>{currentTarget?money(targetRemaining):"Target not set"}</b></article>
+    </div>
+    {currentTarget>0?<div className="currentDonationTarget">
+      <div className="targetTitle"><b>Current target {currentIndex+1} of {targets.length}</b><strong>{money(currentTarget)}</strong></div>
+      <div className="targetMeta"><span>{money(currentRaised)} received</span><b>{percent}% complete</b></div>
+      <div className="targetTrack"><span style={{width:percent+"%"}}/></div>
+      {currentIndex+1<targets.length&&<small>Next target: {money(targets[currentIndex+1])}</small>}
+    </div>:<p className="formFine">Donation target will be displayed here when Admin sets it.</p>}
+  </section>;
+}
+
 function Home({data}) {
-  const {settings,donations,media}=data;
+  const {settings,donations,media,expenses=[]}=data;
 const [now,setNow] = useState(Date.now());
 const [impactAmount,setImpactAmount] = useState(50);
 const estimatedPeople = Math.round(impactAmount / 25);
@@ -76,6 +107,7 @@ const top = useMemo(() => [...donations]
   .slice(0,5), [donations,now]);
 
   return <>
+    <DonationProgress settings={settings} donations={donations} expenses={expenses}/>
     <section className="section leaderboard compactLeaderboard" id="leaderboard">
       <div className="sectionHead">
         <div><div className="sectionLabel">COMMUNITY OF GIVERS</div><h2>Daily kindness leaders</h2><p>Top contributions from our community.</p></div>
@@ -207,7 +239,7 @@ function MediaPage({media,type}) {
   </main>;
 }
 
-function DonationDetails({settings,donations}) {
+function DonationDetails({settings,donations,expenses=[]}) {
   const total = donations.reduce((sum,d)=>sum+Number(d.amount||0),0);
 
   return <main className="detailsPage">
@@ -216,6 +248,7 @@ function DonationDetails({settings,donations}) {
       <h1>Donation details</h1>
       <p>A clear record of contributions made by our community.</p>
     </div>
+    <DonationProgress settings={settings} donations={donations} expenses={expenses}/>
     <section className="stats detailsStats" id="impact">
       <div><span>Total donations</span><b>{money(total)}</b></div>
       <div><span>Contributions</span><b>{donations.length}</b></div>
@@ -591,6 +624,9 @@ function Admin({settings}) {
   const [error,setError]=useState("");
   const [tab,setTab]=useState("overview");
   const [pending,setPending]=useState([]);
+  const [expenseEntries,setExpenseEntries]=useState([]);
+  const [expenseForm,setExpenseForm]=useState({amount:"",purpose:"",expenseDate:new Date().toISOString().slice(0,10)});
+  const [newTargetAmount,setNewTargetAmount]=useState("");
   const [joinRequests,setJoinRequests]=useState([]);
   const [helpRequests,setHelpRequests]=useState([]);
   const [selectedJoin,setSelectedJoin]=useState(null);
@@ -674,6 +710,15 @@ function Admin({settings}) {
     return onSnapshot(query(collection(db,"memberPayments"),orderBy("paidAt","desc"),limit(1000)),
       s=>setMemberPayments(s.docs.map(d=>({id:d.id,...d.data()}))),
       err=>setError("Member payment records load nahi hue: "+err.message)
+    );
+  },[user,isAdmin]);
+
+
+  useEffect(()=>{
+    if(!db||!user||!isAdmin)return;
+    return onSnapshot(query(collection(db,"expenses"),orderBy("expenseDate","desc"),limit(1000)),
+      snap=>setExpenseEntries(snap.docs.map(d=>({id:d.id,...d.data()}))),
+      err=>setError("Expense records load error: "+err.message)
     );
   },[user,isAdmin]);
 
@@ -764,6 +809,35 @@ function Admin({settings}) {
     if(!adjustmentForm.paidAt||!adjustmentForm.reason.trim()){setError("Date aur adjustment ka reason zaroori hai.");return;}
     try{await addDoc(collection(db,"memberPayments"),{memberId:selectedPaymentMember.id,memberName:selectedPaymentMember.name||"",entryType:"adjustment",amount,paidAt:adjustmentForm.paidAt,referenceId:adjustmentForm.reason.trim(),createdAt:serverTimestamp(),enteredBy:user.email});setAdjustmentForm({amount:"",reason:"",paidAt:""});alert("Amount adjustment save ho gaya.");}
     catch(err){setError(err.message||"Adjustment save nahi hua.");}
+  }
+
+
+  async function saveExpense(e){
+    e.preventDefault();setError("");
+    const amount=Number(expenseForm.amount);
+    if(!Number.isFinite(amount)||amount<=0||!expenseForm.purpose.trim()||!expenseForm.expenseDate){setError("Expense amount, purpose aur date sahi bharein.");return;}
+    try{
+      await addDoc(collection(db,"expenses"),{amount,purpose:expenseForm.purpose.trim(),expenseDate:expenseForm.expenseDate,createdAt:serverTimestamp(),enteredBy:user.email});
+      setExpenseForm({amount:"",purpose:"",expenseDate:new Date().toISOString().slice(0,10)});
+      alert("Expense entry save ho gayi.");
+    }catch(err){setError(err.message||"Expense save nahi hua.");}
+  }
+
+  async function deleteExpense(item){
+    if(!window.confirm("Is expense entry ko permanently delete karna hai?"))return;
+    try{await deleteDoc(doc(db,"expenses",item.id));alert("Expense entry delete ho gayi.");}
+    catch(err){setError(err.message||"Expense delete nahi hua.");}
+  }
+
+  async function saveTargetPlan(e){
+    e.preventDefault();setError("");
+    const targets=(Array.isArray(form.targetAmounts)?form.targetAmounts:[]).map(Number);
+    if(!targets.length||targets.some(n=>!Number.isFinite(n)||n<=0)){setError("Kam se kam ek valid target amount add karein.");return;}
+    try{
+      await setDoc(doc(db,"site","settings"),{targetAmounts:targets,updatedAt:serverTimestamp()},{merge:true});
+      setForm(p=>({...p,targetAmounts:targets}));
+      alert("Donation target plan save ho gaya.");
+    }catch(err){setError(err.message||"Target plan save nahi hua.");}
   }
 
   function donationMonthKey(d){
@@ -932,7 +1006,7 @@ function Admin({settings}) {
     <button className="textBtn" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
-  const nav=[["overview","Overview"],["donations","Donations"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["helpline","Helpline"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
+  const nav=[["overview","Overview"],["donations","Donations"],["funds","Targets & Expenses"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["helpline","Helpline"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
 
   return <main className="adminShell">
     <aside className="adminSide">
@@ -966,6 +1040,31 @@ function Admin({settings}) {
             </div></td>
           </tr>)}</tbody>
         </table></div>
+      </div>}
+
+
+      {tab==="funds"&&<div className="adminPanel fundsAdmin">
+        <h2>Donation targets</h2>
+        <p className="formFine">Targets ko order mein add karein. Ek target poora hone ke baad extra donation agle target mein automatically count hoga.</p>
+        <form className="targetAddForm" onSubmit={e=>{e.preventDefault();const n=Number(newTargetAmount);if(!Number.isFinite(n)||n<=0)return;setForm(p=>({...p,targetAmounts:[...(Array.isArray(p.targetAmounts)?p.targetAmounts:[]),n]}));setNewTargetAmount("");}}>
+          <label>New target amount (₹)<input type="number" min="1" value={newTargetAmount} onChange={e=>setNewTargetAmount(e.target.value)} placeholder="Example: 25000" required/></label>
+          <button className="primaryBtn">Add target</button>
+        </form>
+        <ol className="targetAdminList">{(Array.isArray(form.targetAmounts)?form.targetAmounts:[]).map((amount,index)=><li key={index}><span>Target {index+1}</span><b>{money(amount)}</b><button type="button" className="dangerAction" onClick={()=>setForm(p=>({...p,targetAmounts:p.targetAmounts.filter((_,i)=>i!==index)}))}>Remove</button></li>)}</ol>
+        <button className="primaryBtn" onClick={saveTargetPlan}>Save target plan</button>
+        <div className="fundsDivider"/>
+        <h2>Expense management</h2>
+        <form className="settingsForm expenseEntryForm" onSubmit={saveExpense}>
+          <label>Expense amount (₹)<input type="number" min="1" value={expenseForm.amount} onChange={e=>setExpenseForm(p=>({...p,amount:e.target.value}))} required placeholder="Enter amount"/></label>
+          <label>Expense purpose / details<input value={expenseForm.purpose} onChange={e=>setExpenseForm(p=>({...p,purpose:e.target.value}))} required maxLength="250" placeholder="Example: Food distribution"/></label>
+          <label>Expense date<input type="date" value={expenseForm.expenseDate} onChange={e=>setExpenseForm(p=>({...p,expenseDate:e.target.value}))} required/></label>
+          <button className="primaryBtn">Save expense entry</button>
+        </form>
+        <h3>Expense history ({expenseEntries.length})</h3>
+        <div className="tableWrap"><table><thead><tr><th>Date</th><th>Purpose</th><th>Amount</th><th>Action</th></tr></thead><tbody>
+          {expenseEntries.map(item=><tr key={item.id}><td>{item.expenseDate||"—"}</td><td>{item.purpose}</td><td>{money(item.amount)}</td><td><button className="dangerAction" onClick={()=>deleteExpense(item)}>Delete</button></td></tr>)}
+          {!expenseEntries.length&&<tr><td colSpan="4" className="empty">Abhi koi expense entry nahi hai.</td></tr>}
+        </tbody></table></div>
       </div>}
 
       {tab==="communityJoins"&&<div className="adminPanel communityJoinAdmin">
@@ -1148,7 +1247,7 @@ export default function App() {
       <Route path="/" element={<Home data={data}/>}/>
       <Route path="/photos" element={<MediaPage media={data.media} type="image"/>}/>
       <Route path="/videos" element={<MediaPage media={data.media} type="video"/>}/>
-      <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
+      <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations} expenses={data.expenses}/>}/>
       <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
       <Route path="/join-community" element={<JoinCommunity/>}/>
       <Route path="/helpline" element={<HelpLine/>}/>
