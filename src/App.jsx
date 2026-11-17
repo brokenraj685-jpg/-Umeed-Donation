@@ -895,9 +895,10 @@ function Admin({settings}) {
     const d=v?.toDate?v.toDate():v?.seconds?new Date(v.seconds*1000):v?new Date(v):null;
     return d&&!Number.isNaN(d.getTime())?d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"):"";
   };
-  const membersJoinedThisMonth=joinRequests.filter(j=>memberJoinMonthKey(j)===memberReportMonth);
-  const membersLeftThisMonth=joinRequests.filter(j=>memberLeftMonthKey(j)===memberReportMonth);
-  const memberMonthRows=joinRequests.map(j=>{
+  const memberRecords=joinRequests.filter(j=>["approved","left"].includes(j.status));
+  const membersJoinedThisMonth=memberRecords.filter(j=>memberJoinMonthKey(j)===memberReportMonth);
+  const membersLeftThisMonth=memberRecords.filter(j=>memberLeftMonthKey(j)===memberReportMonth);
+  const memberMonthRows=memberRecords.map(j=>{
     const entries=memberPayments.filter(p=>p.memberId===j.id&&String(p.paidAt||"").slice(0,7)===memberReportMonth).sort((a,b)=>String(a.paidAt||"").localeCompare(String(b.paidAt||"")));
     const paid=entries.filter(p=>p.entryType!=="adjustment").reduce((sum,p)=>sum+Number(p.amount||0),0);
     const adjustments=entries.filter(p=>p.entryType==="adjustment").reduce((sum,p)=>sum+Number(p.amount||0),0);
@@ -1280,7 +1281,7 @@ function Admin({settings}) {
         <div className="adminCards monthlyFundSummary">
           <article><span>Members joined</span><b>{membersJoinedThisMonth.length}</b></article>
           <article><span>Members left</span><b>{membersLeftThisMonth.length}</b></article>
-          <article><span>Total members in records</span><b>{joinRequests.length}</b></article>
+          <article><span>Total members in records</span><b>{memberRecords.length}</b></article>
           <article><span>Monthly member payments</span><b>{money(totalMemberMonthPayments)}</b></article>
         </div>
         <h3>All members and monthly payment details — {memberReportLabel}</h3>
@@ -1303,7 +1304,7 @@ function Admin({settings}) {
           <div className="monthlyFundPrintSummary">
             <p>Members joined this month: <b>{membersJoinedThisMonth.length}</b></p>
             <p>Members left this month: <b>{membersLeftThisMonth.length}</b></p>
-            <p>Total members in records: <b>{joinRequests.length}</b></p>
+            <p>Total members in records: <b>{memberRecords.length}</b></p>
             <p>Total monthly member payments: <b>{money(totalMemberMonthPayments)}</b></p>
             <p>Total adjustments: <b>{money(totalMemberMonthAdjustments)}</b></p>
           </div>
