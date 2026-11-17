@@ -1214,3 +1214,14 @@ footer .brand{font-size:14px}
 .founderMessageClose{position:sticky;float:right;top:0;margin:-12px -10px 0 0;border:0;background:#edf5ee;color:#174b32;border-radius:50%;width:34px;height:34px;font-size:24px;line-height:1;cursor:pointer}
 .founderMessageQuote{font-weight:700;color:#205d40;border-left:3px solid #78a98a;padding-left:12px}
 @media(max-width:640px){.founderMessageModal{padding:22px 18px;font-size:13px;line-height:1.65}.founderMessageModal h2{font-size:23px}.founderMessageModal h3{font-size:15px}}
+
+
+.founderMessageAction{max-width:900px;margin:14px auto 0}
+.founderMessageAction button{width:100%;display:flex;align-items:center;justify-content:flex-start;gap:11px;text-align:left;border:1px solid #cfe2d4;background:linear-gradient(110deg,#17613f,#237a50);color:#fff;border-radius:11px;padding:10px 14px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(16,76,47,.14);transition:transform .2s ease,filter .2s ease}
+.founderMessageAction button:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.founderMessageAction button>svg{width:27px;height:27px;flex:0 0 27px;padding:4px;border-radius:8px;background:rgba(255,255,255,.16)}
+.founderMessageAction button span:not(.founderMessageArrow){display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0}
+.founderMessageAction button b{font-size:12px;white-space:nowrap}
+.founderMessageAction button small{font-size:10px;font-weight:400;opacity:.85}
+.founderMessageAction button .founderMessageArrow{margin-left:auto;font-size:11px;white-space:nowrap;font-weight:600}
+@media(max-width:640px){.founderMessageAction{margin-top:12px}.founderMessageAction button{padding:9px 11px;gap:9px}.founderMessageAction button b{font-size:11px}.founderMessageAction button .founderMessageArrow{font-size:10px}}
