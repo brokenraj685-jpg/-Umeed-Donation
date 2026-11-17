@@ -241,6 +241,7 @@ function DonationDetails({settings,donations}) {
 
 function CommunityService({settings}) {
   const content = settings.serviceContent || "";
+  const [founderOpen,setFounderOpen]=useState(false);
   return <main className="servicePage">
     <div className="serviceHero">
       <div className="sectionLabel">UMEED COMMUNITY</div>
@@ -250,6 +251,33 @@ function CommunityService({settings}) {
     <section className="serviceContent">
       {content.trim() ? <div className="serviceText">{content}</div> : <div className="serviceEmpty">Community service information will be added soon.</div>}
     </section>
+    <div className="founderMessageAction"><button type="button" onClick={()=>setFounderOpen(true)}>A Message From The Founder <span>Read more</span></button></div>
+    {founderOpen&&<div className="founderMessageOverlay" role="dialog" aria-modal="true" aria-label="A Message From The Founder" onClick={()=>setFounderOpen(false)}>
+      <article className="founderMessageModal" onClick={e=>e.stopPropagation()}>
+        <button className="founderMessageClose" type="button" onClick={()=>setFounderOpen(false)} aria-label="Close">×</button>
+        <div className="sectionLabel">UMEED COMMUNITY</div>
+        <h2>A Message From The Founder</h2>
+        <h3>The Story, Purpose &amp; Vision Behind Umeed Community</h3>
+        <p>My name is <b>Raj Babu Shaikh</b>. I am a 22-year-old young man from a middle-class family, and I completed my 12th standard education in Maharashtra.</p>
+        <p>I am not a lawyer, nor do I have extensive knowledge of legal matters, rules and regulations. I am simply an ordinary person who has a strong desire to do something meaningful for society.</p>
+        <p>The idea behind creating <b>Umeed Community</b> came from a simple thought: What if ordinary people like us could come together, help those who are in need, and also create small earning opportunities for young people who are unemployed and struggling to support themselves?</p>
+        <p>I wanted to create a platform where people could experience the happiness of helping someone, where even a small contribution could make a positive difference in another person's life, and where deserving people could receive support when they need it most.</p>
+        <p>I understand that I may not know everything. I have started this initiative with good intentions and with the knowledge and resources available to me. My purpose is not to claim that I am perfect or that every decision I make will always be right. My purpose is to learn, improve and make this initiative better with time.</p>
+        <h3>An Honest Request to Everyone</h3>
+        <p>Umeed Community is an initiative built with the hope of helping people. However, if any member, visitor or knowledgeable person notices a mistake, weakness, misunderstanding or possible issue in our community's rules, regulations, working process or activities, I sincerely request you to please inform us first.</p>
+        <p>If you have knowledge of legal matters, social work, financial transparency or any other relevant subject, your guidance would be valuable to us.</p>
+        <p>Please give us an opportunity to understand the issue, review it and make the necessary improvements. We do not want to ignore genuine concerns or knowingly continue with something that may be wrong.</p>
+        <p>We believe that accepting mistakes and learning from knowledgeable people is an important part of building something responsible.</p>
+        <h3>Our Vision</h3>
+        <ul><li>To help people who genuinely need support.</li><li>To create small earning opportunities for unemployed young people.</li><li>To encourage kindness, cooperation and humanity.</li><li>To maintain transparency and responsibility in our work.</li><li>To keep learning, improving and making our community more useful for society.</li></ul>
+        <p>I may be just a 22-year-old middle-class young man, but I believe that a good initiative does not always need to begin with a big office, a large organisation or a lot of money. Sometimes, it begins with a small idea and an honest intention.</p>
+        <p><b>Umeed Community is my small effort towards that idea.</b></p>
+        <p>I do not claim to be perfect. I only hope that with your support, suggestions, knowledge and cooperation, we can make this effort better and bring a little more hope into people's lives.</p>
+        <p>Thank you for being a part of this journey.</p>
+        <p><b>With hope and gratitude,<br/>Raj Babu Shaikh<br/>Founder – Umeed Community</b></p>
+        <p className="founderMessageQuote">“A small effort from ordinary people can bring a meaningful change in someone's life.”</p>
+      </article>
+    </div>}
   </main>;
 }
 
