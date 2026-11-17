@@ -1295,3 +1295,15 @@ footer .brand{font-size:14px}
   body.print-fund-report .monthlyFundPrintSummary p{margin:2mm 0!important}
   body.print-fund-report .monthlyFundReportPrint .monthlyFundPrintFooter{margin-top:10mm!important;color:#617469!important;font-size:8pt!important}
 }
+
+
+/* Destructive member action */
+.memberPaymentsAdmin .dangerBtn{
+  border:1px solid #b42318;
+  background:#fff4f2;
+  color:#a51d16;
+  border-radius:10px;
+  padding:10px 14px;
+  font-weight:700;
+}
+.memberPaymentsAdmin .dangerBtn:active{transform:scale(.98)}
