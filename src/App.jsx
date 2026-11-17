@@ -568,6 +568,8 @@ function Admin({settings}) {
   const [memberPayments,setMemberPayments]=useState([]);
   const [selectedPaymentMember,setSelectedPaymentMember]=useState(null);
   const [paymentForm,setPaymentForm]=useState({amount:"",paidAt:"",referenceId:""});
+  const [memberPercentForm,setMemberPercentForm]=useState("15");
+  const [adjustmentForm,setAdjustmentForm]=useState({amount:"",reason:"",paidAt:""});
   const [paymentReportMonth,setPaymentReportMonth]=useState(()=>new Date().toISOString().slice(0,7));
   const [form,setForm]=useState(settings);
   const [mediaTitle,setMediaTitle]=useState("");
@@ -714,7 +716,24 @@ function Admin({settings}) {
   }
 
   function memberPaymentTotal(memberId){
-    return memberPayments.filter(p=>p.memberId===memberId).reduce((sum,p)=>sum+Number(p.amount||0),0);
+    return memberPayments.filter(p=>p.memberId===memberId&&p.entryType!=="adjustment").reduce((sum,p)=>sum+Number(p.amount||0),0);
+  }
+
+  async function saveMemberPercent(e){
+    e.preventDefault();setError("");
+    const percent=Number(memberPercentForm);
+    if(!selectedPaymentMember||!Number.isFinite(percent)||percent<0||percent>100){setError("Percentage 0 se 100 ke beech enter karein.");return;}
+    try{await updateDoc(doc(db,"communityJoins",selectedPaymentMember.id),{memberPercent:percent,percentUpdatedAt:serverTimestamp(),percentUpdatedBy:user.email});setSelectedPaymentMember(p=>({...p,memberPercent:percent}));alert("Member percentage save ho gaya.");}
+    catch(err){setError(err.message||"Percentage save nahi hua.");}
+  }
+
+  async function saveMemberAdjustment(e){
+    e.preventDefault();setError("");
+    const amount=Number(adjustmentForm.amount);
+    if(!selectedPaymentMember||!Number.isFinite(amount)||amount===0){setError("Adjustment amount zero nahi ho sakta. Plus ya minus amount enter karein.");return;}
+    if(!adjustmentForm.paidAt||!adjustmentForm.reason.trim()){setError("Date aur adjustment ka reason zaroori hai.");return;}
+    try{await addDoc(collection(db,"memberPayments"),{memberId:selectedPaymentMember.id,memberName:selectedPaymentMember.name||"",entryType:"adjustment",amount,paidAt:adjustmentForm.paidAt,referenceId:adjustmentForm.reason.trim(),createdAt:serverTimestamp(),enteredBy:user.email});setAdjustmentForm({amount:"",reason:"",paidAt:""});alert("Amount adjustment save ho gaya.");}
+    catch(err){setError(err.message||"Adjustment save nahi hua.");}
   }
 
   function donationMonthKey(d){
@@ -723,12 +742,16 @@ function Admin({settings}) {
   }
 
   const selectedMonthPayments=selectedPaymentMember
-    ?memberPayments.filter(p=>p.memberId===selectedPaymentMember.id&&String(p.paidAt||"").slice(0,7)===paymentReportMonth)
+    ?memberPayments.filter(p=>p.memberId===selectedPaymentMember.id&&p.entryType!=="adjustment"&&String(p.paidAt||"").slice(0,7)===paymentReportMonth)
       .sort((a,b)=>String(a.paidAt||"").localeCompare(String(b.paidAt||"")))
     :[];
+  const selectedMonthAdjustments=selectedPaymentMember?memberPayments.filter(p=>p.memberId===selectedPaymentMember.id&&p.entryType==="adjustment"&&String(p.paidAt||"").slice(0,7)===paymentReportMonth):[];
   const selectedMonthTotal=selectedMonthPayments.reduce((sum,p)=>sum+Number(p.amount||0),0);
-  const communityShare=Math.round(selectedMonthTotal*0.85*100)/100;
-  const memberShare=Math.round(selectedMonthTotal*0.15*100)/100;
+  const selectedMemberPercent=Number(selectedPaymentMember?.memberPercent??15);
+  const baseMemberShare=Math.round(selectedMonthTotal*selectedMemberPercent)/100;
+  const adjustmentTotal=selectedMonthAdjustments.reduce((sum,p)=>sum+Number(p.amount||0),0);
+  const communityShare=Math.round((selectedMonthTotal-baseMemberShare)*100)/100;
+  const memberShare=Math.round((baseMemberShare+adjustmentTotal)*100)/100;
   const reportMonthLabel=new Date(paymentReportMonth+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
 
   async function verify(d,approved) {
@@ -948,7 +971,7 @@ function Admin({settings}) {
         <h2>Member Payments & Earnings</h2>
         <p className="formFine">Approved member ko select karke uski har payment ki entry save karein. Har member ka record alag rahega.</p>
         <div className="memberPaymentCards">
-          {joinRequests.filter(j=>j.status==="approved"||j.status==="left").map(j=><button type="button" key={j.id} className={"memberPaymentCard"+(selectedPaymentMember?.id===j.id?" selected":"")} onClick={()=>setSelectedPaymentMember(j)}>
+          {joinRequests.filter(j=>j.status==="approved"||j.status==="left").map(j=><button type="button" key={j.id} className={"memberPaymentCard"+(selectedPaymentMember?.id===j.id?" selected":"")} onClick={()=>{setSelectedPaymentMember(j);setMemberPercentForm(String(j.memberPercent??15));}}>
             <b>{j.name}</b><span>{j.mobile||"—"}</span><strong>{money(memberPaymentTotal(j.id))}</strong><small>{memberPayments.filter(p=>p.memberId===j.id).length} payment entries · {j.status==="left"?"Left":"Active"}</small>
           </button>)}
           {!joinRequests.some(j=>j.status==="approved"||j.status==="left")&&<p className="empty">Abhi koi approved member nahi hai.</p>}
@@ -956,13 +979,28 @@ function Admin({settings}) {
         {selectedPaymentMember&&<section className="adminPanel selectedMemberPayments">
           <div className="sectionHead"><div><div className="sectionLabel">SELECTED MEMBER · {selectedPaymentMember.status==="left"?"LEFT":"ACTIVE"}</div><h2>{selectedPaymentMember.name}</h2><p>{selectedPaymentMember.email||"—"} · {selectedPaymentMember.mobile||"—"}</p></div><b className="amount">{money(memberPaymentTotal(selectedPaymentMember.id))}</b></div>
           {selectedPaymentMember.status==="approved"&&<div className="actions"><button type="button" onClick={()=>markMemberLeft(selectedPaymentMember)}>Mark member as Left</button></div>}
+          {selectedPaymentMember.status==="approved"&&<form className="settingsForm" onSubmit={saveMemberPercent}>
+            <h3>Set this member's percentage</h3>
+            <p className="formFine">Is member ke kaam ke hisaab se uska percentage set karein. Default 15% hai.</p>
+            <label>Member percentage (%)<input type="number" min="0" max="100" step="0.01" value={memberPercentForm} onChange={e=>setMemberPercentForm(e.target.value)} required/></label>
+            <button className="primaryBtn">Save member percentage</button>
+          </form>}
           {selectedPaymentMember.status==="left"&&<p className="formFine">Ye member Left mark hai. Purana record safe hai aur nayi payment entry band hai.</p>}
+          {selectedPaymentMember.status==="approved"&&<form className="settingsForm" onSubmit={saveMemberAdjustment}>
+            <h3>Increase / decrease member amount</h3>
+            <p className="formFine">Plus amount se paisa badhega, minus amount se ghatega. Example: 500 ya -200.</p>
+            <label>Adjustment amount (₹)<input type="number" step="0.01" value={adjustmentForm.amount} onChange={e=>setAdjustmentForm(p=>({...p,amount:e.target.value}))} required placeholder="500 ya -200"/></label>
+            <label>Date & time<input type="datetime-local" value={adjustmentForm.paidAt} onChange={e=>setAdjustmentForm(p=>({...p,paidAt:e.target.value}))} required/></label>
+            <label>Reason<input value={adjustmentForm.reason} onChange={e=>setAdjustmentForm(p=>({...p,reason:e.target.value}))} required placeholder="Bonus / deduction reason"/></label>
+            <button className="primaryBtn">Save amount adjustment</button>
+          </form>}
           <div className="memberReportControls">
             <label>PDF ke liye month select karein<input type="month" value={paymentReportMonth} onChange={e=>setPaymentReportMonth(e.target.value)}/></label>
             <div className="memberReportTotals">
               <div><span>Total amount entered for this month</span><b>{money(selectedMonthTotal)}</b></div>
-              <div><span>85% Umeed Community</span><b>{money(communityShare)}</b></div>
-              <div><span>15% Member & Service Charges</span><b>{money(memberShare)}</b></div>
+              <div><span>Community balance</span><b>{money(communityShare)}</b></div>
+              <div><span>Member share ({selectedMemberPercent}%) + adjustments</span><b>{money(memberShare)}</b></div>
+              <div><span>Manual adjustments</span><b>{money(adjustmentTotal)}</b></div>
             </div>
           </div>
           {selectedPaymentMember.status==="approved"&&<form className="settingsForm" onSubmit={saveMemberPayment}>
@@ -987,8 +1025,10 @@ function Admin({settings}) {
             <h3>Statement month: {reportMonthLabel}</h3>
             <div className="memberPdfSummary">
               <p>Total verified donations received through this member: <b>{money(selectedMonthTotal)}</b></p>
-              <p>Umeed Community share (85%): <b>{money(communityShare)}</b></p>
-              <p>Member & Service Charges (15%): <b>{money(memberShare)}</b></p>
+              <p>Community balance: <b>{money(communityShare)}</b></p>
+              <p>Member share ({selectedMemberPercent}%): <b>{money(baseMemberShare)}</b></p>
+              <p>Manual adjustments: <b>{money(adjustmentTotal)}</b></p>
+              <p>Final member amount: <b>{money(memberShare)}</b></p>
             </div>
             <h3>Monthly payment entries</h3>
             <table><thead><tr><th>Date & Time</th><th>Amount received through member</th><th>Payment Reference ID</th></tr></thead><tbody>
