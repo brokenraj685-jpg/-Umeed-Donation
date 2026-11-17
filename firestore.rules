@@ -14,7 +14,7 @@ service cloud.firestore {
     }
     match /donations/{donationId} {
       allow read: if isAdmin() || resource.data.status == "verified";
-      allow create: if request.resource.data.keys().hasOnly(["name","mobile","state","amount","transactionId","note","referralCode","certificateCode","status","createdAt"])
+      allow create: if request.resource.data.keys().hasOnly(["name","mobile","state","amount","transactionId","note","referralCode","storyId","certificateCode","status","createdAt"])
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 80
@@ -32,6 +32,11 @@ service cloud.firestore {
           || (request.resource.data.referralCode is string
             && exists(/databases/$(database)/documents/referralCodes/$(request.resource.data.referralCode))
             && get(/databases/$(database)/documents/referralCodes/$(request.resource.data.referralCode)).data.memberUid is string))
+        && (!("storyId" in request.resource.data)
+          || (request.resource.data.storyId is string
+            && request.resource.data.storyId.size() > 0
+            && request.resource.data.storyId.size() <= 150
+            && exists(/databases/$(database)/documents/media/$(request.resource.data.storyId))))
         && request.resource.data.status == "pending";
       allow update, delete: if isAdmin();
     }
