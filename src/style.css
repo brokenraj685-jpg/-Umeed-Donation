@@ -1328,3 +1328,15 @@ footer .brand{font-size:14px}
   body.print-member-archive-report .memberArchivePrint .monthlyFundPrintSummary{border:1px solid #dce8df!important;padding:3mm!important;margin:3mm 0!important}
   body.print-member-archive-report .memberArchivePrint .monthlyFundPrintSummary p{margin:1mm 0!important}
 }
+
+
+/* Helpline request actions */
+.helplineActions{display:flex;align-items:center;gap:7px;min-width:140px}
+.helplineActions button{border:0;border-radius:8px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer}
+.helplineSolveBtn{background:#168447;color:#fff}
+.helplineSolveBtn:disabled{background:#dff3e6;color:#17633a;cursor:default}
+.helplineDeleteBtn{background:#fee8e7;color:#b42318}
+.helplineSolvedStatus{display:inline-block;background:#dcfce7;color:#166534;padding:5px 9px;border-radius:20px;font-size:12px;font-weight:700}
+.helplinePendingStatus{display:inline-block;background:#fff4d6;color:#8a5a00;padding:5px 9px;border-radius:20px;font-size:12px;font-weight:700}
+.helplineSolvedRow{background:#f3fbf5}
+@media(max-width:600px){.helplineActions{min-width:125px}.helplineActions button{padding:7px 9px;font-size:12px}}
