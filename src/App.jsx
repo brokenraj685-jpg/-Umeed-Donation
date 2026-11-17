@@ -147,8 +147,8 @@ const top = useMemo(() => [...donations]
       <span>Built on kindness. Powered by community.</span>
       <div className="socialLinks" aria-label="Social media links">
         {settings.instagramUrl&&<a className="socialLink instagramLink" href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Instagram"><Instagram size={23}/><span><b>Instagram</b><small>Instagram open</small></span></a>}
-        {settings.facebookUrl&&<a className="socialLink facebookLink" href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Facebook"><Facebook size={23}/><span><b>Facebook</b><small>Facebook open</small></span></a>}
         <Link className="socialLink helplineLink" to="/helpline" aria-label="Open Helpline"><Phone size={23}/><span><b>Helpline</b><small>Get help</small></span></Link>
+        {settings.facebookUrl&&<a className="socialLink facebookLink" href={settings.facebookUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Facebook"><Facebook size={23}/><span><b>Facebook</b><small>Facebook open</small></span></a>}
       </div>
     </footer>
   </>;
