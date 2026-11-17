@@ -525,7 +525,7 @@ function Donate({settings}) {
         {settings.upiId&&<p>UPI ID: <b>{settings.upiId}</b></p>}
         {settings.upiName&&<p>Payee: {settings.upiName}</p>}
         {settings.phone&&<p>UPI / Mobile: {settings.phone}</p>}
-        <small>Pay only to the details shown here. Transaction reference mile to use sambhal kar rakhein; form mein bharna optional hai.</small>
+        <small>Yeh QR code hamari Community ke Main Member ka hai. Kripya donation sirf isi QR code ko scan karke karein.</small>
       </div>
       <label>UPI transaction ID / reference (optional)<input name="transactionId" value={form.transactionId} onChange={change} placeholder="Agar pata ho to yahan likhein"/></label>
       <label>Message (optional)<textarea name="note" rows="3" maxLength="300" value={form.note} onChange={change} placeholder="A short message"/></label>
