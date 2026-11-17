@@ -53,10 +53,8 @@ function Header({settings}) {
 }
 
 
-function DonationProgress({settings,donations,expenses=[]}) {
+function DonationProgress({settings,donations}) {
   const received=donations.reduce((sum,d)=>sum+Number(d.amount||0),0);
-  const spent=expenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
-  const balance=received-spent;
   const targets=(Array.isArray(settings.targetAmounts)?settings.targetAmounts:[]).map(Number).filter(n=>Number.isFinite(n)&&n>0);
   let remainingDonation=received, currentIndex=0;
   while(currentIndex<targets.length&&remainingDonation>=targets[currentIndex]){remainingDonation-=targets[currentIndex];currentIndex++;}
@@ -65,14 +63,11 @@ function DonationProgress({settings,donations,expenses=[]}) {
   const targetRemaining=currentTarget?Math.max(0,currentTarget-currentRaised):0;
   const percent=currentTarget?Math.min(100,Math.round(currentRaised/currentTarget*100)):0;
   return <section className="donationProgress section">
-    <div className="sectionLabel">TRANSPARENT DONATION TRACKER</div><h2>Donation & expense report</h2>
-    <div className="donationProgressGrid">
+    <div className="sectionLabel">DONATION PROGRESS</div><h2>Donation progress</h2>
+    <div className="donationProgressGrid donationProgressPublicGrid">
       <article><span>Total donation received</span><b>{money(received)}</b></article>
-      <article><span>Total expenses</span><b>{money(spent)}</b></article>
-      <article><span>Available balance</span><b>{money(balance)}</b></article>
       <article><span>Current target remaining</span><b>{currentTarget?money(targetRemaining):"Target not set"}</b></article>
     </div>
-    {expenses.length>0&&<div className="publicExpenseHistory"><h3>Expense details</h3><div className="tableWrap"><table><thead><tr><th>Date</th><th>Purpose</th><th>Amount</th></tr></thead><tbody>{expenses.map(item=><tr key={item.id}><td>{item.expenseDate||"—"}</td><td>{item.purpose}</td><td>{money(item.amount)}</td></tr>)}</tbody></table></div></div>}
     {currentTarget>0?<div className="currentDonationTarget">
       <div className="targetTitle"><b>Current target {currentIndex+1} of {targets.length}</b><strong>{money(currentTarget)}</strong></div>
       <div className="targetMeta"><span>{money(currentRaised)} received</span><b>{percent}% complete</b></div>
@@ -83,7 +78,7 @@ function DonationProgress({settings,donations,expenses=[]}) {
 }
 
 function Home({data}) {
-  const {settings,donations,media,expenses=[]}=data;
+  const {settings,donations,media}=data;
 const [now,setNow] = useState(Date.now());
 const [impactAmount,setImpactAmount] = useState(50);
 const estimatedPeople = Math.round(impactAmount / 25);
@@ -108,7 +103,6 @@ const top = useMemo(() => [...donations]
   .slice(0,5), [donations,now]);
 
   return <>
-    <DonationProgress settings={settings} donations={donations} expenses={expenses}/>
     <section className="section leaderboard compactLeaderboard" id="leaderboard">
       <div className="sectionHead">
         <div><div className="sectionLabel">COMMUNITY OF GIVERS</div><h2>Daily kindness leaders</h2><p>Top contributions from our community.</p></div>
@@ -240,7 +234,7 @@ function MediaPage({media,type}) {
   </main>;
 }
 
-function DonationDetails({settings,donations,expenses=[]}) {
+function DonationDetails({settings,donations}) {
   const total = donations.reduce((sum,d)=>sum+Number(d.amount||0),0);
 
   return <main className="detailsPage">
@@ -249,7 +243,7 @@ function DonationDetails({settings,donations,expenses=[]}) {
       <h1>Donation details</h1>
       <p>A clear record of contributions made by our community.</p>
     </div>
-    <DonationProgress settings={settings} donations={donations} expenses={expenses}/>
+    <DonationProgress settings={settings} donations={donations}/>
     <section className="stats detailsStats" id="impact">
       <div><span>Total donations</span><b>{money(total)}</b></div>
       <div><span>Contributions</span><b>{donations.length}</b></div>
@@ -627,6 +621,7 @@ function Admin({settings}) {
   const [pending,setPending]=useState([]);
   const [expenseEntries,setExpenseEntries]=useState([]);
   const [expenseForm,setExpenseForm]=useState({amount:"",purpose:"",expenseDate:new Date().toISOString().slice(0,10)});
+  const [fundReportMonth,setFundReportMonth]=useState(()=>new Date().toISOString().slice(0,7));
   const [newTargetAmount,setNewTargetAmount]=useState("");
   const [joinRequests,setJoinRequests]=useState([]);
   const [helpRequests,setHelpRequests]=useState([]);
@@ -871,6 +866,11 @@ function Admin({settings}) {
   const communityShare=Math.round((selectedMonthTotal-baseMemberShare)*100)/100;
   const memberShare=Math.round((baseMemberShare+adjustmentTotal)*100)/100;
   const reportMonthLabel=new Date(paymentReportMonth+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+  const fundReportLabel=new Date(fundReportMonth+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+  const monthlyFundDonations=pending.filter(d=>d.status==="verified"&&donationMonthKey(d)===fundReportMonth).sort((a,b)=>donationMonthKey(a).localeCompare(donationMonthKey(b)));
+  const monthlyFundExpenses=expenseEntries.filter(e=>String(e.expenseDate||"").slice(0,7)===fundReportMonth).sort((a,b)=>String(a.expenseDate||"").localeCompare(String(b.expenseDate||"")));
+  const monthlyDonationTotal=monthlyFundDonations.reduce((sum,d)=>sum+Number(d.amount||0),0);
+  const monthlyExpenseTotal=monthlyFundExpenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
 
   async function verify(d,approved) {
     await updateDoc(doc(db,"donations",d.id),{
@@ -1020,7 +1020,7 @@ function Admin({settings}) {
     <button className="textBtn" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
-  const nav=[["overview","Overview"],["donations","Donations"],["funds","Targets & Expenses"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["helpline","Helpline"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
+  const nav=[["overview","Overview"],["donations","Donations"],["funds","Targets & Expenses"],["monthlyFunds","Monthly Reports"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["helpline","Helpline"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
 
   return <main className="adminShell">
     <aside className="adminSide">
@@ -1079,6 +1079,51 @@ function Admin({settings}) {
           {expenseEntries.map(item=><tr key={item.id}><td>{item.expenseDate||"—"}</td><td>{item.purpose}</td><td>{money(item.amount)}</td><td><div className="actions"><button onClick={()=>editExpense(item)}>Edit</button><button className="dangerAction" onClick={()=>deleteExpense(item)}>Delete</button></div></td></tr>)}
           {!expenseEntries.length&&<tr><td colSpan="4" className="empty">Abhi koi expense entry nahi hai.</td></tr>}
         </tbody></table></div>
+      </div>}
+
+      {tab==="monthlyFunds"&&<div className="adminPanel monthlyFundsAdmin">
+        <h2>Monthly donation & expense report</h2>
+        <p className="formFine">Sirf admin ke liye. Selected month ke verified donations aur expenses yahan milenge. PDF ko record ke roop mein save kar sakte hain.</p>
+        <div className="monthlyReportToolbar">
+          <label>Report month<input type="month" value={fundReportMonth} onChange={e=>setFundReportMonth(e.target.value)}/></label>
+          <button className="primaryBtn" type="button" onClick={()=>printWithMode("print-fund-report")}>Download monthly PDF</button>
+        </div>
+        <div className="adminCards monthlyFundSummary">
+          <article><span>Total verified donations</span><b>{money(monthlyDonationTotal)}</b></article>
+          <article><span>Total expenses</span><b>{money(monthlyExpenseTotal)}</b></article>
+          <article><span>Balance after expenses</span><b>{money(monthlyDonationTotal-monthlyExpenseTotal)}</b></article>
+          <article><span>Donation entries</span><b>{monthlyFundDonations.length}</b></article>
+        </div>
+        <h3>Donation details – {fundReportLabel}</h3>
+        <div className="tableWrap"><table><thead><tr><th>Date</th><th>Donor</th><th>Mobile</th><th>Amount</th><th>Transaction ID</th></tr></thead><tbody>
+          {monthlyFundDonations.map(d=><tr key={d.id}><td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN")||"—"}</td><td>{d.name||"—"}</td><td>{d.mobile||"—"}</td><td>{money(d.amount)}</td><td>{d.transactionId||"—"}</td></tr>)}
+          {!monthlyFundDonations.length&&<tr><td colSpan="5" className="empty">Is mahine koi verified donation nahi hai.</td></tr>}
+        </tbody></table></div>
+        <h3>Expense details – {fundReportLabel}</h3>
+        <div className="tableWrap"><table><thead><tr><th>Date</th><th>Expense reason / purpose</th><th>Amount</th></tr></thead><tbody>
+          {monthlyFundExpenses.map(e=><tr key={e.id}><td>{e.expenseDate||"—"}</td><td>{e.purpose||"—"}</td><td>{money(e.amount)}</td></tr>)}
+          {!monthlyFundExpenses.length&&<tr><td colSpan="3" className="empty">Is mahine koi expense entry nahi hai.</td></tr>}
+        </tbody></table></div>
+        <div className="monthlyFundReportPrint">
+          <h1>Umeed Community – Monthly Financial Report</h1>
+          <h2>{fundReportLabel}</h2>
+          <div className="monthlyFundPrintSummary">
+            <p>Total verified donations: <b>{money(monthlyDonationTotal)}</b></p>
+            <p>Total expenses: <b>{money(monthlyExpenseTotal)}</b></p>
+            <p>Balance after expenses: <b>{money(monthlyDonationTotal-monthlyExpenseTotal)}</b></p>
+          </div>
+          <h3>Donation records</h3>
+          <table><thead><tr><th>Date</th><th>Donor</th><th>Mobile</th><th>Amount</th><th>Transaction ID</th></tr></thead><tbody>
+            {monthlyFundDonations.map(d=><tr key={d.id}><td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN")||"—"}</td><td>{d.name||"—"}</td><td>{d.mobile||"—"}</td><td>{money(d.amount)}</td><td>{d.transactionId||"—"}</td></tr>)}
+            {!monthlyFundDonations.length&&<tr><td colSpan="5">No verified donations for this month.</td></tr>}
+          </tbody></table>
+          <h3>Expense records and reasons</h3>
+          <table><thead><tr><th>Date</th><th>Reason / purpose</th><th>Amount</th></tr></thead><tbody>
+            {monthlyFundExpenses.map(e=><tr key={e.id}><td>{e.expenseDate||"—"}</td><td>{e.purpose||"—"}</td><td>{money(e.amount)}</td></tr>)}
+            {!monthlyFundExpenses.length&&<tr><td colSpan="3">No expense entries for this month.</td></tr>}
+          </tbody></table>
+          <p className="monthlyFundPrintFooter">Generated from Umeed Community admin records.</p>
+        </div>
       </div>}
 
       {tab==="communityJoins"&&<div className="adminPanel communityJoinAdmin">
@@ -1261,7 +1306,7 @@ export default function App() {
       <Route path="/" element={<Home data={data}/>}/>
       <Route path="/photos" element={<MediaPage media={data.media} type="image"/>}/>
       <Route path="/videos" element={<MediaPage media={data.media} type="video"/>}/>
-      <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations} expenses={data.expenses}/>}/>
+      <Route path="/details" element={<DonationDetails settings={data.settings} donations={data.donations}/>}/>
       <Route path="/service" element={<CommunityService settings={data.settings}/>}/>
       <Route path="/join-community" element={<JoinCommunity/>}/>
       <Route path="/helpline" element={<HelpLine/>}/>
