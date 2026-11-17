@@ -295,7 +295,7 @@ function JoinCommunity() {
   async function submit(e){
     e.preventDefault();setError("");
     if(!db){setError("Joining service abhi available nahi hai.");return;}
-    if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(form.email.trim())){setError("Valid Gmail / email address enter karein.");return;}
+    if(form.email.trim()&&!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(form.email.trim())){setError("Valid Gmail / email address enter karein, ya ise khali chhod dein.");return;}
     if(!/^[6-9]\\d{9}$/.test(form.mobile)){setError("Valid 10-digit mobile number enter karein.");return;}
     if(Number(form.age)<18||Number(form.age)>100){setError("Joining ke liye age 18 se 100 ke beech honi chahiye.");return;}
     setBusy(true);
@@ -328,7 +328,7 @@ function JoinCommunity() {
       <section className="joinFormCard"><h2>Join Community Form</h2><p>Form submit karne ke baad admin approval ka wait karein.</p>
         <form onSubmit={submit}>
           <label>Full name<input name="name" value={form.name} onChange={change} maxLength="80" required placeholder="Apna poora naam"/></label>
-          <label>Gmail / Email address<input name="email" type="email" autoComplete="email" value={form.email} onChange={change} required placeholder="example@gmail.com"/></label>
+          <label>Gmail / Email address (optional)<input name="email" type="email" autoComplete="email" value={form.email} onChange={change} placeholder="example@gmail.com (optional)"/></label>
           <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/\\D/g,"").slice(0,10)}))} required placeholder="10-digit mobile number"/></label>
           <label>State<select name="state" value={form.state} onChange={change} required><option value="">Select state</option>{states.map(x=><option key={x}>{x}</option>)}</select></label>
           <label>Age<input name="age" type="number" min="18" max="100" value={form.age} onChange={change} required placeholder="Your age"/></label>
