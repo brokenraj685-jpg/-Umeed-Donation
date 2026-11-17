@@ -956,9 +956,9 @@ function Admin({settings}) {
       {tab==="donations"&&<div className="adminPanel">
         <h2>Donation submissions</h2>
         <div className="tableWrap"><table>
-          <thead><tr><th>Donor</th><th>State</th><th>Amount</th><th>Transaction ID</th><th>Unique Number</th><th>Status</th><th>Action</th></tr></thead>
+          <thead><tr><th>Donor</th><th>Mobile Number</th><th>State</th><th>Amount</th><th>Transaction ID</th><th>Unique Number</th><th>Status</th><th>Action</th></tr></thead>
           <tbody>{pending.map(d=><tr key={d.id}>
-            <td>{d.name}</td><td>{d.state}</td><td>{money(d.amount)}</td><td>{d.transactionId}</td><td><b>{d.certificateCode||"—"}</b></td>
+            <td>{d.name}</td><td>{d.mobile||"—"}</td><td>{d.state}</td><td>{money(d.amount)}</td><td>{d.transactionId}</td><td><b>{d.certificateCode||"—"}</b></td>
             <td><span className={"status "+d.status}>{d.status}</span></td>
             <td><div className="actions">
               {d.status==="pending"&&<><button onClick={()=>verify(d,true)}>Verify</button><button onClick={()=>verify(d,false)}>Reject</button></>}
