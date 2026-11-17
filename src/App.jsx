@@ -631,6 +631,7 @@ function Admin({settings}) {
   const [memberPercentForm,setMemberPercentForm]=useState("15");
   const [adjustmentForm,setAdjustmentForm]=useState({amount:"",reason:"",paidAt:""});
   const [paymentReportMonth,setPaymentReportMonth]=useState(()=>new Date().toISOString().slice(0,7));
+  const [memberReportMonth,setMemberReportMonth]=useState(()=>new Date().toISOString().slice(0,7));
   const [form,setForm]=useState(settings);
   const [mediaTitle,setMediaTitle]=useState("");
   const [mediaCaption,setMediaCaption]=useState("");
@@ -784,30 +785,24 @@ function Admin({settings}) {
     }catch(err){setError(err.message||"Member status update nahi hua.");}
   }
 
-  async function deleteMemberCompletely(member){
-    const ok=window.confirm(`${member.name||"Ye member"} ka member profile, payment entries, adjustments aur referral code permanently delete ho jayega. Ye action wapas nahi hoga. Is member se jude original donation records financial history ke liye safe rahenge. Kya aap sure hain?`);
+  async function archiveMember(member){
+    if(member.archived)return;
+    const ok=window.confirm(`${member.name||"Ye member"} ko archive karna hai? Member ka profile, referral code, donation se connection aur saari payment history safe rahegi. Member active list se hat jayega aur Archive & Reports mein dikhega.`);
     if(!ok)return;
     setError("");
     try{
-      const [paymentSnap,referralSnap]=await Promise.all([
-        getDocs(query(collection(db,"memberPayments"),where("memberId","==",member.id))),
-        getDocs(query(collection(db,"referralCodes"),where("memberUid","==",member.id)))
-      ]);
-      const refs=[
-        ...paymentSnap.docs.map(item=>item.ref),
-        ...referralSnap.docs.map(item=>item.ref),
-        doc(db,"communityJoins",member.id)
-      ];
-      for(let i=0;i<refs.length;i+=450){
-        const batch=writeBatch(db);
-        refs.slice(i,i+450).forEach(ref=>batch.delete(ref));
-        await batch.commit();
-      }
-      setSelectedPaymentMember(current=>current?.id===member.id?null:current);
-      alert("Member profile, payment history aur referral code permanently delete ho gaye. Original donation records safe hain.");
-    }catch(err){
-      setError(err.message||"Member delete nahi ho paya. Kuch records delete hue hon to admin records check karein.");
-    }
+      const update={
+        archived:true,
+        archivedAt:serverTimestamp(),
+        archivedBy:user.email,
+        status:"left",
+        leftAt:member.leftAt||serverTimestamp(),
+        leftMarkedBy:member.leftMarkedBy||user.email
+      };
+      await updateDoc(doc(db,"communityJoins",member.id),update);
+      setSelectedPaymentMember(current=>current?.id===member.id?{...current,...update}:current);
+      alert("Member archive ho gaya. Uska poora record aur payment history safe hai.");
+    }catch(err){setError(err.message||"Member archive nahi ho paya.");}
   }
 
   function memberPaymentTotal(memberId){
@@ -890,6 +885,26 @@ function Admin({settings}) {
   const communityShare=Math.round((selectedMonthTotal-baseMemberShare)*100)/100;
   const memberShare=Math.round((baseMemberShare+adjustmentTotal)*100)/100;
   const reportMonthLabel=new Date(paymentReportMonth+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+  const memberReportLabel=new Date(memberReportMonth+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
+  const memberJoinMonthKey=j=>{
+    const d=j.createdAt?.toDate?j.createdAt.toDate():j.createdAt?.seconds?new Date(j.createdAt.seconds*1000):new Date(j.createdAt||0);
+    return Number.isNaN(d.getTime())?"":d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0");
+  };
+  const memberLeftMonthKey=j=>{
+    const v=j.leftAt||j.archivedAt;
+    const d=v?.toDate?v.toDate():v?.seconds?new Date(v.seconds*1000):v?new Date(v):null;
+    return d&&!Number.isNaN(d.getTime())?d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0"):"";
+  };
+  const membersJoinedThisMonth=joinRequests.filter(j=>memberJoinMonthKey(j)===memberReportMonth);
+  const membersLeftThisMonth=joinRequests.filter(j=>memberLeftMonthKey(j)===memberReportMonth);
+  const memberMonthRows=joinRequests.map(j=>{
+    const entries=memberPayments.filter(p=>p.memberId===j.id&&String(p.paidAt||"").slice(0,7)===memberReportMonth).sort((a,b)=>String(a.paidAt||"").localeCompare(String(b.paidAt||"")));
+    const paid=entries.filter(p=>p.entryType!=="adjustment").reduce((sum,p)=>sum+Number(p.amount||0),0);
+    const adjustments=entries.filter(p=>p.entryType==="adjustment").reduce((sum,p)=>sum+Number(p.amount||0),0);
+    return {member:j,entries,paid,adjustments};
+  }).sort((a,b)=>String(a.member.name||"").localeCompare(String(b.member.name||"")));
+  const totalMemberMonthPayments=memberMonthRows.reduce((sum,r)=>sum+r.paid,0);
+  const totalMemberMonthAdjustments=memberMonthRows.reduce((sum,r)=>sum+r.adjustments,0);
   const fundReportLabel=new Date(fundReportMonth+"-01T00:00:00").toLocaleDateString("en-IN",{month:"long",year:"numeric"});
   const monthlyFundDonations=pending.filter(d=>d.status==="verified"&&donationMonthKey(d)===fundReportMonth).sort((a,b)=>donationMonthKey(a).localeCompare(donationMonthKey(b)));
   const monthlyFundExpenses=expenseEntries.filter(e=>String(e.expenseDate||"").slice(0,7)===fundReportMonth).sort((a,b)=>String(a.expenseDate||"").localeCompare(String(b.expenseDate||"")));
@@ -1044,7 +1059,7 @@ function Admin({settings}) {
     <button className="textBtn" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
-  const nav=[["overview","Overview"],["donations","Donations"],["funds","Targets & Expenses"],["monthlyFunds","Monthly Reports"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["helpline","Helpline"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
+  const nav=[["overview","Overview"],["donations","Donations"],["funds","Targets & Expenses"],["monthlyFunds","Monthly Reports"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["memberArchive","Member Archive & Reports"],["helpline","Helpline"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
 
   return <main className="adminShell">
     <aside className="adminSide">
@@ -1183,25 +1198,26 @@ function Admin({settings}) {
         <h2>Member Payments & Earnings</h2>
         <p className="formFine">Approved member ko select karke uski har payment ki entry save karein. Har member ka record alag rahega.</p>
         <div className="memberPaymentCards">
-          {joinRequests.filter(j=>j.status==="approved"||j.status==="left").map(j=><button type="button" key={j.id} className={"memberPaymentCard"+(selectedPaymentMember?.id===j.id?" selected":"")} onClick={()=>{setSelectedPaymentMember(j);setMemberPercentForm(String(j.memberPercent??15));}}>
+          {joinRequests.filter(j=>(j.status==="approved"||j.status==="left")&&!j.archived).map(j=><button type="button" key={j.id} className={"memberPaymentCard"+(selectedPaymentMember?.id===j.id?" selected":"")} onClick={()=>{setSelectedPaymentMember(j);setMemberPercentForm(String(j.memberPercent??15));}}>
             <b>{j.name}</b><span>{j.mobile||"—"}</span><strong>{money(memberPaymentTotal(j.id))}</strong><small>{memberPayments.filter(p=>p.memberId===j.id).length} payment entries · {j.status==="left"?"Left":"Active"}</small>
           </button>)}
-          {!joinRequests.some(j=>j.status==="approved"||j.status==="left")&&<p className="empty">Abhi koi approved member nahi hai.</p>}
+          {!joinRequests.some(j=>(j.status==="approved"||j.status==="left")&&!j.archived)&&<p className="empty">Abhi koi active / left member list mein nahi hai. Archived members Archive & Reports mein milenge.</p>}
         </div>
         {selectedPaymentMember&&<section className="adminPanel selectedMemberPayments">
           <div className="sectionHead"><div><div className="sectionLabel">SELECTED MEMBER · {selectedPaymentMember.status==="left"?"LEFT":"ACTIVE"}</div><h2>{selectedPaymentMember.name}</h2><p>{selectedPaymentMember.email||"—"} · {selectedPaymentMember.mobile||"—"}</p></div><b className="amount">{money(memberPaymentTotal(selectedPaymentMember.id))}</b></div>
           <div className="actions">
-            {selectedPaymentMember.status==="approved"&&<button type="button" onClick={()=>markMemberLeft(selectedPaymentMember)}>Mark member as Left</button>}
-            <button type="button" className="dangerBtn" onClick={()=>deleteMemberCompletely(selectedPaymentMember)}>Delete Member & All Data</button>
+            {selectedPaymentMember.status==="approved"&&!selectedPaymentMember.archived&&<button type="button" onClick={()=>markMemberLeft(selectedPaymentMember)}>Mark member as Left</button>}
+            {!selectedPaymentMember.archived&&<button type="button" className="dangerBtn" onClick={()=>archiveMember(selectedPaymentMember)}>Archive Member</button>}
+            {selectedPaymentMember.archived&&<b className="formFine">Archived — complete history preserved</b>}
           </div>
-          {selectedPaymentMember.status==="approved"&&<form className="settingsForm" onSubmit={saveMemberPercent}>
+          {selectedPaymentMember.status==="approved"&&!selectedPaymentMember.archived&&<form className="settingsForm" onSubmit={saveMemberPercent}>
             <h3>Set this member's percentage</h3>
             <p className="formFine">Is member ke kaam ke hisaab se uska percentage set karein. Default 15% hai.</p>
             <label>Member percentage (%)<input type="number" min="0" max="100" step="0.01" value={memberPercentForm} onChange={e=>setMemberPercentForm(e.target.value)} required/></label>
             <button className="primaryBtn">Save member percentage</button>
           </form>}
           {selectedPaymentMember.status==="left"&&<p className="formFine">Ye member Left mark hai. Purana record safe hai aur nayi payment entry band hai.</p>}
-          {selectedPaymentMember.status==="approved"&&<form className="settingsForm" onSubmit={saveMemberAdjustment}>
+          {selectedPaymentMember.status==="approved"&&!selectedPaymentMember.archived&&<form className="settingsForm" onSubmit={saveMemberAdjustment}>
             <h3>Increase / decrease member amount</h3>
             <p className="formFine">Plus amount se paisa badhega, minus amount se ghatega. Example: 500 ya -200.</p>
             <label>Adjustment amount (₹)<input type="number" step="0.01" value={adjustmentForm.amount} onChange={e=>setAdjustmentForm(p=>({...p,amount:e.target.value}))} required placeholder="500 ya -200"/></label>
@@ -1218,7 +1234,7 @@ function Admin({settings}) {
               <div><span>Manual adjustments</span><b>{money(adjustmentTotal)}</b></div>
             </div>
           </div>
-          {selectedPaymentMember.status==="approved"&&<form className="settingsForm" onSubmit={saveMemberPayment}>
+          {selectedPaymentMember.status==="approved"&&!selectedPaymentMember.archived&&<form className="settingsForm" onSubmit={saveMemberPayment}>
             <h3>Add payment entry</h3>
             <label>Payment amount (₹)<input type="number" min="1" step="0.01" value={paymentForm.amount} onChange={e=>setPaymentForm(p=>({...p,amount:e.target.value}))} required placeholder="Enter amount"/></label>
             <label>Payment date & time<input type="datetime-local" value={paymentForm.paidAt} onChange={e=>setPaymentForm(p=>({...p,paidAt:e.target.value}))} required/></label>
@@ -1254,6 +1270,50 @@ function Admin({settings}) {
           </div>
         </section>}
       </div>}
+      {tab==="memberArchive"&&<div className="adminPanel memberArchiveAdmin">
+        <h2>Member Archive & Monthly Reports</h2>
+        <p className="formFine">Yahan sabhi members ka permanent record rahega — active, left aur archived. Month select karke joining, leaving aur har member ki payment entries check karein.</p>
+        <div className="monthlyReportToolbar">
+          <label>Report month<input type="month" value={memberReportMonth} onChange={e=>setMemberReportMonth(e.target.value)}/></label>
+          <button className="primaryBtn" type="button" onClick={()=>printWithMode("print-member-archive-report")}>Download monthly member PDF</button>
+        </div>
+        <div className="adminCards monthlyFundSummary">
+          <article><span>Members joined</span><b>{membersJoinedThisMonth.length}</b></article>
+          <article><span>Members left</span><b>{membersLeftThisMonth.length}</b></article>
+          <article><span>Total members in records</span><b>{joinRequests.length}</b></article>
+          <article><span>Monthly member payments</span><b>{money(totalMemberMonthPayments)}</b></article>
+        </div>
+        <h3>All members and monthly payment details — {memberReportLabel}</h3>
+        <div className="tableWrap"><table><thead><tr><th>Member name</th><th>Mobile</th><th>Join date</th><th>Left date</th><th>Status</th><th>Payments in month</th><th>Adjustments</th><th>Payment entries / details</th></tr></thead><tbody>
+          {memberMonthRows.map(row=><tr key={row.member.id}>
+            <td><b>{row.member.name||"—"}</b></td>
+            <td>{row.member.mobile||"—"}</td>
+            <td>{row.member.createdAt?.toDate?.().toLocaleDateString("en-IN")||"—"}</td>
+            <td>{(row.member.leftAt||row.member.archivedAt)?.toDate?.().toLocaleDateString("en-IN")||"—"}</td>
+            <td>{row.member.archived?"Archived":row.member.status==="left"?"Left":row.member.status==="approved"?"Active":row.member.status}</td>
+            <td>{money(row.paid)}</td>
+            <td>{money(row.adjustments)}</td>
+            <td>{row.entries.length?row.entries.map((p,i)=><div key={p.id}>{p.paidAt?new Date(p.paidAt).toLocaleString("en-IN"):"—"} · {money(p.amount)} · {p.entryType==="adjustment"?"Adjustment: ":""}{p.referenceId||"—"}{i<row.entries.length-1?<hr/>:null}</div>):"No entries"}</td>
+          </tr>)}
+          {!memberMonthRows.length&&<tr><td colSpan="8" className="empty">Abhi koi member record nahi hai.</td></tr>}
+        </tbody></table></div>
+        <div className="memberArchivePrint">
+          <h1>Umeed Community — Monthly Member Report</h1>
+          <h2>{memberReportLabel}</h2>
+          <div className="monthlyFundPrintSummary">
+            <p>Members joined this month: <b>{membersJoinedThisMonth.length}</b></p>
+            <p>Members left this month: <b>{membersLeftThisMonth.length}</b></p>
+            <p>Total members in records: <b>{joinRequests.length}</b></p>
+            <p>Total monthly member payments: <b>{money(totalMemberMonthPayments)}</b></p>
+            <p>Total adjustments: <b>{money(totalMemberMonthAdjustments)}</b></p>
+          </div>
+          <table><thead><tr><th>Member</th><th>Mobile</th><th>Join date</th><th>Left date</th><th>Status</th><th>Payments</th><th>Adjustments</th><th>Payment details</th></tr></thead><tbody>
+            {memberMonthRows.map(row=><tr key={row.member.id}><td>{row.member.name||"—"}</td><td>{row.member.mobile||"—"}</td><td>{row.member.createdAt?.toDate?.().toLocaleDateString("en-IN")||"—"}</td><td>{(row.member.leftAt||row.member.archivedAt)?.toDate?.().toLocaleDateString("en-IN")||"—"}</td><td>{row.member.archived?"Archived":row.member.status==="left"?"Left":row.member.status==="approved"?"Active":row.member.status}</td><td>{money(row.paid)}</td><td>{money(row.adjustments)}</td><td>{row.entries.map(p=><div>{p.paidAt?new Date(p.paidAt).toLocaleString("en-IN"):"—"} · {money(p.amount)} · {p.referenceId||"—"}</div>)}</td></tr>)}
+          </tbody></table>
+          <p>Generated from Umeed Community admin records.</p>
+        </div>
+      </div>}
+
       {tab==="helpline"&&<div className="adminPanel">
         <h2>Helpline Requests ({helpRequests.length})</h2>
         <p className="formFine">Website se submit hui sabhi help requests yahan date aur time ke saath dikhengi.</p>
