@@ -16,7 +16,6 @@ function useSiteData() {
   const [settings,setSettings] = useState({siteName:"Umeed",tagline:"Together, we can bring hope.",about:"A community-led effort to support families and individuals facing hardship. Every verified contribution is recorded transparently.",upiId:"",upiName:"",qrUrl:"",phone:"",heroImage:"",serviceTitle:"Umeed Community Service",serviceContent:"",totalHelped:"0",goal:"500000",instagramUrl:"",facebookUrl:""});
   const [donations,setDonations] = useState([]);
   const [media,setMedia] = useState([]);
-  const [expenses,setExpenses] = useState([]);
 
   useEffect(() => {
     if (!db) return;
@@ -27,11 +26,10 @@ function useSiteData() {
   err => console.error("Verified donations error:",err)
 );
     const stopC = onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(50)), s => setMedia(s.docs.map(d=>({id:d.id,...d.data()}))));
-    const stopD = onSnapshot(query(collection(db,"expenses"),orderBy("expenseDate","desc"),limit(1000)), s => setExpenses(s.docs.map(d=>({id:d.id,...d.data()}))), err => console.error("Expense records error:",err));
-    return () => { stopA(); stopB(); stopC(); stopD(); };
+    return () => { stopA(); stopB(); stopC(); };
   },[]);
 
-  return {settings,donations,media,expenses};
+  return {settings,donations,media};
 }
 
 function Header({settings}) {
