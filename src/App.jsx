@@ -824,6 +824,19 @@ function Admin({settings}) {
     }catch(err){setError(err.message||"Expense save nahi hua.");}
   }
 
+  async function editExpense(item){
+    const amountInput=window.prompt("Expense amount (₹):",String(item.amount||""));
+    if(amountInput===null)return;
+    const purposeInput=window.prompt("Expense purpose:",item.purpose||"");
+    if(purposeInput===null)return;
+    const dateInput=window.prompt("Expense date (YYYY-MM-DD):",item.expenseDate||"");
+    if(dateInput===null)return;
+    const amount=Number(amountInput);
+    if(!Number.isFinite(amount)||amount<=0||!purposeInput.trim()||!/^\\d{4}-\\d{2}-\\d{2}$/.test(dateInput)){setError("Expense amount, purpose ya date sahi nahi hai.");return;}
+    try{await updateDoc(doc(db,"expenses",item.id),{amount,purpose:purposeInput.trim(),expenseDate:dateInput,updatedAt:serverTimestamp(),updatedBy:user.email});alert("Expense entry update ho gayi.");}
+    catch(err){setError(err.message||"Expense update nahi hua.");}
+  }
+
   async function deleteExpense(item){
     if(!window.confirm("Is expense entry ko permanently delete karna hai?"))return;
     try{await deleteDoc(doc(db,"expenses",item.id));alert("Expense entry delete ho gayi.");}
@@ -1063,7 +1076,7 @@ function Admin({settings}) {
         </form>
         <h3>Expense history ({expenseEntries.length})</h3>
         <div className="tableWrap"><table><thead><tr><th>Date</th><th>Purpose</th><th>Amount</th><th>Action</th></tr></thead><tbody>
-          {expenseEntries.map(item=><tr key={item.id}><td>{item.expenseDate||"—"}</td><td>{item.purpose}</td><td>{money(item.amount)}</td><td><button className="dangerAction" onClick={()=>deleteExpense(item)}>Delete</button></td></tr>)}
+          {expenseEntries.map(item=><tr key={item.id}><td>{item.expenseDate||"—"}</td><td>{item.purpose}</td><td>{money(item.amount)}</td><td><div className="actions"><button onClick={()=>editExpense(item)}>Edit</button><button className="dangerAction" onClick={()=>deleteExpense(item)}>Delete</button></div></td></tr>)}
           {!expenseEntries.length&&<tr><td colSpan="4" className="empty">Abhi koi expense entry nahi hai.</td></tr>}
         </tbody></table></div>
       </div>}
