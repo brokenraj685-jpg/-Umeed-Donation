@@ -45,7 +45,6 @@ function Header({settings}) {
       <a href="/#leaderboard" className="navItem" onClick={()=>setOpen(false)}><Trophy className="navIcon" size={17}/><span>Leaderboard</span></a>
       <a href="/#gallery" className="navItem" onClick={()=>setOpen(false)}><Camera className="navIcon" size={17}/><span>Stories</span></a>
       <Link className="navDonate" to="/donate" onClick={()=>setOpen(false)}><HeartHandshake size={17}/><span>Donate now</span><ArrowRight size={15}/></Link>
-      <Link to="/admin" className="navItem adminLink" onClick={()=>setOpen(false)}><ShieldCheck className="navIcon" size={17}/><span>Community</span></Link>
     </nav>
   </header>;
 }
@@ -170,7 +169,7 @@ const top = useMemo(() => [...donations]
     </section>
 
     <footer>
-      <Link to="/" className="brand"><span className="brandIcon"><HeartHandshake size={20}/></span>{settings.siteName || "Umeed"}</Link>
+      <Link to="/admin" className="brand footerAdminEntry" title="Admin dashboard" aria-label="Open admin dashboard"><span className="brandIcon"><HeartHandshake size={20}/></span><span>{settings.siteName || "Umeed"}<small>Admin dashboard</small></span></Link>
       <span>Built on kindness. Powered by community.</span>
       <div className="socialLinks" aria-label="Social media links">
         {settings.instagramUrl&&<a className="socialLink instagramLink" href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Instagram"><Instagram size={23}/><span><b>Instagram</b><small>Instagram open</small></span></a>}
