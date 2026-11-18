@@ -16,7 +16,6 @@ function useSiteData() {
   const [settings,setSettings] = useState({siteName:"Umeed",tagline:"Together, we can bring hope.",about:"A community-led effort to support families and individuals facing hardship. Every verified contribution is recorded transparently.",upiId:"",upiName:"",qrUrl:"",phone:"",heroImage:"",serviceTitle:"Umeed Community Service",serviceContent:"",totalHelped:"0",goal:"500000",instagramUrl:"",facebookUrl:""});
   const [donations,setDonations] = useState([]);
   const [media,setMedia] = useState([]);
-  const [advertisements,setAdvertisements] = useState([]);
 
   useEffect(() => {
     if (!db) return;
@@ -27,11 +26,10 @@ function useSiteData() {
   err => console.error("Verified donations error:",err)
 );
     const stopC = onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(50)), s => setMedia(s.docs.map(d=>({id:d.id,...d.data()}))));
-    const stopD = onSnapshot(query(collection(db,"advertisements"),orderBy("createdAt","asc"),limit(100)), s => setAdvertisements(s.docs.map(d=>({id:d.id,...d.data()}))), err => console.error("Advertisements load error:",err));
-    return () => { stopA(); stopB(); stopC(); stopD(); };
+    return () => { stopA(); stopB(); stopC(); };
   },[]);
 
-  return {settings,donations,media,advertisements};
+  return {settings,donations,media};
 }
 
 function Header({settings}) {
@@ -80,7 +78,8 @@ function DonationProgress({settings,donations}) {
 }
 
 function Home({data}) {
-  const {settings,donations,media,advertisements=[]}=data;
+  const {settings,donations,media}=data;
+  const advertisements=Array.isArray(settings.advertisements)?settings.advertisements:[];
   const [impactAmount,setImpactAmount] = useState(50);
   const [adIndex,setAdIndex] = useState(0);
   const estimatedPeople = Math.round(impactAmount / 25);
@@ -674,7 +673,7 @@ function Admin({settings}) {
   const [editCaption,setEditCaption]=useState("");
   const [replacementFile,setReplacementFile]=useState(null);
   const [mediaBusy,setMediaBusy]=useState(false);
-  const [advertisementItems,setAdvertisementItems]=useState([]);
+  const advertisementItems=Array.isArray(settings.advertisements)?settings.advertisements:[];
   const [advertisementFiles,setAdvertisementFiles]=useState([]);
   const [advertisementBusy,setAdvertisementBusy]=useState(false);
   const [advertisementInterval,setAdvertisementInterval]=useState(String(settings.advertisingIntervalSeconds||15));
@@ -733,11 +732,6 @@ function Admin({settings}) {
   useEffect(()=>{
     if(!db||!user||!isAdmin)return;
     return onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(100)),s=>setMediaItems(s.docs.map(d=>({id:d.id,...d.data()}))),err=>setError(err.message));
-  },[user,isAdmin]);
-
-  useEffect(()=>{
-    if(!db||!user||!isAdmin)return;
-    return onSnapshot(query(collection(db,"advertisements"),orderBy("createdAt","asc"),limit(100)),s=>setAdvertisementItems(s.docs.map(d=>({id:d.id,...d.data()}))),err=>setError("Advertising images load error: "+err.message));
   },[user,isAdmin]);
 
   useEffect(()=>{
@@ -997,6 +991,7 @@ function Admin({settings}) {
     if(!advertisementFiles.length)return;
     setAdvertisementBusy(true);setError("");
     try{
+      const uploadedAds=[];
       for(const imageFile of advertisementFiles){
         if(!imageFile.type.startsWith("image/"))throw new Error("Sirf image files upload karein.");
         const token=await getIdToken(user);
@@ -1005,8 +1000,9 @@ function Admin({settings}) {
         const signed=await res.json();
         const put=await fetch(signed.uploadUrl,{method:"PUT",headers:{"Content-Type":imageFile.type},body:imageFile});
         if(!put.ok)throw new Error("Advertising image upload fail hua: "+imageFile.name);
-        await addDoc(collection(db,"advertisements"),{url:signed.publicUrl,key:signed.key,title:imageFile.name,createdAt:serverTimestamp()});
+        uploadedAds.push({id:signed.key,url:signed.publicUrl,key:signed.key,title:imageFile.name});
       }
+      await setDoc(doc(db,"site","settings"),{advertisements:[...advertisementItems,...uploadedAds],updatedAt:serverTimestamp()},{merge:true});
       setAdvertisementFiles([]);
       alert("Advertising images upload ho gayi.");
     }catch(err){setError(err.message||"Advertising images upload nahi hui.");}
@@ -1029,7 +1025,7 @@ function Admin({settings}) {
     setAdvertisementBusy(true);setError("");
     try{
       await callMediaDelete(item.key);
-      await deleteDoc(doc(db,"advertisements",item.id));
+      await updateDoc(doc(db,"site","settings"),{advertisements:advertisementItems.filter(ad=>ad.id!==item.id),updatedAt:serverTimestamp()});
     }catch(err){setError(err.message||"Advertising image delete nahi hui.");}
     finally{setAdvertisementBusy(false);}
   }
