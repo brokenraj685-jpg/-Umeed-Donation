@@ -110,9 +110,9 @@ const top = useMemo(() => [...donations]
         <Trophy size={34}/>
       </div>
       <div className="tableWrap"><table>
-        <thead><tr><th>Rank</th><th>Donor</th><th>Mobile</th><th>State</th><th>Amount</th><th>Date</th></tr></thead>
+        <thead><tr><th>Rank</th><th>Donor</th><th>State</th><th>Amount</th><th>Date</th></tr></thead>
         <tbody>{top.length?top.map((d,i)=><tr key={d.id}>
-          <td><span className="rank">{i+1}</span></td><td>{d.name}</td><td>{d.mobile||"—"}</td><td>{d.state}</td><td className="amount">{money(d.amount)}</td>
+          <td><span className="rank">{i+1}</span></td><td>{d.name}</td><td>{d.state}</td><td className="amount">{money(d.amount)}</td>
           <td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN") || "Recently"}</td>
         </tr>):<tr><td colSpan="5" className="empty">Be the first to make a contribution.</td></tr>}</tbody>
       </table></div>
