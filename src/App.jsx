@@ -169,7 +169,7 @@ const top = useMemo(() => [...donations]
     </section>
 
     <footer>
-      <Link to="/admin" className="brand footerAdminEntry" title="Admin dashboard" aria-label="Open admin dashboard"><span className="brandIcon"><HeartHandshake size={20}/></span><span>{settings.siteName || "Umeed"}<small>Admin dashboard</small></span></Link>
+      <div className="brand"><Link to="/admin" className="brandIcon" title="Admin dashboard" aria-label="Open admin dashboard"><HeartHandshake size={20}/></Link><span>{settings.siteName || "Umeed"}</span></div>
       <span>Built on kindness. Powered by community.</span>
       <div className="socialLinks" aria-label="Social media links">
         {settings.instagramUrl&&<a className="socialLink instagramLink" href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Instagram"><Instagram size={23}/><span><b>Instagram</b><small>Instagram open</small></span></a>}
