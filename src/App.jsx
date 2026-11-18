@@ -84,6 +84,15 @@ function Home({data}) {
   const [adIndex,setAdIndex] = useState(0);
   const estimatedPeople = Math.round(impactAmount / 25);
   const liveAds = advertisements.filter(ad=>ad.url);
+  const advertisementUrl = (url) => {
+    try {
+      const parsed = new URL(url, window.location.origin);
+      if (parsed.pathname.startsWith("/community/")) parsed.pathname = `/umeed${parsed.pathname}`;
+      return parsed.toString();
+    } catch {
+      return url || "";
+    }
+  };
   useEffect(()=>{
     setAdIndex(0);
     if(!settings.advertisingActive || liveAds.length<2)return;
@@ -106,7 +115,7 @@ function Home({data}) {
     {liveAds.length>0&&<section className="homeAdvertising" aria-label="Community announcements">
       <div className="advertisingViewport">
         <div className="advertisingTrack" style={{transform:`translateX(-${adIndex*100}%)`}}>
-          {liveAds.map((ad,i)=><div className="advertisingSlide" key={ad.id}><img src={ad.url} alt={ad.title||`Umeed announcement ${i+1}`}/></div>)}
+          {liveAds.map((ad,i)=><div className="advertisingSlide" key={ad.id}><img src={advertisementUrl(ad.url)} onError={e=>tryMediaFallback(e,ad.url)} alt={ad.title||`Umeed announcement ${i+1}`}/></div>)}
         </div>
       </div>
     </section>}
