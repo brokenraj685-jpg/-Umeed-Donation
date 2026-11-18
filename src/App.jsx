@@ -79,45 +79,10 @@ function DonationProgress({settings,donations}) {
 
 function Home({data}) {
   const {settings,donations,media}=data;
-const [now,setNow] = useState(Date.now());
 const [impactAmount,setImpactAmount] = useState(50);
 const estimatedPeople = Math.round(impactAmount / 25);
 
-useEffect(() => {
-  const timer = setInterval(() => setNow(Date.now()), 60 * 1000);
-  return () => clearInterval(timer);
-}, []);
-
-const top = useMemo(() => [...donations]
-  .filter(d => {
-    const created = d.createdAt?.toDate
-      ? d.createdAt.toDate().getTime()
-      : typeof d.createdAt?.seconds === "number"
-        ? d.createdAt.seconds * 1000
-        : d.createdAt instanceof Date
-          ? d.createdAt.getTime()
-          : 0;
-    return created > 0 && created <= now && now - created < 30 * 24 * 60 * 60 * 1000;
-  })
-  .sort((a,b) => Number(b.amount) - Number(a.amount))
-  .slice(0,5), [donations,now]);
-
   return <>
-    <section className="section leaderboard compactLeaderboard" id="leaderboard">
-      <div className="sectionHead">
-        <div><div className="sectionLabel">COMMUNITY OF GIVERS</div><h2>Monthly kindness leaders</h2><p>Top 5 contributions from the last 30 days.</p></div>
-        <Trophy size={34}/>
-      </div>
-      <div className="tableWrap"><table>
-        <thead><tr><th>Rank</th><th>Donor</th><th>State</th><th>Amount</th><th>Date</th></tr></thead>
-        <tbody>{top.length?top.map((d,i)=><tr key={d.id}>
-          <td><span className="rank">{i+1}</span></td><td>{d.name}</td><td>{d.state}</td><td className="amount">{money(d.amount)}</td>
-          <td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN") || "Recently"}</td>
-        </tr>):<tr><td colSpan="5" className="empty">Be the first to make a contribution.</td></tr>}</tbody>
-      </table></div>
-      
-    </section>
-
     <section className="impactSlider" aria-label="Donation impact calculator">
       <div className="impactSliderHead">
         <div><span className="sectionLabel">YOUR DONATION, YOUR IMPACT</span><h2>See what your help can do</h2></div>
@@ -246,6 +211,21 @@ function MediaPage({media,type,donations}) {
 
 function DonationDetails({settings,donations}) {
   const total = donations.reduce((sum,d)=>sum+Number(d.amount||0),0);
+  const topContributors = useMemo(() => {
+    const grouped = new Map();
+    donations.forEach(d => {
+      const name = String(d.name || "Anonymous").trim() || "Anonymous";
+      const state = String(d.state || "").trim();
+      const mobile = String(d.mobile || "").replace(/\\D/g,"");
+      const key = mobile ? "mobile:"+mobile : "name:"+name.toLowerCase()+"|state:"+state.toLowerCase();
+      const current = grouped.get(key) || {name,state,total:0,count:0};
+      current.total += Number(d.amount || 0);
+      current.count += 1;
+      if (!current.state && state) current.state = state;
+      grouped.set(key,current);
+    });
+    return [...grouped.values()].sort((a,b)=>b.total-a.total).slice(0,10);
+  },[donations]);
 
   return <main className="detailsPage">
     <div className="detailsHeading">
@@ -259,6 +239,18 @@ function DonationDetails({settings,donations}) {
       <div><span>Contributions</span><b>{donations.length}</b></div>
       <div><span>People Helped Together ❤️</span><b>{settings.totalHelped || "0"}+</b></div>
       <div><span>Our promise</span><b>Transparent giving</b></div>
+    </section>
+    <section className="section detailsList topContributorsSection">
+      <div className="sectionHead">
+        <div><div className="sectionLabel">ALL-TIME LEADERS</div><h2>Top 10 contributors</h2><p>Sabhi verified donations ka ab tak ka total yogdaan. Koi monthly time limit nahi.</p></div>
+        <Trophy size={28}/>
+      </div>
+      <div className="tableWrap"><table>
+        <thead><tr><th>Rank</th><th>Contributor</th><th>State</th><th>Total donated</th></tr></thead>
+        <tbody>{topContributors.length ? topContributors.map((d,i)=><tr key={i}>
+          <td><span className="rank">{i+1}</span></td><td>{d.name}</td><td>{d.state||"—"}</td><td className="amount">{money(d.total)}</td>
+        </tr>) : <tr><td colSpan="4" className="empty">Verified contributions will appear here.</td></tr>}</tbody>
+      </table></div>
     </section>
     <section className="section detailsList">
       <div className="sectionHead">
