@@ -610,7 +610,7 @@ function Donate({settings}) {
       <label>Message (optional)<textarea name="note" rows="3" maxLength="300" value={form.note} onChange={change} placeholder="A short message"/></label>
       {error&&<p className="error">{error}</p>}
       <button className="primaryBtn full" disabled={busy}>{busy?"Submitting…":"Submit donation"}</button>
-      <p className="formFine">Please enter your correct payment reference. Do not submit someone else's transaction details.</p>
+      <p className="formFine">Donation submit karne ke baad apna certificate zaroor download karein. Certificate number sambhal kar rakhein, taaki aap baad mein bhi apna certificate download kar sakein.</p>
     </form>}
     <section className="certificateLookup noPrint">
       <h2>Already donated? Find your certificate</h2>
