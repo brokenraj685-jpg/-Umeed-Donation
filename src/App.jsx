@@ -16,6 +16,7 @@ function useSiteData() {
   const [settings,setSettings] = useState({siteName:"Umeed",tagline:"Together, we can bring hope.",about:"A community-led effort to support families and individuals facing hardship. Every verified contribution is recorded transparently.",upiId:"",upiName:"",qrUrl:"",phone:"",heroImage:"",serviceTitle:"Umeed Community Service",serviceContent:"",totalHelped:"0",goal:"500000",instagramUrl:"",facebookUrl:""});
   const [donations,setDonations] = useState([]);
   const [media,setMedia] = useState([]);
+  const [advertisements,setAdvertisements] = useState([]);
 
   useEffect(() => {
     if (!db) return;
@@ -26,10 +27,11 @@ function useSiteData() {
   err => console.error("Verified donations error:",err)
 );
     const stopC = onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(50)), s => setMedia(s.docs.map(d=>({id:d.id,...d.data()}))));
-    return () => { stopA(); stopB(); stopC(); };
+    const stopD = onSnapshot(query(collection(db,"advertisements"),orderBy("createdAt","asc"),limit(100)), s => setAdvertisements(s.docs.map(d=>({id:d.id,...d.data()}))), err => console.error("Advertisements load error:",err));
+    return () => { stopA(); stopB(); stopC(); stopD(); };
   },[]);
 
-  return {settings,donations,media};
+  return {settings,donations,media,advertisements};
 }
 
 function Header({settings}) {
@@ -78,9 +80,18 @@ function DonationProgress({settings,donations}) {
 }
 
 function Home({data}) {
-  const {settings,donations,media}=data;
-const [impactAmount,setImpactAmount] = useState(50);
-const estimatedPeople = Math.round(impactAmount / 25);
+  const {settings,donations,media,advertisements=[]}=data;
+  const [impactAmount,setImpactAmount] = useState(50);
+  const [adIndex,setAdIndex] = useState(0);
+  const estimatedPeople = Math.round(impactAmount / 25);
+  const liveAds = advertisements.filter(ad=>ad.url);
+  useEffect(()=>{
+    setAdIndex(0);
+    if(!settings.advertisingActive || liveAds.length<2)return;
+    const seconds=Math.max(3,Math.min(300,Number(settings.advertisingIntervalSeconds)||15));
+    const timer=setInterval(()=>setAdIndex(index=>(index+1)%liveAds.length),seconds*1000);
+    return ()=>clearInterval(timer);
+  },[settings.advertisingActive,settings.advertisingIntervalSeconds,liveAds.length]);
 
   return <>
     <section className="impactSlider" aria-label="Donation impact calculator">
@@ -92,6 +103,14 @@ const estimatedPeople = Math.round(impactAmount / 25);
       <div className="impactRangeLabels"><span>₹50</span><span>₹5,000</span></div>
       <div className="impactEstimate"><span className="impactPeople">{estimatedPeople}</span><span>Itne logon ke chehre par muskaan la sakte hain ❤️</span></div>
     </section>
+
+    {liveAds.length>0&&<section className="homeAdvertising" aria-label="Community announcements">
+      <div className="advertisingViewport">
+        <div className="advertisingTrack" style={{transform:`translateX(-${adIndex*100}%)`}}>
+          {liveAds.map((ad,i)=><div className="advertisingSlide" key={ad.id}><img src={ad.url} alt={ad.title||`Umeed announcement ${i+1}`}/></div>)}
+        </div>
+      </div>
+    </section>}
 
     <section className="hero">
       <div className="heroCopy">
@@ -655,6 +674,10 @@ function Admin({settings}) {
   const [editCaption,setEditCaption]=useState("");
   const [replacementFile,setReplacementFile]=useState(null);
   const [mediaBusy,setMediaBusy]=useState(false);
+  const [advertisementItems,setAdvertisementItems]=useState([]);
+  const [advertisementFiles,setAdvertisementFiles]=useState([]);
+  const [advertisementBusy,setAdvertisementBusy]=useState(false);
+  const [advertisementInterval,setAdvertisementInterval]=useState(String(settings.advertisingIntervalSeconds||15));
 
   useEffect(()=>{
     if(!auth)return;
@@ -696,6 +719,7 @@ function Admin({settings}) {
   },[user,isAdmin]);
 
   useEffect(()=>setForm(settings),[settings]);
+  useEffect(()=>setAdvertisementInterval(String(settings.advertisingIntervalSeconds||15)),[settings.advertisingIntervalSeconds]);
 
   useEffect(()=>{
     if(!db||!user||!isAdmin)return;
@@ -709,6 +733,11 @@ function Admin({settings}) {
   useEffect(()=>{
     if(!db||!user||!isAdmin)return;
     return onSnapshot(query(collection(db,"media"),orderBy("createdAt","desc"),limit(100)),s=>setMediaItems(s.docs.map(d=>({id:d.id,...d.data()}))),err=>setError(err.message));
+  },[user,isAdmin]);
+
+  useEffect(()=>{
+    if(!db||!user||!isAdmin)return;
+    return onSnapshot(query(collection(db,"advertisements"),orderBy("createdAt","asc"),limit(100)),s=>setAdvertisementItems(s.docs.map(d=>({id:d.id,...d.data()}))),err=>setError("Advertising images load error: "+err.message));
   },[user,isAdmin]);
 
   useEffect(()=>{
@@ -963,6 +992,48 @@ function Admin({settings}) {
     }
   }
 
+  async function uploadAdvertisementImages(e){
+    e.preventDefault();
+    if(!advertisementFiles.length)return;
+    setAdvertisementBusy(true);setError("");
+    try{
+      for(const imageFile of advertisementFiles){
+        if(!imageFile.type.startsWith("image/"))throw new Error("Sirf image files upload karein.");
+        const token=await getIdToken(user);
+        const res=await fetch("/api/r2-presign",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({fileName:imageFile.name,contentType:imageFile.type})});
+        if(!res.ok)throw new Error("Advertising image upload URL nahi ban paya.");
+        const signed=await res.json();
+        const put=await fetch(signed.uploadUrl,{method:"PUT",headers:{"Content-Type":imageFile.type},body:imageFile});
+        if(!put.ok)throw new Error("Advertising image upload fail hua: "+imageFile.name);
+        await addDoc(collection(db,"advertisements"),{url:signed.publicUrl,key:signed.key,title:imageFile.name,createdAt:serverTimestamp()});
+      }
+      setAdvertisementFiles([]);
+      alert("Advertising images upload ho gayi.");
+    }catch(err){setError(err.message||"Advertising images upload nahi hui.");}
+    finally{setAdvertisementBusy(false);}
+  }
+
+  async function saveAdvertisingSettings(active){
+    const seconds=Number(advertisementInterval);
+    if(!Number.isInteger(seconds)||seconds<3||seconds>300){setError("Image change time 3 se 300 seconds ke beech rakhein.");return;}
+    setAdvertisementBusy(true);setError("");
+    try{
+      await setDoc(doc(db,"site","settings"),{advertisingActive:Boolean(active),advertisingIntervalSeconds:seconds,updatedAt:serverTimestamp()},{merge:true});
+      alert(active?"Advertising slideshow start ho gaya.":"Advertising slideshow stop ho gaya.");
+    }catch(err){setError(err.message||"Advertising settings save nahi hui.");}
+    finally{setAdvertisementBusy(false);}
+  }
+
+  async function removeAdvertisement(item){
+    if(!window.confirm("Kya aap is advertising image ko permanently delete karna chahte hain?"))return;
+    setAdvertisementBusy(true);setError("");
+    try{
+      await callMediaDelete(item.key);
+      await deleteDoc(doc(db,"advertisements",item.id));
+    }catch(err){setError(err.message||"Advertising image delete nahi hui.");}
+    finally{setAdvertisementBusy(false);}
+  }
+
   async function uploadMedia(e) {
     e.preventDefault();
     if(!file)return;
@@ -1094,7 +1165,7 @@ function Admin({settings}) {
     <button className="textBtn" onClick={()=>signOut(auth)}>Sign out</button>
   </div></main>;
 
-  const nav=[["overview","Overview"],["donations","Donations"],["funds","Targets & Expenses"],["monthlyFunds","Monthly Reports"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["memberArchive","Member Archive & Reports"],["helpline","Helpline"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
+  const nav=[["overview","Overview"],["advertising","Advertising"],["donations","Donations"],["funds","Targets & Expenses"],["monthlyFunds","Monthly Reports"],["communityJoins","Community Join"],["memberPayments","Member Payments"],["memberArchive","Member Archive & Reports"],["helpline","Helpline"],["settings","Website settings"],["service","Community service"],["media","Photos & videos"]];
 
   return <main className="adminShell">
     <aside className="adminSide">
@@ -1113,6 +1184,31 @@ function Admin({settings}) {
         <article><span>Pending verification</span><b>{pending.filter(d=>d.status==="pending").length}</b></article>
         <article><span>Verified donations</span><b>{pending.filter(d=>d.status==="verified").length}</b></article>
         <article><span>Verified amount</span><b>{money(pending.filter(d=>d.status==="verified").reduce((s,d)=>s+Number(d.amount||0),0))}</b></article>
+      </div>}
+
+      {tab==="advertising"&&<div className="adminPanel advertisingAdmin">
+        <h2>Home page advertising</h2>
+        <p className="formFine">Yahan upload ki gayi images home page par 15:7 ratio ke animated banner mein dikhengi. Multiple images upload kar sakte hain; har image set kiye gaye time tak dikhegi.</p>
+        <form className="settingsForm" onSubmit={uploadAdvertisementImages}>
+          <label>Advertising images (multiple select kar sakte hain)<input type="file" accept="image/*" multiple onChange={e=>setAdvertisementFiles(Array.from(e.target.files||[]))}/></label>
+          {advertisementFiles.length>0&&<p>{advertisementFiles.length} image(s) selected</p>}
+          <button className="primaryBtn" disabled={advertisementBusy||advertisementFiles.length===0}><UploadCloud size={18}/>{advertisementBusy?"Uploading…":"Upload advertising images"}</button>
+        </form>
+        <div className="settingsForm">
+          <label>Har image kitne seconds dikhe?<input type="number" min="3" max="300" step="1" value={advertisementInterval} onChange={e=>setAdvertisementInterval(e.target.value)}/></label>
+          <p className="formFine">Default 15 seconds. Aap 3 se 300 seconds tak set kar sakte hain.</p>
+          <div className="actions"><button type="button" disabled={advertisementBusy||advertisementItems.length===0} onClick={()=>saveAdvertisingSettings(true)}>Start advertising</button><button type="button" disabled={advertisementBusy} onClick={()=>saveAdvertisingSettings(false)}>Stop advertising</button></div>
+          <p className="formFine">Status: {settings.advertisingActive?"Running":"Stopped"}</p>
+        </div>
+        {error&&<p className="error">{error}</p>}
+        <div className="adminMediaManager">
+          <h2>Advertising images ({advertisementItems.length})</h2>
+          {advertisementItems.length===0?<p className="formFine">Abhi koi advertising image upload nahi hui.</p>:<div className="adminMediaGrid">{advertisementItems.map(item=><article className="adminMediaItem" key={item.id}>
+            <img src={adminMediaUrl(item.url)} alt={item.title||"Advertising image"}/>
+            <div className="adminMediaInfo"><b>{item.title||"Advertising image"}</b><small>Home page banner · 15:7 display</small></div>
+            <div className="actions"><button type="button" disabled={advertisementBusy} onClick={()=>removeAdvertisement(item)}>Delete</button></div>
+          </article>)}</div>}
+        </div>
       </div>}
 
       {tab==="donations"&&<div className="adminPanel">
