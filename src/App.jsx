@@ -98,7 +98,7 @@ const top = useMemo(() => [...donations]
         : d.createdAt instanceof Date
           ? d.createdAt.getTime()
           : 0;
-    return created > 0 && created <= now && now - created < 12 * 60 * 60 * 1000;
+    return created > 0 && created <= now && now - created < 30 * 24 * 60 * 60 * 1000;
   })
   .sort((a,b) => Number(b.amount) - Number(a.amount))
   .slice(0,5), [donations,now]);
@@ -106,7 +106,7 @@ const top = useMemo(() => [...donations]
   return <>
     <section className="section leaderboard compactLeaderboard" id="leaderboard">
       <div className="sectionHead">
-        <div><div className="sectionLabel">COMMUNITY OF GIVERS</div><h2>Daily kindness leaders</h2><p>Top contributions from our community.</p></div>
+        <div><div className="sectionLabel">COMMUNITY OF GIVERS</div><h2>Monthly kindness leaders</h2><p>Top 5 contributions from the last 30 days.</p></div>
         <Trophy size={34}/>
       </div>
       <div className="tableWrap"><table>
