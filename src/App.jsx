@@ -102,6 +102,14 @@ function Home({data}) {
   },[settings.advertisingActive,settings.advertisingIntervalSeconds,liveAds.length]);
 
   return <>
+    {liveAds.length>0&&<section className="homeAdvertising" aria-label="Community announcements">
+      <div className="advertisingViewport">
+        <div className="advertisingTrack" style={{transform:`translateX(-${adIndex*100}%)`}}>
+          {liveAds.map((ad,i)=><div className="advertisingSlide" key={ad.id}><img src={advertisementUrl(ad.url)} onError={e=>tryMediaFallback(e,ad.url)} alt={ad.title||`Umeed announcement ${i+1}`}/></div>)}
+        </div>
+      </div>
+    </section>}
+
     <section className="impactSlider" aria-label="Donation impact calculator">
       <div className="impactSliderHead">
         <div><span className="sectionLabel">YOUR DONATION, YOUR IMPACT</span><h2>See what your help can do</h2></div>
@@ -112,13 +120,6 @@ function Home({data}) {
       <div className="impactEstimate"><span className="impactPeople">{estimatedPeople}</span><span>Itne logon ke chehre par muskaan la sakte hain ❤️</span></div>
     </section>
 
-    {liveAds.length>0&&<section className="homeAdvertising" aria-label="Community announcements">
-      <div className="advertisingViewport">
-        <div className="advertisingTrack" style={{transform:`translateX(-${adIndex*100}%)`}}>
-          {liveAds.map((ad,i)=><div className="advertisingSlide" key={ad.id}><img src={advertisementUrl(ad.url)} onError={e=>tryMediaFallback(e,ad.url)} alt={ad.title||`Umeed announcement ${i+1}`}/></div>)}
-        </div>
-      </div>
-    </section>}
 
     <section className="hero">
       <div className="heroCopy">
