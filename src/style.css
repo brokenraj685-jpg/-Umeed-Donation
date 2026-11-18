@@ -813,8 +813,8 @@ footer .brand{font-size:14px}
   .detailsList .tableWrap table {
     width: 680px;
     min-width: 680px;
-    animation: umeedContributorsSlide 18s ease-in-out infinite alternate;
-    will-change: transform;
+    animation: none;
+    will-change: auto;
   }
 
   .detailsList .tableWrap:focus-within table,
@@ -845,7 +845,7 @@ footer .brand{font-size:14px}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .detailsList .tableWrap table { animation: none; }
+  .allContributionsSection .tableWrap table { animation: none; }
 }
 
 /* Join Umeed Community page */
