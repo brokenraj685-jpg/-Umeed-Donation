@@ -242,7 +242,7 @@ function DonationDetails({settings,donations}) {
     </section>
     <section className="section detailsList topContributorsSection">
       <div className="sectionHead">
-        <div><div className="sectionLabel">ALL-TIME LEADERS</div><h2>Top 10 contributors</h2><p>Sabhi verified donations ka ab tak ka total yogdaan. Koi monthly time limit nahi.</p></div>
+        <div><div className="sectionLabel">ALL-TIME LEADERS</div><h2>Top 10 contributors</h2></div>
         <Trophy size={28}/>
       </div>
       <div className="tableWrap"><table>
@@ -252,7 +252,7 @@ function DonationDetails({settings,donations}) {
         </tr>) : <tr><td colSpan="4" className="empty">Verified contributions will appear here.</td></tr>}</tbody>
       </table></div>
     </section>
-    <section className="section detailsList">
+    <section className="section detailsList allContributionsSection">
       <div className="sectionHead">
         <div><div className="sectionLabel">COMMUNITY RECORD</div><h2>All contributions</h2></div>
         <ShieldCheck size={28}/>
