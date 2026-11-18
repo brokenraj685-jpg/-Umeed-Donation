@@ -147,8 +147,7 @@ const top = useMemo(() => [...donations]
       </div>
     </section>
 
-    <section className="section intro">
-      <div className="sectionLabel">WHY WE EXIST</div>
+    <section className="section intro">      <div className="sectionLabel">WHY WE EXIST</div>
       <h2>Kindness has the power<br/>to change a life.</h2>
       <p>{settings.about}</p>
       <Link to="/donate" className="underLink">Be part of the change <ArrowRight size={16}/></Link>
@@ -228,7 +227,7 @@ function MediaPage({media,type,donations}) {
           const target=Number(m.targetAmount), remaining=Math.max(0,target-raised), percent=Math.min(100,Math.round(raised/target*100));
           return <div className="storyDonationProgress">
             {m.targetReason&&<small>{m.targetReason}</small>}
-            <div className="storyDonationNumbers"><span>Target <b>{money(target)}</b></span><span>Received <b>{money(raised)}</b></span></div>
+            <div className="storyDonationNumbers"><span>Zaroorat <b>{money(target)}</b></span><span>Ab Tak Mila <b>{money(raised)}</b></span></div>
             <div className="storyDonationTrack"><span style={{width:percent+"%"}}/></div>
             <div className="storyDonationFoot"><b>{percent}% complete</b><span>{money(remaining)} baki</span></div>
             <Link className="primaryBtn storyDonateBtn" to={`/donate?story=${encodeURIComponent(m.id)}`}>Donate Now <ArrowRight size={16}/></Link>
@@ -297,8 +296,7 @@ function CommunityService({settings}) {
         <button className="founderMessageClose" type="button" onClick={()=>setFounderOpen(false)} aria-label="Close">×</button>
         <div className="sectionLabel">UMEED COMMUNITY</div>
         <h2>A Message From The Founder</h2>
-        <h3>The Story, Purpose &amp; Vision Behind Umeed Community</h3>
-        <p>My name is <b>Raj Babu Shaikh</b>. I am a 22-year-old young man from a middle-class family, and I completed my 12th standard education in Maharashtra.</p>
+        <h3>The Story, Purpose &amp; Vision Behind Umeed Community</h3>        <p>My name is <b>Raj Babu Shaikh</b>. I am a 22-year-old young man from a middle-class family, and I completed my 12th standard education in Maharashtra.</p>
         <p>I am not a lawyer, nor do I have extensive knowledge of legal matters, rules and regulations. I am simply an ordinary person who has a strong desire to do something meaningful for society.</p>
         <p>The idea behind creating <b>Umeed Community</b> came from a simple thought: What if ordinary people like us could come together, help those who are in need, and also create small earning opportunities for young people who are unemployed and struggling to support themselves?</p>
         <p>I wanted to create a platform where people could experience the happiness of helping someone, where even a small contribution could make a positive difference in another person's life, and where deserving people could receive support when they need it most.</p>
@@ -447,7 +445,6 @@ function Donate({settings}) {
       }
     },err=>console.error("Certificate status check:",err));
   },[certificateCode]);
-
   function downloadCertificate(record){
     setShowCertificate(true);
     setTimeout(()=>window.print(),400);
@@ -597,8 +594,7 @@ function Donate({settings}) {
     {!done&&<form className="donateForm" onSubmit={submit}>
       <h2>Donation details</h2>
       <label>Your full name<input name="name" required maxLength="80" value={form.name} onChange={change} placeholder="Enter your name"/></label>
-      <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" required value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/[^0-9]/g,"").slice(0,10)}))} placeholder="Enter 10-digit mobile number"/></label>
-      <label>State<select name="state" required value={form.state} onChange={change}>
+      <label>Mobile number<input name="mobile" type="tel" inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength="10" required value={form.mobile} onChange={e=>setForm(p=>({...p,mobile:e.target.value.replace(/[^0-9]/g,"").slice(0,10)}))} placeholder="Enter 10-digit mobile number"/></label>      <label>State<select name="state" required value={form.state} onChange={change}>
         <option value="">Select your state</option>{states.map(s=><option key={s}>{s}</option>)}
       </select></label>
       <label>Donation amount (₹)<input name="amount" required type="number" min="1" max="10000000" value={form.amount} onChange={change} placeholder="e.g. 500"/></label>
@@ -747,8 +743,7 @@ function Admin({settings}) {
     try {
       await signInWithEmailAndPassword(auth,email,password);
     } catch(err) {
-      setError("Login failed. Check your email and password.");
-    }
+      setError("Login failed. Check your email and password.");    }
   }
 
   async function saveSettings(e) {
@@ -898,7 +893,6 @@ function Admin({settings}) {
       await deleteDoc(doc(db,"helpRequests",item.id));
     }catch(err){setError(err.message||"Helpline request delete nahi hui.");}
   }
-
   async function saveTargetPlan(e){
     e.preventDefault();setError("");
     const targets=(Array.isArray(form.targetAmounts)?form.targetAmounts:[]).map(item=>{
@@ -1047,8 +1041,7 @@ function Admin({settings}) {
         const res=await fetch("/api/r2-presign",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${token}`},body:JSON.stringify({fileName:replacementFile.name,contentType:replacementFile.type})});
         if(!res.ok)throw new Error("Nayi file ke liye upload URL nahi bana.");
         const signed=await res.json();
-        const put=await fetch(signed.uploadUrl,{method:"PUT",headers:{"Content-Type":replacementFile.type},body:replacementFile});
-        if(!put.ok)throw new Error("Nayi file upload nahi hui.");
+        const put=await fetch(signed.uploadUrl,{method:"PUT",headers:{"Content-Type":replacementFile.type},body:replacementFile});        if(!put.ok)throw new Error("Nayi file upload nahi hui.");
         newUrl=signed.publicUrl;newKey=signed.key;
       }
       const targetAmount=Number(editTargetAmount);
@@ -1197,8 +1190,7 @@ function Admin({settings}) {
         </tbody></table></div>
         <div className="monthlyFundReportPrint">
           <h1>Umeed Community – Monthly Financial Report</h1>
-          <h2>{fundReportLabel}</h2>
-          <div className="monthlyFundPrintSummary">
+          <h2>{fundReportLabel}</h2>          <div className="monthlyFundPrintSummary">
             <p>Total verified donations: <b>{money(monthlyDonationTotal)}</b></p>
             <p>Total expenses: <b>{money(monthlyExpenseTotal)}</b></p>
             <p>Balance after expenses: <b>{money(monthlyDonationTotal-monthlyExpenseTotal)}</b></p>
@@ -1347,8 +1339,7 @@ function Admin({settings}) {
             <td>{money(row.adjustments)}</td>
             <td>{row.entries.length?row.entries.map((p,i)=><div key={p.id}>{p.paidAt?new Date(p.paidAt).toLocaleString("en-IN"):"—"} · {money(p.amount)} · {p.entryType==="adjustment"?"Adjustment: ":""}{p.referenceId||"—"}{i<row.entries.length-1?<hr/>:null}</div>):"No entries"}</td>
           </tr>)}
-          {!memberMonthRows.length&&<tr><td colSpan="8" className="empty">Abhi koi member record nahi hai.</td></tr>}
-        </tbody></table></div>
+          {!memberMonthRows.length&&<tr><td colSpan="8" className="empty">Abhi koi member record nahi hai.</td></tr>}        </tbody></table></div>
         <div className="memberArchivePrint">
           <h1>Umeed Community — Monthly Member Report</h1>
           <h2>{memberReportLabel}</h2>
