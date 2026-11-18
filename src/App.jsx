@@ -231,7 +231,7 @@ function MediaPage({media,type,donations}) {
             <div className="storyDonationNumbers"><span>Target <b>{money(target)}</b></span><span>Received <b>{money(raised)}</b></span></div>
             <div className="storyDonationTrack"><span style={{width:percent+"%"}}/></div>
             <div className="storyDonationFoot"><b>{percent}% complete</b><span>{money(remaining)} baki</span></div>
-            <Link className="primaryBtn storyDonateBtn" to={`/donate?story=${encodeURIComponent(m.id)}`}>Donate for this story <ArrowRight size={16}/></Link>
+            <Link className="primaryBtn storyDonateBtn" to={`/donate?story=${encodeURIComponent(m.id)}`}>Donate Now <ArrowRight size={16}/></Link>
           </div>;
         })()}
       </article>):<div className="emptyGallery"><Camera size={30}/><span>No {type==="video"?"videos":"photos"} have been uploaded yet.</span></div>}
