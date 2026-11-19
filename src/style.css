@@ -1410,3 +1410,16 @@ footer .brand{font-size:14px}
 .allContributionsSection .tableWrap{
   overscroll-behavior: auto !important;
 }
+
+/* Top 10 contributors: horizontal table scroll must not trap vertical page scroll */
+.topContributorsSection .tableWrap{
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  touch-action:auto !important;
+  overscroll-behavior: auto !important;
+  -webkit-overflow-scrolling:touch;
+}
+.topContributorsSection .tableWrap table{
+  animation:none !important;
+  transform:none !important;
+}
