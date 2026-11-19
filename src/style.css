@@ -1368,3 +1368,17 @@ footer .brand{font-size:14px}
 .advertisingAdmin .adminMediaItem>img{width:100%;aspect-ratio:15/7;object-fit:contain;background:#eef4ef}
 @media(max-width:640px){.homeAdvertising{width:92%;margin:18px auto 24px}.advertisingViewport{border-radius:10px}}
 @media(prefers-reduced-motion:reduce){.advertisingTrack{transition:none}}
+
+/* All Contributions: keep 10 rows visible, scroll vertically for the rest */
+.allContributionsSection .tableWrap{
+  max-height:620px;
+  overflow-y:auto;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+}
+.allContributionsSection .tableWrap thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+}
