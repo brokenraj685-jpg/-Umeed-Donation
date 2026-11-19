@@ -1396,3 +1396,15 @@ footer .brand{font-size:14px}
   padding-top:12px;
   padding-bottom:12px;
 }
+
+/* Allow page vertical scroll to continue after inner leaderboard/contribution scrolling reaches an edge */
+@media (max-width:760px){
+  .compactLeaderboard .tableWrap,
+  .allContributionsSection .tableWrap{
+    overscroll-behavior-y:auto !important;
+    touch-action:pan-x pan-y !important;
+  }
+}
+.allContributionsSection .tableWrap{
+  overscroll-behavior: auto !important;
+}
