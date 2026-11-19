@@ -1371,7 +1371,7 @@ footer .brand{font-size:14px}
 
 /* All Contributions: keep 10 rows visible, scroll vertically for the rest */
 .allContributionsSection .tableWrap{
-  max-height:620px;
+  max-height:820px;
   overflow-y:auto;
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
