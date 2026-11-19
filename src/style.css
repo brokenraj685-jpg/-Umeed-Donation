@@ -1369,16 +1369,24 @@ footer .brand{font-size:14px}
 @media(max-width:640px){.homeAdvertising{width:92%;margin:18px auto 24px}.advertisingViewport{border-radius:10px}}
 @media(prefers-reduced-motion:reduce){.advertisingTrack{transition:none}}
 
-/* All Contributions: keep 10 rows visible, scroll vertically for the rest */
+/* All Contributions: show only about 10 records; scroll vertically inside the panel */
 .allContributionsSection .tableWrap{
-  max-height:820px;
-  overflow-y:auto;
+  height:720px;
+  max-height:720px;
+  overflow-y:auto !important;
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:thin;
+}
+.allContributionsSection .tableWrap table{
+  animation:none !important;
+  transform:none !important;
 }
 .allContributionsSection .tableWrap thead th{
   position:sticky;
   top:0;
   z-index:2;
+}
+.allContributionsSection .tableWrap tbody tr{
+  height:62px;
 }
