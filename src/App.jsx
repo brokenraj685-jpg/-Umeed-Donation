@@ -654,6 +654,7 @@ function Admin({settings}) {
   const [expenseEntries,setExpenseEntries]=useState([]);
   const [expenseForm,setExpenseForm]=useState({amount:"",purpose:"",expenseDate:new Date().toISOString().slice(0,10)});
   const [fundReportMonth,setFundReportMonth]=useState(()=>new Date().toISOString().slice(0,7));
+  const [dailyDonationDate,setDailyDonationDate]=useState(()=>{const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,"0")}-${String(n.getDate()).padStart(2,"0")}`;});
   const [newTargetAmount,setNewTargetAmount]=useState("");
   const [newTargetReason,setNewTargetReason]=useState("");
   const [joinRequests,setJoinRequests]=useState([]);
@@ -973,6 +974,10 @@ function Admin({settings}) {
   const monthlyFundDonations=pending.filter(d=>d.status==="verified"&&donationMonthKey(d)===fundReportMonth).sort((a,b)=>donationMonthKey(a).localeCompare(donationMonthKey(b)));
   const monthlyFundExpenses=expenseEntries.filter(e=>String(e.expenseDate||"").slice(0,7)===fundReportMonth).sort((a,b)=>String(a.expenseDate||"").localeCompare(String(b.expenseDate||"")));
   const monthlyDonationTotal=monthlyFundDonations.reduce((sum,d)=>sum+Number(d.amount||0),0);
+  const dailyDonationRecords=pending.filter(d=>d.status==="verified"&&(()=>{const date=d.createdAt?.toDate?d.createdAt.toDate():d.createdAt?.seconds?new Date(d.createdAt.seconds*1000):new Date(d.createdAt||0);return !Number.isNaN(date.getTime())&&`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`===dailyDonationDate;})()).sort((a,b)=>{const da=a.createdAt?.toDate?a.createdAt.toDate():a.createdAt?.seconds?new Date(a.createdAt.seconds*1000):new Date(a.createdAt||0);const dbb=b.createdAt?.toDate?b.createdAt.toDate():b.createdAt?.seconds?new Date(b.createdAt.seconds*1000):new Date(b.createdAt||0);return da-dbb;});
+  const dailyDonationTotal=dailyDonationRecords.reduce((sum,d)=>sum+Number(d.amount||0),0);
+  const dailyDonationLabel=new Date(dailyDonationDate+"T00:00:00").toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"});
+
   const monthlyExpenseTotal=monthlyFundExpenses.reduce((sum,e)=>sum+Number(e.amount||0),0);
 
   async function verify(d,approved) {
@@ -1219,6 +1224,22 @@ function Admin({settings}) {
 
       {tab==="donations"&&<div className="adminPanel">
         <h2>Donation submissions</h2>
+        <section className="dailyDonationPdfBox">
+          <h3>Daily donation PDF report</h3>
+          <p>Select date and download that day’s verified donation records. Mobile number and UPI transaction ID will not appear in the PDF.</p>
+          <div className="dailyDonationPdfControls">
+            <label>Donation date<input type="date" value={dailyDonationDate} onChange={e=>setDailyDonationDate(e.target.value)}/></label>
+            <div className="dailyDonationPdfStats"><span>{dailyDonationRecords.length} donations</span><b>{money(dailyDonationTotal)}</b></div>
+            <button type="button" className="primaryBtn" onClick={()=>printWithMode("print-daily-donation-report")} disabled={!dailyDonationRecords.length}>Download daily PDF</button>
+          </div>
+        </section>
+        <div className="dailyDonationReportPrint">
+          <h1>Umeed Community</h1><h2>Daily Donation Report</h2><p className="dailyDonationPrintDate">{dailyDonationLabel}</p>
+          <div className="dailyDonationPrintSummary"><p>Total verified donations: <b>{dailyDonationRecords.length}</b></p><p>Total amount: <b>{money(dailyDonationTotal)}</b></p></div>
+          <table><thead><tr><th>Donor Name</th><th>State</th><th>Amount</th><th>Date</th></tr></thead><tbody>
+            {dailyDonationRecords.map(d=><tr key={d.id}><td>{d.name||"—"}</td><td>{d.state||"—"}</td><td>{money(d.amount)}</td><td>{d.createdAt?.toDate?.().toLocaleDateString("en-IN")||"—"}</td></tr>)}
+          </tbody></table><p className="dailyDonationPrintFooter">Generated for Umeed Community records.</p>
+        </div>
         <div className="tableWrap"><table>
           <thead><tr><th>Donor</th><th>Mobile Number</th><th>State</th><th>Amount</th><th>Transaction ID</th><th>Unique Number</th><th>Status</th><th>Action</th></tr></thead>
           <tbody>{pending.map(d=><tr key={d.id}>
